@@ -400,3 +400,10 @@ button {
   font-size: 26px;
   font-weight: 700;
 }
+
+/* ile stopni światła ma dzień i ile zostało */
+.light {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--mut);
+}

@@ -46,20 +46,17 @@ function pt(t, rr) { rr = rr || r; return [cx - rr * Math.cos(t * R), cy - rr * 
 function arc(a) { var p = pt(Math.min(a, 359.99)); return "M30 170 A140 140 0 " + (a > 180 ? 1 : 0) + " 1 " + p[0] + " " + p[1] }
 function put(id, a) { var p = pt(a); $(id).setAttribute("cx", p[0]); $(id).setAttribute("cy", p[1]) }
 
-/* ===== Podziałka i opisy (rysowane raz) =====
-   kreska co 5° (cienka), 15° (średnia), 90° (długa); opis co 30° */
-var tk = "", lb = "";
-for (var a = 0; a < 360; a += 5) {
-  var len = a % 90 == 0 ? 18 : a % 30 == 0 ? 12 : a % 15 == 0 ? 8 : 4,
-    w = a % 90 == 0 ? 2 : a % 15 == 0 ? 1.5 : 1,
+/* ===== Podziałka (rysowana raz) =====
+   Tylko 12 kresek co 30° (4 dłuższe). Dokładny stopień jest w kółku ze Słońcem,
+   a liczby przy pierścieniu opisują znaczniki doby (dodawane w tick()). */
+var tk = "";
+for (var a = 0; a < 360; a += 30) {
+  var len = a % 90 == 0 ? 16 : 10, w = a % 90 == 0 ? 2 : 1.5,
     p = pt(a, r - 7), q = pt(a, r - 7 - len);   // kreski zaczynają się przy wewnętrznej krawędzi pierścienia
-  tk += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + q[0] + '" y2="' + q[1] + '" stroke-width="' + w + '"/>';
-  if (a % 30 == 0) {
-    var l = pt(a, r - 40);
-    lb += '<text x="' + l[0] + '" y="' + (l[1] + 3.5) + '">' + a + '°</text>'
-  }
+  tk += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + q[0] + '" y2="' + q[1] + '" stroke-width="' + w + '"/>'
 }
-$("ticks").innerHTML = tk; $("labels").innerHTML = lb;
+$("ticks").innerHTML = tk;
+var lastML = "";   // ostatnio narysowane opisy znaczników
 
 /* ===== Obliczenia astronomiczne (algorytm NOAA) ===== */
 // gam: kąt ułamkowy roku (w radianach)
@@ -159,6 +156,7 @@ function tick() {
     live = null;
     $("deg").textContent = "--°";
     if ($("near")) $("near").textContent = "";
+    if ($("light")) $("light").textContent = "";
     setMsg("noSun");
     return
   }
@@ -171,6 +169,21 @@ function tick() {
 
   drawEv(cyc, k, now);
   put("sun", deg); put("set", sd); put("noon", nd);
+  if ($("sunnum")) {
+    put("mid", (sd + 360) / 2);                          // środek nocy
+    var sp = pt(deg);                                    // dokładny stopień w kółku ze Słońcem
+    $("sunnum").setAttribute("x", sp[0]); $("sunnum").setAttribute("y", sp[1] + 3.5);
+    $("sunnum").textContent = Math.round(deg);
+    var ml = "";                                         // liczby przy znacznikach: wschód, górowanie, zachód, północ
+    [0, nd, sd, (sd + 360) / 2].forEach(function (g) {
+      var q = pt(g, r + 22);
+      ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + Math.round(g) + '°</text>'
+    });
+    if (ml !== lastML) { $("labels").innerHTML = ml; lastML = ml }
+  }
+  if ($("light")) $("light").textContent = deg < sd
+    ? t("lightDay").replace("{a}", Math.round(sd)).replace("{b}", Math.round(sd - deg))
+    : t("lightNight").replace("{a}", Math.round(sd));
   // wskazówka centralna: obrót o kąt "deg" wokół środka tarczy
   $("hand").setAttribute("transform", "rotate(" + deg + " " + cx + " " + cy + ")");
   $("day").setAttribute("d", arc(sd));

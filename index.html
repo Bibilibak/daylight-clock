@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar słoneczny</title>
   <base href="/daylight-clock/">
-  <link rel="stylesheet" href="/daylight-clock/css/style.css?v=8">
+  <link rel="stylesheet" href="/daylight-clock/css/style.css?v=9">
 </head>
 <body>
   <div class="top">
@@ -26,12 +26,21 @@
     <path id="day" fill="none" stroke="var(--day)" stroke-width="14"/>
     <path id="prog" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/>
 
+    <!-- pierścień Księżyca (srebrny): ślad, łuk "Księżyc nad horyzontem" -->
+    <circle cx="170" cy="170" r="156" fill="none" stroke="#aab6cc" stroke-opacity="0.3" stroke-width="7"/>
+    <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="7"/>
+
     <!-- podziałka (rysowana w js/main.js) -->
     <g id="ticks" stroke="var(--mut)"></g>
 
     <!-- wskazówka centralna: narysowana w stronę 0° (lewo), obracana w JS -->
     <g id="hand" transform="rotate(0 170 170)">
       <path d="M190 170 L170 166.5 L46 170 L170 173.5 Z" fill="var(--fg)"/>
+    </g>
+
+    <!-- wskazówka Księżyca: cienka, srebrna, obracana w JS -->
+    <g id="moonhand" transform="rotate(0 170 170)">
+      <line x1="170" y1="170" x2="22" y2="170" stroke="#8ea3c2" stroke-width="1.8" stroke-linecap="round"/>
     </g>
 
     <!-- opisy stopni (nad wskazówką, z obwódką dla czytelności) -->
@@ -42,6 +51,7 @@
     <circle id="rise0" r="3" fill="var(--mut)"/>          <!-- wschód -->
     <circle id="mid" r="3" fill="var(--mut)"/>           <!-- środek nocy -->
     <g id="evs"></g>
+    <circle id="moonmark" r="6" fill="#e6ebf5" stroke="#8ea3c2" stroke-width="2"/>
     <circle id="sun" r="11" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>
     <text id="sunnum" font-size="10" font-weight="700" text-anchor="middle" fill="#2b2118"></text>
 
@@ -58,6 +68,7 @@
   <div class="reading">
     <div class="near" id="near"></div>
     <div class="light" id="light"></div>
+    <div class="light" id="moonl"></div>
     <span id="msg"></span>
   </div>
   </div>
@@ -125,8 +136,8 @@
     </div>
   </details>
 
-  <script src="/daylight-clock/js/I18n.js?v=8"></script>
-  <script src="/daylight-clock/js/main.js?v=8"></script>
-  <script src="/daylight-clock/js/view3d.js?v=8"></script>
+  <script src="/daylight-clock/js/I18n.js?v=9"></script>
+  <script src="/daylight-clock/js/main.js?v=9"></script>
+  <script src="/daylight-clock/js/view3d.js?v=9"></script>
 </body>
 </html>

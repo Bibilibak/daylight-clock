@@ -6,6 +6,10 @@ try {
   if (s) { lat = s.lat; lon = s.lon; place = s.name || ""; tz = s.tz || "" }
 } catch (e) {}
 
+// Tryb tarczy: "noon" = od południa (tarcza stała, południe u góry), "rise" = od wschodu (0° po lewej)
+var mode = "noon";
+try { if (localStorage.getItem("mode") === "rise") mode = "rise" } catch (e) {}
+
 function $(i) { return document.getElementById(i) }
 
 // Komunikat pod odczytem stopni zapamiętujemy jako klucz tłumaczenia,
@@ -43,7 +47,14 @@ function zoned(y, mo, d, h, mi) {   // "dzień, godzina:minuta według zegara mi
 
 /* ===== Geometria tarczy ===== */
 function pt(t, rr) { rr = rr || r; return [cx - rr * Math.cos(t * R), cy - rr * Math.sin(t * R)] }
-function arc(a) { var p = pt(Math.min(a, 359.99)); return "M30 170 A140 140 0 " + (a > 180 ? 1 : 0) + " 1 " + p[0] + " " + p[1] }
+// łuk pierścienia od kąta a0 do a1 (zgodnie z ruchem wskazówek)
+function arcSeg(a0, a1) {
+  var p = pt(a0), q = pt(Math.min(a1, a0 + 359.99));
+  return "M" + p[0] + " " + p[1] + " A140 140 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + q[0] + " " + q[1]
+}
+// kąt od południa w zakresie -180..180 (g = stopnie od wschodu, nd = stopień górowania)
+function hourAngle(g, nd) { var h = g - nd; return h > 180 ? h - 360 : h }
+function signedTxt(h, d) { return (h > 0.05 ? "+" : h < -0.05 ? "−" : "") + Math.abs(h).toFixed(d) }
 function put(id, a) { var p = pt(a); $(id).setAttribute("cx", p[0]); $(id).setAttribute("cy", p[1]) }
 
 /* ===== Podziałka (rysowana raz) =====
@@ -108,7 +119,7 @@ $("evl").onclick = function (e) {
 };
 
 var lastL = "";
-function drawEv(cyc, k, now) {
+function drawEv(cyc, k, now, off, nd) {
   var g = "", l = "", c = tzParts(now.getTime());   // dzisiejsza data w wybranym mieście
   evs.forEach(function (v, i) {
     var hh = v.t.split(":"), deg = null;
@@ -117,9 +128,9 @@ function drawEv(cyc, k, now) {
       if (dt >= cyc.a && dt < cyc.b) { deg = k * (dt - cyc.a) }
     }
     if (deg === null) return;
-    var p = pt(deg, r + 16);
+    var p = pt(deg + off, r + 16);
     g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>';
-    l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span><b>' + deg.toFixed(1) + '°</b><a data-i="' + i + '">×</a></span></div>'
+    l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span><b>' + (mode === "noon" ? signedTxt(hourAngle(deg, nd), 1) : deg.toFixed(1)) + '°</b><a data-i="' + i + '">×</a></span></div>'
   });
   $("evs").innerHTML = g;
   if (l !== lastL) { $("evl").innerHTML = l; lastL = l }
@@ -167,30 +178,36 @@ function tick() {
     sd = k * (cyc.set - cyc.a),
     nd = k * ((cyc.rise + cyc.set) / 2 - cyc.a);
 
-  drawEv(cyc, k, now);
-  put("sun", deg); put("set", sd); put("noon", nd);
+  var off = mode === "noon" ? 90 - nd : 0,    // obrót tarczy: "od południa" = południe zawsze u góry (90° na tarczy)
+    hh = hourAngle(deg, nd);                  // kąt Słońca od południa
+  drawEv(cyc, k, now, off, nd);
+  put("sun", deg + off); put("set", sd + off); put("noon", nd + off);
   if ($("sunnum")) {
-    put("mid", (sd + 360) / 2);                          // środek nocy
-    var sp = pt(deg);                                    // dokładny stopień w kółku ze Słońcem
+    put("mid", (sd + 360) / 2 + off);         // środek nocy
+    if ($("rise0")) put("rise0", off);        // wschód
+    var sp = pt(deg + off);                   // dokładny stopień w kółku ze Słońcem
     $("sunnum").setAttribute("x", sp[0]); $("sunnum").setAttribute("y", sp[1] + 3.5);
-    $("sunnum").textContent = Math.round(deg);
-    var ml = "";                                         // liczby przy znacznikach: wschód, górowanie, zachód, północ
-    [0, nd, sd, (sd + 360) / 2].forEach(function (g) {
-      var q = pt(g, r + 22);
-      ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + Math.round(g) + '°</text>'
+    $("sunnum").textContent = mode === "noon" ? (hh < -0.5 ? "−" : "") + Math.abs(Math.round(hh)) : Math.round(deg);
+    var nz = mode === "noon", ml = "";        // liczby przy znacznikach: wschód, górowanie, zachód, północ
+    [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)],
+     [sd + off, nz ? "+" + Math.round(nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
+    ].forEach(function (m) {
+      var q = pt(m[0], r + 22);
+      ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + m[1] + '°</text>'
     });
     if (ml !== lastML) { $("labels").innerHTML = ml; lastML = ml }
   }
   if ($("light")) $("light").textContent = deg < sd
     ? t("lightDay").replace("{a}", Math.round(sd)).replace("{b}", Math.round(sd - deg))
     : t("lightNight").replace("{a}", Math.round(sd));
-  // wskazówka centralna: obrót o kąt "deg" wokół środka tarczy
-  $("hand").setAttribute("transform", "rotate(" + deg + " " + cx + " " + cy + ")");
-  $("day").setAttribute("d", arc(sd));
-  $("prog").setAttribute("d", deg > 0.1 ? arc(deg) : "");
-  $("deg").textContent = deg.toFixed(1) + "°";
-  $("nd").textContent = nd.toFixed(1) + "°";
-  $("sd").textContent = sd.toFixed(1) + "°";
+  // wskazówka centralna: obrót o kąt Słońca na tarczy
+  $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
+  $("day").setAttribute("d", arcSeg(off, sd + off));
+  $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
+  if ($("sinceL")) $("sinceL").textContent = t(nz ? "fromNoon" : "since");
+  $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
+  $("nd").textContent = nz ? "0°" : nd.toFixed(1) + "°";
+  $("sd").textContent = nz ? "+" + (sd / 2).toFixed(1) + "°" : sd.toFixed(1) + "°";
   if ($("near")) $("near").textContent = nearText(deg, nd, sd);
 
   live = { lat: lat, dec: S.dc / R, deg: deg };   // dla js/view3d.js
@@ -290,7 +307,17 @@ if ($("viewBtn")) $("viewBtn").addEventListener("click", function () {
   if (!window.Sun3D) setMsg("no3d")
 });
 
+/* ===== Przełącznik tarczy: od południa (stała) / od wschodu ===== */
+function setMode(m) {
+  mode = m; lastML = "";
+  try { localStorage.setItem("mode", m) } catch (e) {}
+  document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-mode") === m ? "true" : "false") });
+  tick()
+}
+document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
+
 /* ===== Start ===== */
 setLang(detectLang());
+setMode(mode);
 apply();
 setInterval(tick, 1000);

@@ -407,3 +407,28 @@ button {
   font-size: 14px;
   color: var(--mut);
 }
+
+/* ===== Przełącznik tarczy: od południa / od wschodu ===== */
+.seg {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.seg button {
+  background: transparent;
+  color: var(--mut);
+  border: 1px solid var(--arc);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #fff;
+}

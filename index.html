@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar słoneczny</title>
   <base href="/daylight-clock/">
-  <link rel="stylesheet" href="/daylight-clock/css/style.css?v=7">
+  <link rel="stylesheet" href="/daylight-clock/css/style.css?v=8">
 </head>
 <body>
   <div class="top">
@@ -39,7 +39,7 @@
 
     <circle id="noon" r="5" fill="var(--fg)" stroke="var(--bg)" stroke-width="2"/>
     <circle id="set" r="5" fill="var(--bg)" stroke="var(--fg)" stroke-width="2"/>
-    <circle cx="30" cy="170" r="3" fill="var(--mut)"/>   <!-- wschód -->
+    <circle id="rise0" r="3" fill="var(--mut)"/>          <!-- wschód -->
     <circle id="mid" r="3" fill="var(--mut)"/>           <!-- środek nocy -->
     <g id="evs"></g>
     <circle id="sun" r="11" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>
@@ -49,6 +49,11 @@
     <circle cx="170" cy="170" r="8" fill="var(--fg)"/>
     <circle cx="170" cy="170" r="3.5" fill="var(--sun)"/>
   </svg>
+
+  <div class="seg" role="group" data-i18n-aria="dial" aria-label="Tarcza">
+    <button data-mode="noon" aria-pressed="true" data-i18n="modeNoon">od południa</button>
+    <button data-mode="rise" aria-pressed="false" data-i18n="modeRise">od wschodu</button>
+  </div>
 
   <div class="reading">
     <div class="near" id="near"></div>
@@ -85,7 +90,7 @@
   <div class="where"><span id="where"></span></div>
 
   <div class="row">
-    <div class="box"><b id="deg">--°</b><span data-i18n="since">Od wschodu</span></div>
+    <div class="box"><b id="deg">--°</b><span id="sinceL">Od południa</span></div>
     <div class="box"><b id="alt">--°</b><span data-i18n="altitude">Wysokość słońca</span></div>
     <div class="box"><b id="nd">--°</b><span data-i18n="noon">● Górowanie</span></div>
     <div class="box"><b id="sd">--°</b><span data-i18n="sunset">○ Zachód</span></div>
@@ -120,8 +125,8 @@
     </div>
   </details>
 
-  <script src="/daylight-clock/js/I18n.js?v=7"></script>
-  <script src="/daylight-clock/js/main.js?v=7"></script>
-  <script src="/daylight-clock/js/view3d.js?v=7"></script>
+  <script src="/daylight-clock/js/I18n.js?v=8"></script>
+  <script src="/daylight-clock/js/main.js?v=8"></script>
+  <script src="/daylight-clock/js/view3d.js?v=8"></script>
 </body>
 </html>

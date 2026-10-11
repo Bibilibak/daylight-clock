@@ -47,11 +47,13 @@ function zoned(y, mo, d, h, mi) {   // "dzień, godzina:minuta według zegara mi
 
 /* ===== Geometria tarczy ===== */
 function pt(t, rr) { rr = rr || r; return [cx - rr * Math.cos(t * R), cy - rr * Math.sin(t * R)] }
-// łuk pierścienia od kąta a0 do a1 (zgodnie z ruchem wskazówek)
-function arcSeg(a0, a1) {
-  var p = pt(a0), q = pt(Math.min(a1, a0 + 359.99));
-  return "M" + p[0] + " " + p[1] + " A140 140 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + q[0] + " " + q[1]
+// łuk pierścienia o promieniu rad (domyślnie r) od kąta a0 do a1, zgodnie z ruchem wskazówek
+function arcSeg(a0, a1, rad) {
+  rad = rad || r;
+  var p = pt(a0, rad), q = pt(Math.min(a1, a0 + 359.99), rad);
+  return "M" + p[0] + " " + p[1] + " A" + rad + " " + rad + " 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + q[0] + " " + q[1]
 }
+function normDeg(x) { return ((x + 180) % 360 + 360) % 360 - 180 }   // do zakresu -180..180
 // kąt od południa w zakresie -180..180 (g = stopnie od wschodu, nd = stopień górowania)
 function hourAngle(g, nd) { var h = g - nd; return h > 180 ? h - 360 : h }
 function signedTxt(h, d) { return (h > 0.05 ? "+" : h < -0.05 ? "−" : "") + Math.abs(h).toFixed(d) }
@@ -96,6 +98,20 @@ function times(day) {
   }
 }
 
+/* ===== Księżyc: uproszczone położenie (kilka wyrazów wzoru, dokładność rzędu 1°) =====
+   Zwraca kąt godzinny Księżyca H (stopnie od jego górowania, na zachód dodatni),
+   wysokość nad horyzontem i deklinację. */
+function moonPos(now) {
+  var d = now.getTime() / 864e5 - 10957.5,   // dni od J2000
+    L = R * (218.316 + 13.176396 * d), M = R * (134.963 + 13.064993 * d), F = R * (93.272 + 13.22935 * d),
+    l = L + R * 6.289 * Math.sin(M), b = R * 5.128 * Math.sin(F), e = R * 23.4397,
+    ra = Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l)),
+    dc = Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l)),
+    H = R * (280.16 + 360.9856235 * d) + lon * R - ra,
+    alt = Math.asin(Math.sin(lat * R) * Math.sin(dc) + Math.cos(lat * R) * Math.cos(dc) * Math.cos(H));
+  return { H: normDeg(H / R), alt: alt / R, dec: dc / R }
+}
+
 /* ===== Wydarzenia użytkownika ===== */
 var evs = [];
 try { evs = JSON.parse(localStorage.getItem("swe") || "[]") } catch (e) {}
@@ -128,7 +144,7 @@ function drawEv(cyc, k, now, off, nd) {
       if (dt >= cyc.a && dt < cyc.b) { deg = k * (dt - cyc.a) }
     }
     if (deg === null) return;
-    var p = pt(deg + off, r + 16);
+    var p = pt(deg + off, r + 32);
     g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>';
     l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span><b>' + (mode === "noon" ? signedTxt(hourAngle(deg, nd), 1) : deg.toFixed(1)) + '°</b><a data-i="' + i + '">×</a></span></div>'
   });
@@ -168,6 +184,7 @@ function tick() {
     $("deg").textContent = "--°";
     if ($("near")) $("near").textContent = "";
     if ($("light")) $("light").textContent = "";
+    if ($("moonl")) $("moonl").textContent = "";
     setMsg("noSun");
     return
   }
@@ -192,7 +209,7 @@ function tick() {
     [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)],
      [sd + off, nz ? "+" + Math.round(nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
     ].forEach(function (m) {
-      var q = pt(m[0], r + 22);
+      var q = pt(m[0], r - 36);
       ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + m[1] + '°</text>'
     });
     if (ml !== lastML) { $("labels").innerHTML = ml; lastML = ml }
@@ -204,6 +221,16 @@ function tick() {
   $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
   $("day").setAttribute("d", arcSeg(off, sd + off));
   $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
+  if ($("moonhand")) {                        // Księżyc: wskazówka, znacznik na srebrnym pierścieniu i łuk "nad horyzontem"
+    var mp = moonPos(now), c = nd + off,      // c = miejsce górowania na tarczy (tam Księżyc ma H = 0)
+      Hs = normDeg(H / R), ph = ((Hs - mp.H) % 360 + 360) % 360,   // faza: 0 nów, 90 pierwsza kwadra, 180 pełnia
+      cH = (Math.sin(0.125 * R) - Math.sin(lat * R) * Math.sin(mp.dec * R)) / (Math.cos(lat * R) * Math.cos(mp.dec * R)),
+      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156);
+    $("moonhand").setAttribute("transform", "rotate(" + (c + mp.H) + " " + cx + " " + cy + ")");
+    $("moonmark").setAttribute("cx", mq[0]); $("moonmark").setAttribute("cy", mq[1]);
+    $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 156) : arcSeg(c - h0, c + h0, 156));
+    if ($("moonl")) $("moonl").textContent = t(mp.alt > 0.125 ? "moonUp" : "moonDown").replace("{e}", Math.round(ph))
+  }
   if ($("sinceL")) $("sinceL").textContent = t(nz ? "fromNoon" : "since");
   $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
   $("nd").textContent = nz ? "0°" : nd.toFixed(1) + "°";

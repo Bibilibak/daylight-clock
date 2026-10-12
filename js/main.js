@@ -88,14 +88,20 @@ function sol(g) {
 
 // times: wschód i zachód Słońca (ms UTC) dla danego dnia i położenia
 function times(day) {
-  var b = new Date(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate(), 12)), S = sol(gam(b)),
-    c = (Math.cos(90.833 * R) / (Math.cos(lat * R) * Math.cos(S.dc)) - Math.tan(lat * R) * Math.tan(S.dc));
-  if (c > 1 || c < -1) return null;
-  var ha = Math.acos(c) / R, m0 = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate());
-  return {
-    rise: m0 + (720 - 4 * (lon + ha) - S.eq) * 6e4,
-    set: m0 + (720 - 4 * (lon - ha) - S.eq) * 6e4
-  }
+  var m0 = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()),
+    at = function (ms) { return sol(gam(new Date(ms))) },
+    haOf = function (S) {
+      var c = Math.cos(90.833 * R) / (Math.cos(lat * R) * Math.cos(S.dc)) - Math.tan(lat * R) * Math.tan(S.dc);
+      return c > 1 || c < -1 ? null : Math.acos(c) / R
+    },
+    S0 = at(m0 + 12 * 36e5), ha0 = haOf(S0);
+  if (ha0 === null) return null;
+  var Sn = at(m0 + (720 - 4 * lon - S0.eq) * 6e4),
+    noon = m0 + (720 - 4 * lon - Sn.eq) * 6e4,                     // rzeczywiste górowanie: przejście Słońca przez południk
+    Sr = at(noon - ha0 * 4 * 6e4), Ss = at(noon + ha0 * 4 * 6e4),  // deklinacja i równanie czasu w chwili wschodu i zachodu
+    hr = haOf(Sr), hs = haOf(Ss);
+  if (hr === null || hs === null) return null;
+  return { rise: m0 + (720 - 4 * (lon + hr) - Sr.eq) * 6e4, set: m0 + (720 - 4 * (lon - hs) - Ss.eq) * 6e4, noon: noon }
 }
 
 /* ===== Księżyc: uproszczone położenie (kilka wyrazów wzoru, dokładność rzędu 1°) =====
@@ -109,11 +115,36 @@ function moonPos(now) {
     dc = Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l)),
     H = R * (280.16 + 360.9856235 * d) + lon * R - ra,
     alt = Math.asin(Math.sin(lat * R) * Math.sin(dc) + Math.cos(lat * R) * Math.cos(dc) * Math.cos(H));
-  var Ms = R * (357.5291 + 0.98560028 * d), Cs = R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)),
-    sl = Ms + Cs + R * 102.9372 + Math.PI,                    // długość ekliptyczna Słońca
-    ph = (((l - sl) / R) % 360 + 360) % 360;                  // faza: o ile Księżyc wyprzedza Słońce (0 nów, 180 pełnia)
-  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: ph }
+  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: elong(now.getTime()) }
 }
+
+// faza Księżyca = o ile jego długość ekliptyczna wyprzedza Słońce (0 nów, 90 pierwsza kwadra, 180 pełnia, 270 ostatnia)
+function elong(ms) {
+  var d = ms / 864e5 - 10957.5,
+    M = R * (134.963 + 13.064993 * d), l = R * (218.316 + 13.176396 * d) + R * 6.289 * Math.sin(M),
+    Ms = R * (357.5291 + 0.98560028 * d), sl = Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * 102.9372 + Math.PI;
+  return (((l - sl) / R) % 360 + 360) % 360
+}
+// moment nowiu: poprawiamy przybliżenie kilkoma krokami (Księżyc oddala się od Słońca o ok. 12,19° na dobę)
+function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
+// dzień cyklu liczony z CZASU od ostatniego nowiu (nów = początek dnia 1), nie z położenia na tarczy dobowej
+function lunarCycle(now) {
+  var t = now.getTime(), last = newMoonNear(t - elong(t) / 12.19 * 864e5);
+  if (last > t) last = newMoonNear(last - 29.53 * 864e5);
+  var next = newMoonNear(last + 29.53 * 864e5);
+  if (next <= t) { last = next; next = newMoonNear(last + 29.53 * 864e5) }
+  return { day: Math.floor((t - last) / 864e5) + 1, elapsed: (t - last) / 864e5, length: (next - last) / 864e5 }
+}
+function phaseIdx(p) {   // 0 nów, 1 sierp przyb., 2 I kwadra, 3 garb przyb., 4 pełnia, 5 garb ubyw., 6 III kwadra, 7 sierp ubyw.
+  return p < 12 || p >= 348 ? 0 : p < 78 ? 1 : p < 102 ? 2 : p < 168 ? 3 : p < 192 ? 4 : p < 258 ? 5 : p < 282 ? 6 : 7
+}
+function phaseGlyph(p, cx, cy, rr) {   // ikona fazy: ciemna tarcza + jasna część (limb + terminator)
+  var c = Math.cos(p * R), wax = p < 180, top = cy - rr, bot = cy + rr,
+    lit = "M" + cx + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + cx + " " + bot +
+      "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + cx + " " + top + "Z";
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"/>'
+}
+var lastGlyph = "", lastIcon = "";
 
 /* ===== Wydarzenia użytkownika ===== */
 var evs = [];
@@ -172,7 +203,7 @@ function tick() {
   var u = now.getUTCHours() * 60 + now.getUTCMinutes() + now.getUTCSeconds() / 60,
     H = ((u + S.eq + 4 * lon) / 4 - 180) * R;
   var alt = Math.asin(Math.sin(lat * R) * Math.sin(S.dc) + Math.cos(lat * R) * Math.cos(S.dc) * Math.cos(H)) / R;
-  $("alt").textContent = alt.toFixed(1) + "°";
+  $("alt").textContent = signedTxt(alt, 1) + "°";   // + nad horyzontem, − pod
 
   // Wschody z pięciu kolejnych dni; szukamy cyklu [wschód, następny wschód), w którym leży "teraz".
   // (Działa dla każdego miasta, także gdy data u Ciebie i w mieście się różni.)
@@ -180,14 +211,13 @@ function tick() {
   for (var o = -2; o <= 2; o++) days.push(times(new Date(now.getFullYear(), now.getMonth(), now.getDate() + o)));
   for (var i = 0; i < 4 && !cyc; i++) {
     A = days[i]; B = days[i + 1];
-    if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise }
+    if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise, noon: A.noon }
   }
   if (!cyc) {
     live = null;
     $("deg").textContent = "--°";
     if ($("near")) $("near").textContent = "";
     if ($("light")) $("light").textContent = "";
-    if ($("moonl")) $("moonl").textContent = "";
     setMsg("noSun");
     return
   }
@@ -196,7 +226,7 @@ function tick() {
   var k = 360 / (cyc.b - cyc.a),
     deg = Math.min(359.99, k * (now - cyc.a)),
     sd = k * (cyc.set - cyc.a),
-    nd = k * ((cyc.rise + cyc.set) / 2 - cyc.a);
+    nd = k * (cyc.noon - cyc.a)   // górowanie to nie zawsze dokładny środek łuku;
 
   var off = mode === "noon" ? 90 - nd : 0,    // obrót tarczy: "od południa" = południe zawsze u góry (90° na tarczy)
     hh = hourAngle(deg, nd);                  // kąt Słońca od południa
@@ -210,43 +240,40 @@ function tick() {
     $("sunnum").textContent = mode === "noon" ? (hh < -0.5 ? "−" : "") + Math.abs(Math.round(hh)) : Math.round(deg);
     var nz = mode === "noon", ml = "";        // liczby przy znacznikach: wschód, górowanie, zachód, północ
     [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)],
-     [sd + off, nz ? "+" + Math.round(nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
+     [sd + off, nz ? "+" + Math.round(sd - nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
     ].forEach(function (m) {
       var q = pt(m[0], r - 36);
       ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + m[1] + '°</text>'
     });
     if (ml !== lastML) { $("labels").innerHTML = ml; lastML = ml }
   }
-  if ($("light")) $("light").textContent = deg < sd
-    ? t("lightDay").replace("{a}", Math.round(sd)).replace("{b}", Math.round(sd - deg))
-    : t("lightNight").replace("{a}", Math.round(sd));
+  if ($("light")) $("light").textContent = deg < sd ? t("lightDay").replace("{b}", Math.round(sd - deg)) : "";
   // wskazówka centralna: obrót o kąt Słońca na tarczy
   $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
   $("day").setAttribute("d", arcSeg(off, sd + off));
   $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
-  if ($("moonhand")) {                        // Księżyc: wskazówka, znacznik na pierścieniu, łuk "nad horyzontem"
+  if ($("moonhand")) {                        // Księżyc na wspólnej tarczy: wskazówka, znacznik z ikoną fazy, łuk "nad horyzontem"
     var mp = moonPos(now), c = nd + off,      // c = miejsce górowania na tarczy (tam Księżyc ma H = 0)
       cH = (Math.sin(0.125 * R) - Math.sin(lat * R) * Math.sin(mp.dec * R)) / (Math.cos(lat * R) * Math.cos(mp.dec * R)),
-      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156),
-      ill = (1 - Math.cos(mp.ph * R)) / 2,                                       // oświetlona część tarczy
-      md = Math.min(30, Math.floor(mp.ph / (360 / 29.530588)) + 1);              // dzień księżycowy: nów = dzień 1
+      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156), gl = phaseGlyph(mp.ph, 0, 0, 8);
     $("moonhand").setAttribute("transform", "rotate(" + (c + mp.H) + " " + cx + " " + cy + ")");
-    $("moonmark").setAttribute("cx", mq[0]); $("moonmark").setAttribute("cy", mq[1]);
+    if (gl !== lastGlyph) { $("moonmark").innerHTML = gl; lastGlyph = gl }
+    $("moonmark").setAttribute("transform", "translate(" + mq[0] + " " + mq[1] + ")");
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 156) : arcSeg(c - h0, c + h0, 156));
-    if ($("moonl")) $("moonl").textContent = t(mp.alt > 0.125 ? "moonDayUp" : "moonDayDown").replace("{d}", md).replace("{i}", Math.round(ill * 100));
-    if ($("mph")) {                           // kafelki Księżyca i pasek miesiąca
-      $("mph").textContent = mp.ph.toFixed(1) + "°";
-      $("malt").textContent = mp.alt.toFixed(1) + "°";
-      $("mh").textContent = signedTxt(mp.H, 1) + "°";
-      $("marc").textContent = (h0 < 0 ? 0 : h0 > 180 ? 360 : Math.round(2 * h0)) + "°";
-      var mxp = 12 + 316 * mp.ph / 360;
-      $("mprog").setAttribute("width", mxp - 12); $("mmark").setAttribute("cx", mxp)
+    if ($("mname")) {                         // sekcja Księżyca: nazwa fazy, stopnie fazy, dzień cyklu, pasek miesiąca
+      var lc = lunarCycle(now), pct = Math.min(100, lc.elapsed / 29.530588 * 100), ig = phaseGlyph(mp.ph, 0, 0, 18);
+      $("mname").textContent = t("ph" + phaseIdx(mp.ph));
+      $("mdeg2").textContent = t("moonDeg").replace("{p}", Math.round(mp.ph));
+      $("mday").textContent = t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ","));
+      $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";
+      if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
-  if ($("sinceL")) $("sinceL").textContent = t(nz ? "fromNoon" : "since");
+  if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t(nz ? "modeNoon" : "modeRise") }
+  if ($("lightH")) $("lightH").textContent = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy
   $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
-  $("nd").textContent = (90 - Math.abs(lat - S.dc / R)).toFixed(1) + "°";   // największa wysokość Słońca tego dnia
-  $("sd").textContent = nz ? "+" + (sd / 2).toFixed(1) + "°" : sd.toFixed(1) + "°";
+  $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
+  $("sd").textContent = nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
   if ($("near")) $("near").textContent = nearText(deg, nd, sd);
 
   live = { lat: lat, dec: S.dc / R, deg: deg };   // dla js/view3d.js
@@ -355,8 +382,20 @@ function setMode(m) {
 }
 document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
 
+/* ===== Skala paska miesiąca: ikony faz i stopnie w pozycjach 0, 25, 50, 75, 100% ===== */
+function buildMonthScale() {
+  var ph = "", dg = "", P = [0, 25, 50, 75, 100], A = [0, 90, 180, 270, 0];
+  P.forEach(function (p, i) {
+    var pos = "position:absolute;left:" + p + "%;transform:translateX(-" + p + "%)";
+    ph += '<svg viewBox="-9 -9 18 18" width="18" height="18" style="' + pos + '">' + phaseGlyph(A[i], 0, 0, 8) + '</svg>';
+    dg += '<span style="' + pos + '">' + (p * 3.6) + '°</span>'
+  });
+  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg
+}
+
 /* ===== Start ===== */
 setLang(detectLang());
+if ($("mphases")) buildMonthScale();
 setMode(mode);
 apply();
 setInterval(tick, 1000);

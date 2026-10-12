@@ -149,6 +149,7 @@
   $("viewBtn").onclick = function () {
     var open = $("v3").hidden;   // za chwilę pokażemy 3D
     $("v3").hidden = !open;
+    if ($("modeSeg")) $("modeSeg").hidden = open;   // orientacja dotyczy tylko tarczy
     $("dialView").hidden = open;
     if (open) { follow = true; sync(); resetView(); draw() }
     setBtn();

@@ -252,20 +252,29 @@ function tick() {
   $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
   $("day").setAttribute("d", arcSeg(off, sd + off));
   $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
-  if ($("moonhand")) {                        // Księżyc na wspólnej tarczy: wskazówka, znacznik z ikoną fazy, łuk "nad horyzontem"
-    var mp = moonPos(now), c = nd + off,      // c = miejsce górowania na tarczy (tam Księżyc ma H = 0)
+  if ($("moonhand")) {
+    /* Księżyc ma w kodzie TRZY różne wielkości - nie wolno ich mylić:
+       1) moonDial   - położenie wskazówki na głównej tarczy dobowej = miejsce górowania + kąt godzinny Księżyca
+                       (ten sam układ i obrót co Słońce; nie ma nic wspólnego z fazą),
+       2) phaseAngle - kąt fazy w cyklu synodycznym, 0 nów ... 180 pełnia ... 360 nów (pasek miesiąca),
+       3) illumPct   - procent oświetlenia widocznej tarczy (tekst w sekcji Księżyca). */
+    var mp = moonPos(now), meridianDial = nd + off,       // meridianDial: tu na tarczy Słońce góruje (Księżyc ma tam H = 0)
+      moonDial = meridianDial + mp.H, phaseAngle = mp.ph, illumPct = Math.round((1 - Math.cos(phaseAngle * R)) / 2 * 100),
       cH = (Math.sin(0.125 * R) - Math.sin(lat * R) * Math.sin(mp.dec * R)) / (Math.cos(lat * R) * Math.cos(mp.dec * R)),
-      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156), gl = phaseGlyph(mp.ph, 0, 0, 8);
-    $("moonhand").setAttribute("transform", "rotate(" + (c + mp.H) + " " + cx + " " + cy + ")");
+      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(moonDial, 156), gl = phaseGlyph(phaseAngle, 0, 0, 8);
+    $("moonhand").setAttribute("transform", "rotate(" + moonDial + " " + cx + " " + cy + ")");
     if (gl !== lastGlyph) { $("moonmark").innerHTML = gl; lastGlyph = gl }
     $("moonmark").setAttribute("transform", "translate(" + mq[0] + " " + mq[1] + ")");
-    $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 156) : arcSeg(c - h0, c + h0, 156));
-    if ($("mname")) {                         // sekcja Księżyca: nazwa fazy, stopnie fazy, dzień cyklu, pasek miesiąca
-      var lc = lunarCycle(now), pct = Math.min(100, lc.elapsed / 29.530588 * 100), ig = phaseGlyph(mp.ph, 0, 0, 18);
-      $("mname").textContent = t("ph" + phaseIdx(mp.ph));
-      $("mdeg2").textContent = t("moonDeg").replace("{p}", Math.round(mp.ph));
+    $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(meridianDial, meridianDial + 359.9, 156) : arcSeg(meridianDial - h0, meridianDial + h0, 156));
+    if ($("mname")) {                         // sekcja Księżyca
+      var lc = lunarCycle(now), pPhase = phaseAngle / 360 * 100, ig = phaseGlyph(phaseAngle, 0, 0, 18);
+      $("mname").textContent = t("ph" + phaseIdx(phaseAngle));
+      $("mdeg2").textContent = t("moonIll").replace("{i}", illumPct);                       // procent oświetlenia
       $("mday").textContent = t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ","));
-      $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";
+      $("mfill").style.clipPath = "inset(0 " + (100 - pPhase) + "% 0 0)"; $("mnow").style.left = pPhase + "%";   // pasek: kąt fazy
+      $("mtag").textContent = Math.round(phaseAngle) + "°";
+      $("mtag").style.left = "clamp(17px, " + pPhase + "%, calc(100% - 17px))";            // etykieta zostaje w kontenerze,
+      $("mcaret").style.left = "clamp(4px, " + pPhase + "%, calc(100% - 4px))";             // strzałka wskazuje dokładne miejsce
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }

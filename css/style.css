@@ -433,19 +433,6 @@ button {
   color: #fff;
 }
 
-/* ===== Księżyc: pasek miesiąca i nagłówki rzędów kafelków ===== */
-.mstrip {
-  display: block;
-  width: 100%;
-  max-width: 340px;
-  margin: 10px auto 0;
-}
-
-.mlb {
-  font-size: 10px;
-  fill: var(--mut);
-  text-anchor: middle;
-}
 
 .rowh {
   max-width: 380px;
@@ -457,3 +444,46 @@ button {
   color: var(--mut);
   text-align: left;
 }
+
+[hidden] { display: none !important; }
+
+/* górny pasek: pod przyciskiem 3D stoi przełącznik orientacji tarczy */
+.top { align-items: flex-start; }
+.topl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.topl .seg { margin-top: 0; justify-content: flex-start; }
+
+/* stopnie światła pod nagłówkiem */
+.lightH { margin: 2px 0 8px; font-size: 20px; font-weight: 700; }
+
+/* legenda: kto jest kim na tarczy */
+.legend { display: flex; justify-content: center; align-items: center; gap: 6px 8px; margin-top: 6px; font-size: 12px; color: var(--mut); }
+.legend .lg { width: 10px; height: 10px; border-radius: 50%; margin-left: 6px; }
+.legend .lg:first-child { margin-left: 0; }
+.legend .lg.sun { background: var(--sun); }
+.legend .lg.moon { background: #dfe5f1; box-shadow: inset 0 0 0 1.5px #8ea3c2; }
+
+.box small { display: block; margin-top: 2px; font-size: 11px; line-height: 1.25; color: var(--mut); }
+
+.rowh { max-width: 380px; margin: 10px auto 6px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); text-align: left; }
+
+/* ===== Księżyc: faza, dzień cyklu, pasek miesiąca ===== */
+.moonbox { display: flex; align-items: center; gap: 14px; max-width: 380px; margin: 0 auto; padding: 10px 14px; background: var(--card); border-radius: 14px; text-align: left; }
+.mico { flex: none; }
+.mname { font-size: 20px; font-weight: 700; }
+.mdeg2 { font-size: 14px; font-weight: 600; }
+.mday { margin-top: 2px; font-size: 13px; color: var(--mut); }
+
+.month { max-width: 340px; margin: 14px auto 0; }
+.mphases, .mdegs { position: relative; height: 18px; }
+.mdegs { height: 14px; margin-top: 4px; font-size: 10px; color: var(--mut); }
+.mbar { position: relative; height: 14px; margin: 6px 0 0; border-radius: 999px; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(142, 163, 194, .5); }
+.mtrack, .mfill { position: absolute; inset: 0; background: linear-gradient(90deg, #4a5068 0%, #dfe5f1 50%, #4a5068 100%); }
+.mtrack { opacity: .28; }
+.mfill { clip-path: inset(0 100% 0 0); transition: clip-path .6s ease; }   /* płynny przyrost postępu */
+.mticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, rgba(128, 128, 128, .5) 0, rgba(128, 128, 128, .5) 1px, transparent 1px, transparent calc(100% / 29.5306)); }
+.mnow { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 0 1px rgba(43, 33, 24, .55); }
+.mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
+
+/* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */
+.moonbox .mico { width: 46px; height: 46px; max-width: none; margin: 0; flex: none; }
+.mphases svg { width: 18px; height: 18px; max-width: none; margin: 0; }

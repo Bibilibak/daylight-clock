@@ -432,3 +432,28 @@ button {
   border-color: var(--sun);
   color: #fff;
 }
+
+/* ===== Księżyc: pasek miesiąca i nagłówki rzędów kafelków ===== */
+.mstrip {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 10px auto 0;
+}
+
+.mlb {
+  font-size: 10px;
+  fill: var(--mut);
+  text-anchor: middle;
+}
+
+.rowh {
+  max-width: 380px;
+  margin: 10px auto 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-align: left;
+}

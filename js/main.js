@@ -109,7 +109,10 @@ function moonPos(now) {
     dc = Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l)),
     H = R * (280.16 + 360.9856235 * d) + lon * R - ra,
     alt = Math.asin(Math.sin(lat * R) * Math.sin(dc) + Math.cos(lat * R) * Math.cos(dc) * Math.cos(H));
-  return { H: normDeg(H / R), alt: alt / R, dec: dc / R }
+  var Ms = R * (357.5291 + 0.98560028 * d), Cs = R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)),
+    sl = Ms + Cs + R * 102.9372 + Math.PI,                    // długość ekliptyczna Słońca
+    ph = (((l - sl) / R) % 360 + 360) % 360;                  // faza: o ile Księżyc wyprzedza Słońce (0 nów, 180 pełnia)
+  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: ph }
 }
 
 /* ===== Wydarzenia użytkownika ===== */
@@ -221,19 +224,28 @@ function tick() {
   $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
   $("day").setAttribute("d", arcSeg(off, sd + off));
   $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
-  if ($("moonhand")) {                        // Księżyc: wskazówka, znacznik na srebrnym pierścieniu i łuk "nad horyzontem"
+  if ($("moonhand")) {                        // Księżyc: wskazówka, znacznik na pierścieniu, łuk "nad horyzontem"
     var mp = moonPos(now), c = nd + off,      // c = miejsce górowania na tarczy (tam Księżyc ma H = 0)
-      Hs = normDeg(H / R), ph = ((Hs - mp.H) % 360 + 360) % 360,   // faza: 0 nów, 90 pierwsza kwadra, 180 pełnia
       cH = (Math.sin(0.125 * R) - Math.sin(lat * R) * Math.sin(mp.dec * R)) / (Math.cos(lat * R) * Math.cos(mp.dec * R)),
-      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156);
+      h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(c + mp.H, 156),
+      ill = (1 - Math.cos(mp.ph * R)) / 2,                                       // oświetlona część tarczy
+      md = Math.min(30, Math.floor(mp.ph / (360 / 29.530588)) + 1);              // dzień księżycowy: nów = dzień 1
     $("moonhand").setAttribute("transform", "rotate(" + (c + mp.H) + " " + cx + " " + cy + ")");
     $("moonmark").setAttribute("cx", mq[0]); $("moonmark").setAttribute("cy", mq[1]);
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 156) : arcSeg(c - h0, c + h0, 156));
-    if ($("moonl")) $("moonl").textContent = t(mp.alt > 0.125 ? "moonUp" : "moonDown").replace("{e}", Math.round(ph))
+    if ($("moonl")) $("moonl").textContent = t(mp.alt > 0.125 ? "moonDayUp" : "moonDayDown").replace("{d}", md).replace("{i}", Math.round(ill * 100));
+    if ($("mph")) {                           // kafelki Księżyca i pasek miesiąca
+      $("mph").textContent = mp.ph.toFixed(1) + "°";
+      $("malt").textContent = mp.alt.toFixed(1) + "°";
+      $("mh").textContent = signedTxt(mp.H, 1) + "°";
+      $("marc").textContent = (h0 < 0 ? 0 : h0 > 180 ? 360 : Math.round(2 * h0)) + "°";
+      var mxp = 12 + 316 * mp.ph / 360;
+      $("mprog").setAttribute("width", mxp - 12); $("mmark").setAttribute("cx", mxp)
+    }
   }
   if ($("sinceL")) $("sinceL").textContent = t(nz ? "fromNoon" : "since");
   $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
-  $("nd").textContent = nz ? "0°" : nd.toFixed(1) + "°";
+  $("nd").textContent = (90 - Math.abs(lat - S.dc / R)).toFixed(1) + "°";   // największa wysokość Słońca tego dnia
   $("sd").textContent = nz ? "+" + (sd / 2).toFixed(1) + "°" : sd.toFixed(1) + "°";
   if ($("near")) $("near").textContent = nearText(deg, nd, sd);
 

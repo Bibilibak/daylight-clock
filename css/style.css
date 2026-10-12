@@ -476,7 +476,7 @@ button {
 .month { max-width: 340px; margin: 14px auto 0; }
 .mphases, .mdegs { position: relative; height: 18px; }
 .mdegs { height: 14px; margin-top: 4px; font-size: 10px; color: var(--mut); }
-.mbar { position: relative; height: 14px; margin: 6px 0 0; border-radius: 999px; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(142, 163, 194, .5); }
+.mbar { position: relative; height: 14px; margin: 2px 0 0; border-radius: 999px; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(142, 163, 194, .5); }
 .mtrack, .mfill { position: absolute; inset: 0; background: linear-gradient(90deg, #4a5068 0%, #dfe5f1 50%, #4a5068 100%); }
 .mtrack { opacity: .28; }
 .mfill { clip-path: inset(0 100% 0 0); transition: clip-path .6s ease; }   /* płynny przyrost postępu */
@@ -487,3 +487,9 @@ button {
 /* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */
 .moonbox .mico { width: 46px; height: 46px; max-width: none; margin: 0; flex: none; }
 .mphases svg { width: 18px; height: 18px; max-width: none; margin: 0; }
+
+/* etykieta kąta fazy nad paskiem: zostaje w kontenerze, strzałka wskazuje dokładne miejsce */
+.mcap { margin-bottom: 6px; font-size: 11px; color: var(--mut); text-align: left; }
+.mtagrow { position: relative; height: 22px; margin-top: 2px; }
+.mtag { position: absolute; top: 0; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.4; background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px #8ea3c2; white-space: nowrap; }
+.mcaret { position: absolute; top: 17px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-top-color: #8ea3c2; border-bottom: 0; }

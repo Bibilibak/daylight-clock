@@ -33,9 +33,8 @@
     <path id="day" fill="none" stroke="var(--day)" stroke-width="14"/>
     <path id="prog" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/>
 
-    <!-- pierścień Księżyca (srebrny): ślad, łuk "Księżyc nad horyzontem" -->
-    <circle cx="170" cy="170" r="156" fill="none" stroke="#aab6cc" stroke-opacity="0.3" stroke-width="7"/>
-    <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="7"/>
+    <!-- Księżyc na wspólnej tarczy: srebrny łuk "Księżyc nad horyzontem" przy zewnętrznej krawędzi pierścienia -->
+    <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="4"/>
 
     <!-- podziałka (rysowana w js/main.js) -->
     <g id="ticks" stroke="var(--mut)"></g>
@@ -126,7 +125,7 @@
     <div class="mphases" id="mphases"></div>
     <div class="mtagrow"><span class="mtag" id="mtag"></span><i class="mcaret" id="mcaret"></i></div>
     <div class="mbar" role="img" data-i18n-aria="moonStripAria" aria-label="Miesiąc księżycowy">
-      <div class="mtrack"></div><div class="mfill" id="mfill"></div><div class="mticks"></div><div class="mnow" id="mnow"></div>
+      <div class="mtrack"></div><div class="mfill" id="mfill"></div><div class="mticks"></div><div class="mnow" id="mnow"></div><span class="mval" id="mval"></span>
     </div>
     <div class="mdegs" id="mdegs"></div>
   </div>

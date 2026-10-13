@@ -100,6 +100,14 @@
       o += '<circle cx="' + q[0][0].toFixed(1) + '" cy="' + q[0][1].toFixed(1) + '" r="3.5" fill="var(--fg)"/>' + lab([q[0][0], q[0][1] + 13], q[1], "v3lb", -6)
     });
 
+    // Księżyc: prawdziwy kąt godzinny i deklinacja, w tym samym układzie co Słońce (kąt względem Słońca zachowany)
+    var LV = window.live;
+    if (LV && LV.mH !== null && LV.mH !== undefined) {
+      var Pm = P(sv(H - (LV.sH - LV.mH) * D, LV.mDec * D, lat));
+      o += ln(O, Pm, 'stroke="#8ea3c2" stroke-width="1.2" stroke-opacity="0.8"');
+      o += '<circle cx="' + Pm[0].toFixed(1) + '" cy="' + Pm[1].toFixed(1) + '" r="6" fill="#e6ebf5" stroke="#8ea3c2" stroke-width="2"/>' + lab([Pm[0], Pm[1] + 15], t("moonH"), "v3lb", 6)
+    }
+
     // Słońce
     o += '<circle cx="' + Ps[0].toFixed(1) + '" cy="' + Ps[1].toFixed(1) + '" r="7" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>';
 
@@ -148,10 +156,8 @@
   /* ----- przycisk w lewym górnym rogu: tarcza <-> wizualizacja 3D ----- */
   $("viewBtn").onclick = function () {
     var open = $("v3").hidden;   // za chwilę pokażemy 3D
-    $("v3").hidden = !open;
-    if ($("modeSeg")) $("modeSeg").hidden = open;   // orientacja dotyczy tylko tarczy
-    $("dialView").hidden = open;
     if (open) { follow = true; sync(); resetView(); draw() }
+    if (window.showView) showView(open ? "3d" : "dial");   // przełączanie widoków jest w main.js
     setBtn();
   };
 

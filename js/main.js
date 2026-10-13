@@ -125,11 +125,13 @@ function moonPos(now) {
 }
 
 // faza Księżyca = o ile jego długość ekliptyczna wyprzedza Słońce (0 nów, 90 pierwsza kwadra, 180 pełnia, 270 ostatnia)
+function sunLonDeg(ms) {   // długość ekliptyczna Słońca w stopniach (0° = równonoc wiosenna)
+  var d = ms / 864e5 - 10957.5, Ms = R * (357.5291 + 0.98560028 * d);
+  return (((Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * 102.9372 + Math.PI) / R) % 360 + 360) % 360
+}
 function elong(ms) {
-  var d = ms / 864e5 - 10957.5,
-    M = R * (134.963 + 13.064993 * d), l = R * (218.316 + 13.176396 * d) + R * 6.289 * Math.sin(M),
-    Ms = R * (357.5291 + 0.98560028 * d), sl = Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * 102.9372 + Math.PI;
-  return (((l - sl) / R) % 360 + 360) % 360
+  var d = ms / 864e5 - 10957.5, M = R * (134.963 + 13.064993 * d), l = R * (218.316 + 13.176396 * d) + R * 6.289 * Math.sin(M);
+  return ((l / R - sunLonDeg(ms)) % 360 + 360) % 360
 }
 // moment nowiu: poprawiamy przybliżenie kilkoma krokami (Księżyc oddala się od Słońca o ok. 12,19° na dobę)
 function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
@@ -270,10 +272,9 @@ function tick() {
     $("moonmark").setAttribute("transform", "translate(" + mq[0] + " " + mq[1] + ")");
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 152) : arcSeg(c - h0, c + h0, 152));
     if ($("mname")) {                         // sekcja Księżyca
-      var lc = lunarCycle(now), pct = mp.ph / 360 * 100, ig = phaseGlyph(mp.ph, 0, 0, 18);
+      var pct = mp.ph / 360 * 100, ig = phaseGlyph(mp.ph, 0, 0, 18);
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
-      $("mday").textContent = t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ","));
       $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";   // pasek = kąt fazy
       $("mval").textContent = Math.round(mp.ph) + "°";
       $("mval").style.left = pct + "%"; $("mval").style.transform = pct > 80 ? "translateX(calc(-100% - 6px))" : "translateX(6px)";
@@ -287,16 +288,18 @@ function tick() {
   $("sd").textContent = nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
   if ($("near")) $("near").textContent = nearText(deg, nd, sd);
 
-  live = { lat: lat, dec: S.dc / R, deg: deg };   // dla js/view3d.js
+  live = { lat: lat, dec: S.dc / R, deg: deg, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null };   // dla js/view3d.js
 }
 
 /* ===== Lokalizacja ===== */
+function refreshViews() { if (window.YearClock) YearClock.render(); if (window.Cal) Cal.render() }
 function apply() {
   $("lat").value = lat; $("lon").value = lon;
   try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
   if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
   setMsg("sinceRise");
-  tick()
+  tick();
+  refreshViews()
 }
 
 $("go").onclick = function () {
@@ -373,7 +376,8 @@ document.querySelectorAll(".lang button").forEach(function (b) {
     lastL = "";       // wymuś odrysowanie listy wydarzeń
     if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
     if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
-    tick()
+    tick();
+    refreshViews()
   }
 });
 
@@ -403,6 +407,23 @@ function buildMonthScale() {
   });
   $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg
 }
+
+/* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */
+var curView = "dial";
+function showView(v) {
+  curView = v;
+  $("dialView").hidden = v !== "dial"; $("v3").hidden = v !== "3d";
+  if ($("yearView")) $("yearView").hidden = v !== "year";
+  if ($("calView")) $("calView").hidden = v !== "cal";
+  if ($("dialExtras")) $("dialExtras").hidden = v === "year" || v === "cal";   // kafelki i Księżyc tylko przy zegarze i 3D
+  if ($("modeSeg")) $("modeSeg").hidden = v !== "dial";
+  [["yearBtn", "year"], ["calBtn", "cal"]].forEach(function (x) { if ($(x[0])) $(x[0]).setAttribute("aria-pressed", v === x[1] ? "true" : "false") });
+  if (v === "year" && window.YearClock) YearClock.render();
+  if (v === "cal" && window.Cal) Cal.render();
+  if (window.Sun3D) Sun3D.refresh()
+}
+if ($("yearBtn")) $("yearBtn").onclick = function () { showView(curView === "year" ? "dial" : "year") };
+if ($("calBtn")) $("calBtn").onclick = function () { showView(curView === "cal" ? "dial" : "cal") };
 
 /* ===== Start ===== */
 setLang(detectLang());

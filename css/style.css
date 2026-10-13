@@ -496,3 +496,35 @@ button {
 
 /* kąt fazy przy znaczniku na pasku miesiąca (zawsze wewnątrz paska) */
 .mval { position: absolute; top: 0; height: 14px; padding: 0 5px; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 14px; white-space: nowrap; color: #fff; background: rgba(43, 33, 24, .85); }
+
+/* ===== Nawigacja widoków ===== */
+.navr { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ===== Zegar roku ===== */
+#yearView { max-width: 380px; margin: 8px auto 22px; text-align: left; }
+.ysvg { margin: 0 auto; }
+.ylb { font-size: 10px; fill: var(--mut); }
+.ystate { margin-top: 10px; font-size: 22px; font-weight: 700; }
+.ydot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; }
+.yrow { margin-top: 4px; font-size: 14px; color: var(--mut); }
+
+/* ===== Kalendarz ===== */
+#calView { max-width: 380px; margin: 8px auto 22px; }
+.cnav { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.cnav b { flex: 1; text-transform: capitalize; }
+.cnav button, .ctoday { width: auto; padding: 4px 10px; background: transparent; color: var(--fg); border: 1px solid var(--arc); border-radius: 8px; font-weight: 600; cursor: pointer; }
+.cgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; }
+.cgrid .wd { font-size: 11px; color: var(--mut); text-transform: capitalize; }
+.cc { position: relative; width: auto; height: 46px; padding: 2px; background: var(--card); color: var(--fg); border: 1px solid transparent; border-radius: 10px; font-weight: 400; cursor: pointer; }
+.cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }
+.cc b { display: block; margin-top: 11px; font-size: 13px; }
+.cc.today { border-color: var(--sun); }
+.cc.sel { background: var(--sun); color: #fff; }
+.cc.sel small { color: #fff; }
+.ctoolbar { text-align: center; }
+.cdet { margin-top: 12px; padding: 12px 14px; text-align: left; background: var(--card); border-radius: 14px; }
+.cdet > div { margin-top: 4px; font-size: 14px; }
+.cdet .cg1 { margin: 0; font-size: 13px; color: var(--mut); }
+.cdet .cg1::first-letter { text-transform: uppercase; }
+.cdet .cp { font-size: 18px; font-weight: 700; }
+.cnote { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--mut); }

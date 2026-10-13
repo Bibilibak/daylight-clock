@@ -493,3 +493,6 @@ button {
 .mtagrow { position: relative; height: 22px; margin-top: 2px; }
 .mtag { position: absolute; top: 0; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.4; background: var(--card); color: var(--fg); box-shadow: inset 0 0 0 1px #8ea3c2; white-space: nowrap; }
 .mcaret { position: absolute; top: 17px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-top-color: #8ea3c2; border-bottom: 0; }
+
+/* kąt fazy przy znaczniku na pasku miesiąca (zawsze wewnątrz paska) */
+.mval { position: absolute; top: 0; height: 14px; padding: 0 5px; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 14px; white-space: nowrap; color: #fff; background: rgba(43, 33, 24, .85); }

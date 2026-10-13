@@ -190,7 +190,7 @@ var I18N = {
     sinceRise: "desde el amanecer",
     altitude: "Altura del sol",
     since: "Desde el amanecer",
-    moonIll: "{i}% iluminada",
+    moonIll: "{i}% de iluminación",
     moonCap: "Ángulo de fase: posición en el ciclo de luna nueva a luna nueva",
     angleSun: "Ángulo del Sol",
     altDesc: "+ sobre / − bajo el horizonte",

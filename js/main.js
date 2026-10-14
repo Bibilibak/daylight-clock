@@ -276,8 +276,9 @@ function tick() {
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
       $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";   // pasek = kąt fazy
-      $("mval").textContent = Math.round(mp.ph) + "°";
-      $("mval").style.left = pct + "%"; $("mval").style.transform = pct > 80 ? "translateX(calc(-100% - 6px))" : "translateX(6px)";
+      $("mval").textContent = Math.round(mp.ph) + "°";   // etykieta kąta fazy nad paskiem: nie zasłania podziałki
+      $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-" + pct + "%)";   // zawsze w granicach komponentu
+      $("mcaret").style.left = pct + "%";                 // znacznik dokładnie na pozycji kąta fazy
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
@@ -375,6 +376,7 @@ document.querySelectorAll(".lang button").forEach(function (b) {
     setMsg(msgKey);   // przetłumacz komunikat pod odczytem
     lastL = "";       // wymuś odrysowanie listy wydarzeń
     if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
+    if ($("mphases")) buildMonthScale();            // nazwy faz pod paskiem
     if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
     tick();
     refreshViews()
@@ -405,7 +407,9 @@ function buildMonthScale() {
     ph += '<svg viewBox="-9 -9 18 18" width="18" height="18" style="' + pos + '">' + phaseGlyph(A[i], 0, 0, 8) + '</svg>';
     dg += '<span style="' + pos + '">' + (p * 3.6) + '°</span>'
   });
-  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg
+  var nm = "", NM = ["ph0", "ph2", "ph4", "ph6", "ph0"];
+  P.forEach(function (p, i) { nm += '<span style="left:' + p + '%;transform:translateX(-' + p + '%)">' + t(NM[i]) + '</span>' });
+  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg; if ($("mnames")) $("mnames").innerHTML = nm
 }
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */

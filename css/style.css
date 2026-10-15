@@ -579,5 +579,8 @@ button {
   #dialView > svg, #v3svg { max-width: min(640px, 68vh); }
   #yearView { max-width: min(600px, 75vh); }
   #yearView .ysvg { max-width: none; }   /* ogólny limit svg (380 px) nie dotyczy wykresu roku */
-  #calView { max-width: 520px; }
+  #calView { max-width: 400px; zoom: 1.3; }
+  /* reszta informacji rośnie razem z tarczą (cały blok w skali, proporcje bez zmian) */
+  .top, h1, .lightH, .legend, .reading, .where, #dialExtras, .place, .results, .or, body > .row, .manual,
+  #v3 > :not(svg), .yseg, .ystate, .yrow { zoom: 1.3; }
 }

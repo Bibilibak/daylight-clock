@@ -1,0 +1,534 @@
+/* ===== Kolory i zmienne (motyw jasny) ===== */
+:root {
+  --bg: #fff7ea;
+  --fg: #2b2118;
+  --mut: #8a7863;
+  --arc: #f3dfb8;
+  --night: #2f2a5a;   /* noc: ciemny granat */
+  --day: #ffd36a;
+  --v3a: #854f0b;   /* tekst kąta obrotu (pomarańcz) */
+  --v3b: #185fa5;   /* tekst kąta wysokości (niebieski) */     /* dzień: jasny żółty */
+  --sun: #f08a00;
+  --card: #ffeed2;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ===== Motyw ciemny (automatycznie według systemu) ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14100c;
+    --fg: #f6ead8;
+    --mut: #a39278;
+    --arc: #4a3a22;
+    --night: #3a3268;
+    --day: #ffd36a;
+    --v3a: #f0b24a;
+    --v3b: #85b7eb;
+    --sun: #ffb02e;
+    --card: #221a12;
+  }
+}
+
+/* ===== Motyw ciemny (ręcznie przez data-theme="dark") ===== */
+:root[data-theme="dark"] {
+  --bg: #14100c;
+  --fg: #f6ead8;
+  --mut: #a39278;
+  --arc: #4a3a22;
+  --night: #3a3268;
+  --day: #ffd36a;
+  --v3a: #f0b24a;
+  --v3b: #85b7eb;
+  --sun: #ffb02e;
+  --card: #221a12;
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ===== Układ strony ===== */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  text-align: center;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 8px 0 0;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+svg {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* opisy stopni z obwódką w kolorze tła, żeby wskazówka ich nie zasłaniała */
+#labels {
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* ===== Przełącznik języka (prawy górny róg) ===== */
+.lang {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.lang button {
+  background: transparent;
+  color: var(--mut);
+  border: 1px solid var(--arc);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.lang button[aria-pressed="true"] {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #fff;
+}
+
+/* ===== Odczyt stopni pod tarczą ===== */
+.reading {
+  margin: 4px 0 14px;
+}
+
+.reading b {
+  display: block;
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.reading span {
+  font-size: 12px;
+  color: var(--mut);
+}
+
+/* ===== Wiersze i kafelki ===== */
+.row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  max-width: 380px;
+  margin: 0 auto 12px;
+}
+
+.box {
+  flex: 1;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 10px 4px;
+}
+
+.box b {
+  display: block;
+  font-size: 20px;
+}
+
+.box span {
+  font-size: 12px;
+  color: var(--mut);
+}
+
+/* ===== Pola formularza i przyciski ===== */
+input,
+button {
+  font: inherit;
+  border-radius: 10px;
+  border: 1px solid var(--arc);
+  background: var(--card);
+  color: var(--fg);
+  padding: 8px;
+  width: 90px;
+}
+
+button {
+  width: auto;
+  background: var(--sun);
+  color: #fff;
+  border: 0;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
+#en { width: 130px; }
+#et { width: 110px; }
+
+/* ===== Lista wydarzeń ===== */
+.ev {
+  max-width: 380px;
+  margin: 0 auto 12px;
+  text-align: left;
+}
+
+.ev div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.ev i {
+  font-style: normal;
+  color: var(--mut);
+  font-size: 14px;
+}
+
+.ev a {
+  color: var(--mut);
+  padding: 0 6px;
+  font-size: 20px;
+}
+
+/* ===== Wyszukiwanie miasta ===== */
+.place {
+  max-width: 380px;
+  margin: 0 auto 8px;
+}
+
+.place input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+}
+
+.results {
+  max-width: 380px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+/* separator „lub” między wyszukiwaniem a przyciskiem lokalizacji */
+.or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 380px;
+  margin: 16px auto;
+  color: var(--mut);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--arc);
+}
+
+.results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  color: var(--fg);
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.results .hint {
+  color: var(--mut);
+  font-size: 14px;
+  padding: 6px 12px;
+}
+
+.where {
+  font-size: 13px;
+  color: var(--mut);
+  margin: -6px 0 14px;
+}
+
+.manual {
+  max-width: 380px;
+  margin: 0 auto 12px;
+  color: var(--mut);
+  font-size: 13px;
+}
+
+.manual summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+
+
+/* ===== Górny pasek: widok 3D (lewy róg) + język (prawy róg) ===== */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-btn {
+  background: transparent;
+  color: var(--mut);
+  border: 1px solid var(--arc);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.view-btn[aria-pressed="true"] {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #fff;
+}
+
+/* ===== Wizualizacja 3D ===== */
+#v3svg {
+  touch-action: none;
+  cursor: grab;
+}
+
+.v3lb { font-size: 11px; fill: var(--mut); }
+.v3lb, .v3A, .v3B {
+  paint-order: stroke;   /* obwódka w kolorze tła dla czytelności */
+  stroke: var(--card);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.v3A  { font-size: 12px; font-weight: 600; fill: var(--v3a); }
+.v3B  { font-size: 12px; font-weight: 600; fill: var(--v3b); }
+
+.box span.v3a::before,
+.box span.v3b::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.box span.v3a::before { background: #ef9f27; }
+.box span.v3b::before { background: #378add; }
+
+.v3cap,
+.v3hint {
+  max-width: 380px;
+  margin: 8px auto 18px;
+  font-size: 12px;
+  color: var(--mut);
+}
+
+.v3rw {
+  display: grid;
+  grid-template-columns: 120px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  max-width: 380px;
+  margin: 8px auto;
+  font-size: 14px;
+  text-align: left;
+}
+
+.v3rw span:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+#v3 input[type="range"] {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--sun);
+}
+
+.v3btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 380px;
+  margin: 10px auto 0;
+}
+
+.v3btns button {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--arc);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.v3btns button.main {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* odczyt względem najbliższego znacznika (np. "12° 30′ do południa") */
+.near {
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* ile stopni światła ma dzień i ile zostało */
+.light {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--mut);
+}
+
+/* ===== Przełącznik tarczy: od południa / od wschodu ===== */
+.seg {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.seg button {
+  background: transparent;
+  color: var(--mut);
+  border: 1px solid var(--arc);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--sun);
+  border-color: var(--sun);
+  color: #fff;
+}
+
+
+.rowh {
+  max-width: 380px;
+  margin: 10px auto 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-align: left;
+}
+
+[hidden] { display: none !important; }
+
+/* górny pasek: pod przyciskiem 3D stoi przełącznik orientacji tarczy */
+.top { align-items: flex-start; }
+.topl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.topl .seg { margin-top: 0; justify-content: flex-start; }
+
+/* stopnie światła pod nagłówkiem */
+.lightH { margin: 2px 0 8px; font-size: 20px; font-weight: 700; }
+
+/* legenda: kto jest kim na tarczy */
+.legend { display: flex; justify-content: center; align-items: center; gap: 6px 8px; margin-top: 6px; font-size: 12px; color: var(--mut); }
+.legend .lg { width: 10px; height: 10px; border-radius: 50%; margin-left: 6px; }
+.legend .lg:first-child { margin-left: 0; }
+.legend .lg.sun { background: var(--sun); }
+.legend .lg.moon { background: #dfe5f1; box-shadow: inset 0 0 0 1.5px #8ea3c2; }
+
+.box small { display: block; margin-top: 2px; font-size: 11px; line-height: 1.25; color: var(--mut); }
+
+.rowh { max-width: 380px; margin: 10px auto 6px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); text-align: left; }
+
+/* ===== Księżyc: faza, dzień cyklu, pasek miesiąca ===== */
+.moonbox { display: flex; align-items: center; gap: 14px; max-width: 380px; margin: 0 auto; padding: 10px 14px; background: var(--card); border-radius: 14px; text-align: left; }
+.mico { flex: none; }
+.mname { font-size: 20px; font-weight: 700; }
+.mdeg2 { font-size: 14px; font-weight: 600; }
+.mday { margin-top: 2px; font-size: 13px; color: var(--mut); }
+
+.month { max-width: 340px; margin: 14px auto 0; }
+.mphases, .mdegs { position: relative; height: 18px; }
+.mdegs { height: 14px; margin-top: 4px; font-size: 10px; color: var(--mut); }
+.mbar { position: relative; height: 14px; margin: 2px 0 0; border-radius: 999px; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(142, 163, 194, .5); }
+.mtrack, .mfill { position: absolute; inset: 0; background: linear-gradient(90deg, #4a5068 0%, #dfe5f1 50%, #4a5068 100%); }
+.mtrack { opacity: .28; }
+.mfill { clip-path: inset(0 100% 0 0); transition: clip-path .6s ease; }   /* płynny przyrost postępu */
+.mticks { position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, rgba(128, 128, 128, .5) 0, rgba(128, 128, 128, .5) 1px, transparent 1px, transparent calc(100% / 29.5306)); }
+.mnow { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 0 1px rgba(43, 33, 24, .55); }
+.mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
+
+/* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */
+.moonbox .mico { width: 46px; height: 46px; max-width: none; margin: 0; flex: none; }
+.mphases svg { width: 18px; height: 18px; max-width: none; margin: 0; }
+
+/* etykieta kąta fazy nad paskiem: zostaje w kontenerze, strzałka wskazuje dokładne miejsce */
+.mcap { margin-bottom: 6px; font-size: 11px; color: var(--mut); text-align: left; }
+
+
+/* ===== Nawigacja widoków ===== */
+.navr { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ===== Zegar roku ===== */
+#yearView { max-width: 380px; margin: 8px auto 22px; text-align: left; }
+.ysvg { margin: 0 auto; }
+.ylb { font-size: 10px; fill: var(--mut); }
+.ystate { margin-top: 10px; font-size: 22px; font-weight: 700; }
+.ydot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; }
+.yrow { margin-top: 4px; font-size: 14px; color: var(--mut); }
+
+/* ===== Kalendarz ===== */
+#calView { max-width: 380px; margin: 8px auto 22px; }
+.cnav { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.cnav b { flex: 1; text-transform: capitalize; }
+.cnav button, .ctoday { width: auto; padding: 4px 10px; background: transparent; color: var(--fg); border: 1px solid var(--arc); border-radius: 8px; font-weight: 600; cursor: pointer; }
+.cgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; }
+.cgrid .wd { font-size: 11px; color: var(--mut); text-transform: capitalize; }
+.cc { position: relative; width: auto; height: 46px; padding: 2px; background: var(--card); color: var(--fg); border: 1px solid transparent; border-radius: 10px; font-weight: 400; cursor: pointer; }
+.cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }
+.cc b { display: block; margin-top: 11px; font-size: 13px; }
+.cc.today { border-color: var(--sun); }
+.cc.sel { background: var(--sun); color: #fff; }
+.cc.sel small { color: #fff; }
+.ctoolbar { text-align: center; }
+.cdet { margin-top: 12px; padding: 12px 14px; text-align: left; background: var(--card); border-radius: 14px; }
+.cdet > div { margin-top: 4px; font-size: 14px; }
+.cdet .cg1 { margin: 0; font-size: 13px; color: var(--mut); }
+.cdet .cg1::first-letter { text-transform: uppercase; }
+.cdet .cp { font-size: 18px; font-weight: 700; }
+.cnote { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
+
+/* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */
+.mcur { position: relative; height: 22px; margin-top: 2px; }
+.mpill { position: absolute; top: 0; height: 16px; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 16px; white-space: nowrap; color: #fff; background: rgba(43, 33, 24, .88); }
+.mcaret { position: absolute; top: 16px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-top-color: rgba(43, 33, 24, .88); border-bottom: 0; }
+.mbar { margin-top: 0; }
+.mnames { position: relative; height: 14px; margin-top: 2px; font-size: 10px; color: var(--mut); }
+.mnames span { position: absolute; white-space: nowrap; }
+.yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }

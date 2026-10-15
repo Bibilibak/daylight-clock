@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zegar słoneczny</title>
+  <link rel="stylesheet" href="css/style.css?v=14">
+</head>
+<body>
+  <div class="top">
+    <div class="topl">
+      <div class="navr">
+        <button id="viewBtn" class="view-btn" aria-pressed="false">Wizualizacja zegara w 3D</button>
+        <button id="yearBtn" class="view-btn" aria-pressed="false" data-i18n="yearBtn">Zegar roku</button>
+        <button id="calBtn" class="view-btn" aria-pressed="false" data-i18n="calBtn">Kalendarz</button>
+      </div>
+      <div class="seg" id="modeSeg" role="group" data-i18n-aria="dial" aria-label="Tarcza">
+        <button data-mode="noon" aria-pressed="true" data-i18n="modeNoon">od południa</button>
+        <button data-mode="rise" aria-pressed="false" data-i18n="modeRise">od wschodu</button>
+      </div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="pl" aria-pressed="true">PL</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+      <button data-lang="es" aria-pressed="false">ES</button>
+    </div>
+  </div>
+
+  <h1 data-i18n="title">Zegar słoneczny</h1>
+  <div class="lightH" id="lightH"></div>
+
+  <div id="dialView">
+  <svg viewBox="-14 -14 368 368" data-i18n-aria="dial" aria-label="Tarcza">
+    <!-- pierścień: noc = ciemny, dzień = jasny; cienka linia = postęp od wschodu -->
+    <circle cx="170" cy="170" r="140" fill="none" stroke="var(--night)" stroke-width="14"/>
+    <path id="day" fill="none" stroke="var(--day)" stroke-width="14"/>
+    <path id="prog" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Księżyc na wspólnej tarczy: srebrny łuk "Księżyc nad horyzontem" przy zewnętrznej krawędzi pierścienia -->
+    <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="4"/>
+
+    <!-- podziałka (rysowana w js/main.js) -->
+    <g id="ticks" stroke="var(--mut)"></g>
+
+    <!-- wskazówka centralna: narysowana w stronę 0° (lewo), obracana w JS -->
+    <g id="hand" transform="rotate(0 170 170)">
+      <path d="M190 170 L170 166.5 L46 170 L170 173.5 Z" fill="var(--fg)"/>
+    </g>
+
+    <!-- wskazówka Księżyca: cienka, srebrna, obracana w JS -->
+    <g id="moonhand" transform="rotate(0 170 170)">
+      <line x1="170" y1="170" x2="22" y2="170" stroke="#8ea3c2" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+
+    <!-- opisy stopni (nad wskazówką, z obwódką dla czytelności) -->
+    <g id="labels" fill="var(--mut)" font-size="10" text-anchor="middle"></g>
+
+    <circle id="noon" r="5" fill="var(--fg)" stroke="var(--bg)" stroke-width="2"/>
+    <circle id="set" r="5" fill="var(--bg)" stroke="var(--fg)" stroke-width="2"/>
+    <circle id="rise0" r="3" fill="var(--mut)"/>          <!-- wschód -->
+    <circle id="mid" r="3" fill="var(--mut)"/>           <!-- środek nocy -->
+    <g id="evs"></g>
+    <g id="moonmark"></g>
+    <circle id="sun" r="11" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>
+    <text id="sunnum" font-size="10" font-weight="700" text-anchor="middle" fill="#2b2118"></text>
+
+    <!-- oś wskazówki -->
+    <circle cx="170" cy="170" r="8" fill="var(--fg)"/>
+    <circle cx="170" cy="170" r="3.5" fill="var(--sun)"/>
+  </svg>
+
+
+  <div class="legend"><span class="lg sun"></span><span data-i18n="sunH">Słońce</span><span class="lg moon"></span><span data-i18n="moonH">Księżyc</span></div>
+
+  <div class="reading">
+    <div class="near" id="near"></div>
+    <div class="light" id="light"></div>
+    <span id="msg"></span>
+  </div>
+  </div>
+
+  <div id="yearView" hidden></div>
+  <div id="calView" hidden></div>
+
+  <div id="v3" hidden>
+    <svg id="v3svg" viewBox="0 0 380 340" role="img" data-i18n-aria="v3Aria" aria-label="Sfera niebieska 3D"><g id="v3sc"></g></svg>
+
+    <div class="row">
+      <div class="box"><b id="v3A">--°</b><span class="v3a" data-i18n="v3Rot">Obrót od wschodu</span></div>
+      <div class="box"><b id="v3B">--°</b><span class="v3b" data-i18n="v3Alt">Wysokość Słońca</span></div>
+      <div class="box"><b id="v3C">--°</b><span data-i18n="v3Arc">Łuk dnia</span></div>
+    </div>
+
+    <p class="v3cap" data-i18n="v3Cap">Pomarańczowy: obrót Ziemi wokół osi (kąt z tarczy). Niebieski: wysokość Słońca nad horyzontem.</p>
+
+    <div class="v3rw"><label for="v3g" data-i18n="v3Rot">Obrót od wschodu</label><input type="range" id="v3g" min="0" max="360" step="0.1" value="90"><span id="v3gv"></span></div>
+    <div class="v3rw"><label for="v3lat" data-i18n="v3Lat">Szerokość geogr.</label><input type="range" id="v3lat" min="-66" max="66" step="1" value="52"><span id="v3latv"></span></div>
+    <div class="v3rw"><label for="v3dec" data-i18n="v3Dec">Deklinacja Słońca</label><input type="range" id="v3dec" min="-23.4" max="23.4" step="0.1" value="0"><span id="v3decv"></span></div>
+
+    <div class="v3btns">
+      <button id="v3now" class="main" data-i18n="v3Now">Teraz</button>
+      <button data-v3d="23.4" data-i18n="v3Jun">21 cze</button>
+      <button data-v3d="0" data-i18n="v3Eq">Równonoc</button>
+      <button data-v3d="-23.4" data-i18n="v3DecS">21 gru</button>
+      <button id="v3rs" data-i18n="v3View">Widok</button>
+    </div>
+    <p class="v3hint" data-i18n="v3Hint">Przeciągnij rysunek, aby obrócić widok.</p>
+  </div>
+
+  <div class="where"><span id="where"></span></div>
+
+  <div id="dialExtras">
+  <div class="rowh" data-i18n="sunH">Słońce</div>
+  <div class="row">
+    <div class="box"><b id="deg">--°</b><span id="sinceL">Kąt Słońca</span><small id="sinceD"></small></div>
+    <div class="box"><b id="alt">--°</b><span data-i18n="altitude">Wysokość słońca</span><small data-i18n="altDesc">+ nad / − pod horyzontem</small></div>
+    <div class="box"><b id="nd">--°</b><span data-i18n="noon">● Górowanie</span><small data-i18n="maxDesc">dziś w tym miejscu</small></div>
+    <div class="box"><b id="sd">--°</b><span data-i18n="sunset">○ Zachód</span><small data-i18n="sunDesc">kąt na tarczy</small></div>
+  </div>
+
+  <div class="rowh" data-i18n="moonH">Księżyc</div>
+  <div class="moonbox">
+    <svg id="mico" class="mico" viewBox="-20 -20 40 40" width="46" height="46" aria-hidden="true"></svg>
+    <div>
+      <div class="mname" id="mname">--</div>
+      <div class="mdeg2" id="mdeg2"></div>
+    </div>
+  </div>
+  <div class="month">
+    <div class="mcap" data-i18n="moonCap">Kąt fazy: położenie w cyklu od nowiu do nowiu</div>
+    <div class="mphases" id="mphases"></div>
+    <div class="mcur"><span class="mpill" id="mval"></span><i class="mcaret" id="mcaret"></i></div>
+    <div class="mbar" role="img" data-i18n-aria="moonStripAria" aria-label="Miesiąc księżycowy">
+      <div class="mtrack"></div><div class="mfill" id="mfill"></div><div class="mticks"></div><div class="mnow" id="mnow"></div>
+    </div>
+    <div class="mdegs" id="mdegs"></div>
+    <div class="mnames" id="mnames"></div>
+  </div>
+
+  <div class="row">
+    <input id="en" data-i18n-ph="eventPh" placeholder="Np. Lekcja">
+    <input id="et" type="time" value="08:00">
+    <button id="add" data-i18n="add">Dodaj</button>
+  </div>
+
+  <div class="ev" id="evl"></div>
+  </div>
+
+  <!-- wybór miejsca: wyszukiwanie miasta po nazwie -->
+  <div class="place">
+    <input id="city" type="search" enterkeyhint="search" autocomplete="off"
+           data-i18n-ph="cityPh" placeholder="Szukaj miasta…">
+  </div>
+  <div class="results" id="cityres"></div>
+
+  <div class="or" data-i18n="or">lub</div>
+
+  <div class="row"><button id="loc" data-i18n="useLoc">Użyj mojej lokalizacji</button></div>
+
+  <!-- współrzędne ręcznie (awaryjnie, gdy wyszukiwanie nie działa) -->
+  <details class="manual">
+    <summary data-i18n="manual">Współrzędne ręcznie</summary>
+    <div class="row">
+      <input id="lat" type="number" step="0.01" data-i18n-ph="latPh" placeholder="Szer.">
+      <input id="lon" type="number" step="0.01" data-i18n-ph="lonPh" placeholder="Dł.">
+      <button id="go" data-i18n="set">Ustaw</button>
+    </div>
+  </details>
+
+  <script src="js/I18n.js?v=14"></script>
+  <script src="js/main.js?v=14"></script>
+  <script src="js/view3d.js?v=14"></script>
+  <script src="js/year.js?v=14"></script>
+  <script src="js/calendar.js?v=14"></script>
+</body>
+</html>

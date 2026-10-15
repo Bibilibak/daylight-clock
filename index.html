@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar słoneczny</title>
-  <link rel="stylesheet" href="css/style.css?v=20">
+  <link rel="stylesheet" href="css/style.css?v=21">
 </head>
 <body>
   <div class="top">
@@ -19,18 +19,19 @@
         <button data-mode="rise" aria-pressed="false" data-i18n="modeRise">od wschodu</button>
       </div>
     </div>
-    <div class="lang">
-      <select id="langSel" aria-label="Język / Language">
-        <option value="pl">Polski</option>
-        <option value="en">English</option>
-        <option value="es">Español</option>
-        <option value="de">Deutsch</option>
-        <option value="fr">Français</option>
-        <option value="it">Italiano</option>
-        <option value="pt">Português</option>
-        <option value="uk">Українська</option>
-        <option value="ar">العربية</option>
-      </select>
+    <div class="lang" id="langBox">
+      <button id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Język / Language"><span id="langCur">Polski</span></button>
+      <ul id="langList" role="listbox" tabindex="-1" aria-label="Język / Language" hidden>
+        <li role="option" id="lang-pl" data-lang="pl">Polski</li>
+        <li role="option" id="lang-en" data-lang="en">English</li>
+        <li role="option" id="lang-es" data-lang="es">Español</li>
+        <li role="option" id="lang-de" data-lang="de">Deutsch</li>
+        <li role="option" id="lang-fr" data-lang="fr">Français</li>
+        <li role="option" id="lang-it" data-lang="it">Italiano</li>
+        <li role="option" id="lang-pt" data-lang="pt">Português</li>
+        <li role="option" id="lang-uk" data-lang="uk">Українська</li>
+        <li role="option" id="lang-ar" data-lang="ar" dir="rtl">العربية</li>
+      </ul>
     </div>
   </div>
 
@@ -173,11 +174,11 @@
     </div>
   </details>
 
-  <script src="js/I18n.js?v=20"></script>
-  <script src="js/I18n-more.js?v=20"></script>
-  <script src="js/main.js?v=20"></script>
-  <script src="js/view3d.js?v=20"></script>
-  <script src="js/year.js?v=20"></script>
-  <script src="js/calendar.js?v=20"></script>
+  <script src="js/I18n.js?v=21"></script>
+  <script src="js/I18n-more.js?v=21"></script>
+  <script src="js/main.js?v=21"></script>
+  <script src="js/view3d.js?v=21"></script>
+  <script src="js/year.js?v=21"></script>
+  <script src="js/calendar.js?v=21"></script>
 </body>
 </html>

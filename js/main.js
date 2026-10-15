@@ -440,8 +440,8 @@ if ($("city")) $("city").onkeydown = function (e) {
 };
 
 /* ===== Przełącznik języka ===== */
-if ($("langSel")) $("langSel").onchange = function () {
-  setLang(this.value);
+function pickLang(l) {
+  setLang(l);
   setMsg(msgKey);   // przetłumacz komunikat pod odczytem
   lastL = "";       // wymuś odrysowanie listy wydarzeń
   if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
@@ -449,7 +449,41 @@ if ($("langSel")) $("langSel").onchange = function () {
   if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
   tick();
   refreshViews()
-};
+}
+
+/* ===== Lista języków (własna, zaokrąglona; obsługa myszą i klawiaturą) ===== */
+(function () {
+  var btn = $("langBtn"), list = $("langList"), box = $("langBox");
+  if (!btn || !list) return;
+  var opts = [].slice.call(list.querySelectorAll("[data-lang]")), act = 0;
+  function mark(i) {
+    act = (i + opts.length) % opts.length;
+    opts.forEach(function (o, k) { o.classList.toggle("active", k === act) });
+    list.setAttribute("aria-activedescendant", opts[act].id)
+  }
+  function open(on) {
+    list.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false");
+    if (on) {
+      mark(Math.max(0, opts.findIndex ? opts.findIndex(function (o) { return o.getAttribute("data-lang") === lang }) : 0));
+      list.focus()
+    }
+  }
+  function choose(i) { open(false); btn.focus(); if (opts[i].getAttribute("data-lang") !== lang) pickLang(opts[i].getAttribute("data-lang")) }
+  btn.onclick = function () { open(list.hidden) };
+  btn.onkeydown = function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(true) } };
+  list.onclick = function (e) { var o = e.target.closest("[data-lang]"); if (o) choose(opts.indexOf(o)) };
+  list.onmousemove = function (e) { var o = e.target.closest("[data-lang]"); if (o && opts.indexOf(o) !== act) mark(opts.indexOf(o)) };
+  list.onkeydown = function (e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); mark(act + 1) }
+    else if (e.key === "ArrowUp") { e.preventDefault(); mark(act - 1) }
+    else if (e.key === "Home") { e.preventDefault(); mark(0) }
+    else if (e.key === "End") { e.preventDefault(); mark(opts.length - 1) }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(act) }
+    else if (e.key === "Escape") { e.preventDefault(); open(false); btn.focus() }
+    else if (e.key === "Tab") open(false)
+  };
+  document.addEventListener("click", function (e) { if (!list.hidden && !box.contains(e.target)) open(false) });
+})();
 
 /* ===== Przycisk widoku 3D =====
    Obsługę przycisku dodaje js/view3d.js. Jeśli ten plik się nie załadował

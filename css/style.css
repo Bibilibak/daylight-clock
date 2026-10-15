@@ -1,6 +1,7 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
+  --lang-fg: #6e5c48;  /* tekst przycisku języka: między --mut a --fg */
   --on-sun: #4f2c00;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,9:1) */
   --fg: #2b2118;
   --mut: #8a7863;
@@ -22,6 +23,7 @@
     --bg: #14100c;
     --fg: #f6ead8;
     --mut: #a39278;
+    --lang-fg: #cbbca5;
     --arc: #4a3a22;
     --night: #3a3268;
     --day: #ffd36a;
@@ -37,6 +39,7 @@
   --bg: #14100c;
   --fg: #f6ead8;
   --mut: #a39278;
+  --lang-fg: #cbbca5;
   --arc: #4a3a22;
   --night: #3a3268;
   --day: #ffd36a;
@@ -87,21 +90,22 @@ svg {
 
 /* ===== Przełącznik języka (prawy górny róg) ===== */
 .lang {
+  position: relative;
   display: flex;
   justify-content: flex-end;
   gap: 4px;
 }
 
-/* lista języków: rozwijana, ze strzałką narysowaną w CSS (wygląda tak samo w każdej przeglądarce) */
-.lang select {
-  appearance: none;
-  -webkit-appearance: none;
+/* lista języków: własna (systemowa lista w Windows jest kanciasta i czarna), ze strzałką narysowaną w CSS */
+#langBtn {
+  width: auto;
+  margin: 0;
   background-color: transparent;
-  background-image: linear-gradient(45deg, transparent 50%, var(--mut) 50%), linear-gradient(135deg, var(--mut) 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, var(--lang-fg) 50%), linear-gradient(135deg, var(--lang-fg) 50%, transparent 50%);
   background-position: right 12px center, right 7px center;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
-  color: var(--mut);   /* ten sam spokojny kolor co przyciski widoków po lewej */
+  color: var(--lang-fg);   /* odrobinę wyraźniej niż przyciski widoków, ale bez czerni */
   border: 1px solid var(--arc);
   border-radius: 8px;
   font: inherit;
@@ -110,9 +114,35 @@ svg {
   padding: 4px 26px 4px 10px;
   cursor: pointer;
 }
-.lang select:hover, .lang select:focus-visible { border-color: var(--sun); }
-.lang select option { background: var(--bg); color: var(--fg); }
-[dir="rtl"] .lang select { background-position: left 7px center, left 12px center; padding: 4px 10px 4px 26px; }
+#langBtn:hover, #langBtn:focus-visible, #langBtn[aria-expanded="true"] { border-color: var(--sun); }
+#langList {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 150px;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--arc);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(43, 33, 24, .18);
+}
+#langList:focus { outline: none; }
+#langList li {
+  padding: 7px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--fg);
+  cursor: pointer;
+}
+#langList li.active { background: var(--card); }   /* podświetlenie myszą / strzałkami */
+#langList li[aria-selected="true"] { color: var(--sun); font-weight: 700; }
+#langList li[dir="rtl"] { text-align: right; }
+[dir="rtl"] #langBtn { background-position: left 7px center, left 12px center; padding: 4px 10px 4px 26px; }
+[dir="rtl"] #langList { right: auto; left: 0; }
 
 /* arabski (od prawej do lewej): tarcza, widok 3D i pasek Księżyca zostają w układzie astronomicznym */
 [dir="rtl"] svg, [dir="rtl"] .month { direction: ltr; }

@@ -407,5 +407,9 @@ function setLang(l) {
   document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")) });
   document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.getAttribute("data-i18n-ph")) });
   document.querySelectorAll("[data-i18n-aria]").forEach(function (el) { el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria"))) });
-  if (document.getElementById("langSel")) document.getElementById("langSel").value = l;
+  document.querySelectorAll("#langList [data-lang]").forEach(function (o) {   // lista języków: zaznacz wybrany, podpisz przycisk
+    var on = o.getAttribute("data-lang") === l;
+    o.setAttribute("aria-selected", on ? "true" : "false");
+    if (on && document.getElementById("langCur")) document.getElementById("langCur").textContent = o.textContent
+  });
 }

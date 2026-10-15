@@ -128,7 +128,8 @@ function polarCycle(now) {
   for (var i = 0; i < 5; i++) {
     var a = (n[i] + n[i + 1]) / 2, b = (n[i + 1] + n[i + 2]) / 2;
     if (now >= a && now < b) {
-      var up = sunAlwaysUp(sol(gam(new Date(n[i + 1]))).dc / R);
+      // deklinacja na obu końcach cyklu: przy samym biegunie Słońce może w tej dobie przejść przez równik
+      var up = sunAlwaysUp(sol(gam(new Date(a))).dc / R) || sunAlwaysUp(sol(gam(new Date(b))).dc / R);
       return { a: a, b: b, noon: n[i + 1], rise: a, set: up ? b : a, polar: up ? "polarDay" : "polarNight" }
     }
   }

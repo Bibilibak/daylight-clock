@@ -173,7 +173,12 @@
     if (!L) return;
     $("v3lat").value = Math.max(-66, Math.min(66, Math.round(L.lat)));
     $("v3dec").value = Math.round(Math.max(-23.4, Math.min(23.4, L.dec)) * 10) / 10;
-    $("v3g").value = L.deg.toFixed(1);   // polarna: obrót liczony od słonecznej północy (wschodu nie ma), ale aktualny
+    // Obrót "od wschodu" z prawdziwego kąta godzinnego Słońca (sH: 0 = górowanie), przeliczony na model 3D
+    // (szerokość i deklinacja z suwaków, przycięte do ±66° / ±23,4°). Działa też w dzień/noc polarną
+    // i za kołem podbiegunowym, gdzie kąt z tarczy (od wschodu lub od północy) nie pasuje do modelu.
+    var la3 = +$("v3lat").value * D, de3 = +$("v3dec").value * D,
+      H0m = Math.acos(Math.max(-1, Math.min(1, -Math.tan(la3) * Math.tan(de3)))) / D;
+    $("v3g").value = (((L.sH + H0m) % 360 + 360) % 360).toFixed(1);
   }
 
   // domyślny widok: patrzymy tak jak obserwator na Słońce - na półkuli północnej na południe,

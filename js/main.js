@@ -121,7 +121,8 @@ function moonPos(now) {
     H = R * (280.16 + 360.9856235 * d) + lon * R - ra,
     alt = Math.asin(Math.sin(lat * R) * Math.sin(dc) + Math.cos(lat * R) * Math.cos(dc) * Math.cos(H));
   var ph = elong(now.getTime());
-  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: ph, illum: (1 - Math.cos(ph * R)) / 2 }
+  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: ph, illum: (1 - Math.cos(ph * R)) / 2,
+    lon: normDeg(l / R), node: normDeg(125.044 - 0.0529539 * d) }   // długość ekliptyczna Księżyca i węzła wstępującego (L - F)
 }
 
 // faza Księżyca = o ile jego długość ekliptyczna wyprzedza Słońce (0 nów, 90 pierwsza kwadra, 180 pełnia, 270 ostatnia)
@@ -295,7 +296,8 @@ function tick() {
   $("sd").textContent = nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
   if ($("near")) $("near").textContent = nearText(deg, nd, sd);
 
-  live = { lat: lat, dec: S.dc / R, deg: deg, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null };   // dla js/view3d.js
+  live = { lat: lat, dec: S.dc / R, deg: deg, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null,
+    sLon: sunLonDeg(now.getTime()), mLon: mp ? mp.lon : null, node: mp ? mp.node : null };   // dla js/view3d.js
 }
 
 /* ===== Lokalizacja ===== */

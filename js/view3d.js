@@ -44,6 +44,26 @@
   }
   function fmt(n) { return n.toLocaleString(lang, { maximumFractionDigits: 1 }) }
 
+  // współrzędne ekliptyczne (długość l, szerokość b) -> rektascensja i deklinacja
+  var EPS = 23.4397 * D, INC = 5.145 * D;   // nachylenie osi Ziemi i orbity Księżyca do ekliptyki
+  function eq(l, b) {
+    return {
+      ra: Math.atan2(Math.sin(l) * Math.cos(EPS) - Math.tan(b) * Math.sin(EPS), Math.cos(l)),
+      dec: Math.asin(Math.sin(b) * Math.cos(EPS) + Math.cos(b) * Math.sin(EPS) * Math.sin(l))
+    }
+  }
+  // linia przez punkty 3D: część pod horyzontem bledsza
+  function curve(pts, st) {
+    var o = "", run = [pts[0]], up = pts[0][2] >= 0;
+    function flush() { if (run.length > 1) o += '<path d="' + pa(run.map(P), 0) + '" fill="none" ' + st + ' stroke-opacity="' + (up ? 0.9 : 0.3) + '"/>' }
+    for (var i = 1; i < pts.length; i++) {
+      run.push(pts[i]);
+      if ((pts[i][2] >= 0) !== up) { flush(); run = [pts[i]]; up = !up }
+    }
+    flush();
+    return o
+  }
+
   function draw() {
     var lat = +$("v3lat").value * D, dec = +$("v3dec").value * D, g = +$("v3g").value;
     var H0 = Math.acos(Math.max(-1, Math.min(1, -Math.tan(lat) * Math.tan(dec)))),   // połowa łuku dnia
@@ -100,12 +120,28 @@
       o += '<circle cx="' + q[0][0].toFixed(1) + '" cy="' + q[0][1].toFixed(1) + '" r="3.5" fill="var(--fg)"/>' + lab([q[0][0], q[0][1] + 13], q[1], "v3lb", -6)
     });
 
-    // Księżyc: prawdziwy kąt godzinny i deklinacja, w tym samym układzie co Słońce (kąt względem Słońca zachowany)
+    // ekliptyka i orbita Księżyca: wielkie okręgi na niebie, przecinają się w dwóch węzłach.
+    // Słońce stoi na ekliptyce w długości odpowiadającej deklinacji z suwaka (pora roku z prawdziwej daty).
     var LV = window.live;
-    if (LV && LV.mH !== null && LV.mH !== undefined) {
-      var Pm = P(sv(H - (LV.sH - LV.mH) * D, LV.mDec * D, lat));
-      o += ln(O, Pm, 'stroke="#8ea3c2" stroke-width="1.2" stroke-opacity="0.8"');
-      o += '<circle cx="' + Pm[0].toFixed(1) + '" cy="' + Pm[1].toFixed(1) + '" r="6" fill="#e6ebf5" stroke="#8ea3c2" stroke-width="2"/>' + lab([Pm[0], Pm[1] + 15], t("moonH"), "v3lb", 6)
+    if (LV && LV.node !== null && LV.node !== undefined) {
+      var lS = Math.asin(Math.max(-1, Math.min(1, Math.sin(dec) / Math.sin(EPS))));
+      if (Math.cos(LV.sLon * D) < 0) lS = Math.PI - lS;
+      var raS = eq(lS, 0).ra, Om = LV.node * D;
+      var sky = function (l, b) { var e = eq(l, b); return sv(H - (e.ra - raS), e.dec, lat) };
+      var onOrbit = function (u) { return sky(Om + Math.atan2(Math.sin(u) * Math.cos(INC), Math.cos(u)), Math.asin(Math.sin(u) * Math.sin(INC))) };
+      var ec = [], mo = [];
+      for (i = 0; i <= 120; i++) { ec.push(sky(i * 3 * D, 0)); mo.push(onOrbit(i * 3 * D)) }
+      o += curve(ec, 'stroke="#d4b20b" stroke-width="1.3"');
+      o += curve(mo, 'stroke="#8ea3c2" stroke-width="1.3" stroke-dasharray="4 3"');
+      [0, Math.PI].forEach(function (u) {   // węzły: tu orbita Księżyca przecina ekliptykę
+        var q = P(onOrbit(u));
+        o += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="3" fill="var(--card)" stroke="#8ea3c2" stroke-width="1.5"/>'
+      });
+      o += lab(P(sky(lS + 50 * D, 0)), t("v3Ecl"), "v3lb", 6);
+      // Księżyc: ta sama odległość od Słońca co w rzeczywistości, położony na swojej orbicie
+      var lM = lS + (LV.mLon - LV.sLon) * D, dM = lM - Om,
+        Pm = P(onOrbit(Math.atan2(Math.sin(dM), Math.cos(dM) * Math.cos(INC))));
+      o += '<circle cx="' + Pm[0].toFixed(1) + '" cy="' + Pm[1].toFixed(1) + '" r="4.5" fill="#e6ebf5" stroke="#8ea3c2" stroke-width="1.5"/>' + lab([Pm[0], Pm[1] - 10], t("moonH"), "v3lb", 6)
     }
 
     // Słońce

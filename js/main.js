@@ -471,6 +471,7 @@ function buildMonthScale() {
 var curView = "dial";
 function showView(v) {
   curView = v;
+  try { sessionStorage.setItem("view", v) } catch (e) {}   // po odświeżeniu (np. podgląd na żywo) wracamy do tego widoku
   $("dialView").hidden = v !== "dial"; $("v3").hidden = v !== "3d";
   if ($("yearView")) $("yearView").hidden = v !== "year";
   if ($("calView")) $("calView").hidden = v !== "cal";
@@ -490,3 +491,10 @@ if ($("mphases")) buildMonthScale();
 setMode(mode);
 apply();
 setInterval(tick, 1000);
+// Przywróć ostatni widok po odświeżeniu - dopiero po załadowaniu wszystkich skryptów (zegar roku, 3D, kalendarz)
+window.addEventListener("load", function () {
+  var sv = null;
+  try { sv = sessionStorage.getItem("view") } catch (e) {}
+  if (sv === "year" || sv === "cal") showView(sv)
+  else if (sv === "3d" && $("viewBtn")) $("viewBtn").click()
+});

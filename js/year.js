@@ -48,7 +48,10 @@
       col = st === "yRise" || st === "yLong" ? "#e8a000" : st === "yFall" || st === "yShort" ? "#6a66b0" : "var(--mut)";
     last = { year: y, today: today, iMax: iMax, iMin: iMin, dMax: dMax, dMin: dMin, rate: rate, state: st, flat: flat, hours: h0, lightDeg: h0 * 15, amp: a[iMax] - a[iMin], n: n };
 
-    var top0 = lat >= 0 ? 90 : 270, o = "", i,
+    var o = viz === "line" ? lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0) : "", i;
+    if (viz === "loop") {
+    var top0 = lat >= 0 ? 90 : 270;
+    var
       rr = function (h) { return Math.max(20, Math.min(140, 80 + 60 * (h * 15 - 180) / 180)) },
       Pt = function (k, r2) { var th = (lam[((k % n) + n) % n] - top0) * R; return [180 + r2 * Math.sin(th), 160 - r2 * Math.cos(th)] },
       Pc = function (k) { return Pt(k, rr(a[((k % n) + n) % n])) },
@@ -77,15 +80,78 @@
     }
     o += '<circle cx="' + pm[0].toFixed(1) + '" cy="' + pm[1].toFixed(1) + '" r="6.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2.5"/>';
     if (!polar && rr(a[iMin]) > 45) o += '<text x="180" y="166" text-anchor="middle" font-size="22" font-weight="700" fill="var(--fg)">' + Math.round(h0 * 15) + '°</text>';
+    }
 
     var rt = Math.abs(rate) < 0.05 ? "0" : (rate > 0 ? "+" : "−") + num(Math.abs(rate), 1),
-      h = '<svg class="ysvg" viewBox="0 0 360 320" role="img" aria-label="' + t("yearBtn") + '">' + o + '</svg>' +
+      h = '<div class="seg yseg" role="group">' +
+        '<button data-yv="line" aria-pressed="' + (viz === "line") + '">' + t("yVizLine") + '</button>' +
+        '<button data-yv="loop" aria-pressed="' + (viz === "loop") + '">' + t("yVizLoop") + '</button></div>' +
+        '<svg class="ysvg" viewBox="0 0 360 ' + (viz === "line" ? 206 : 320) + '" role="img" aria-label="' + t("yearBtn") + '">' + o + '</svg>' +
         '<div class="ystate"><span class="ydot" style="background:' + col + '"></span>' + t(st) + '</div>';
     if (!polar) h += '<div class="yrow">' + t("lightHead").replace("{a}", Math.round(h0 * 15)) + (flat ? "" : " · " + t("yRate").replace("{r}", rt)) + '</div>';
     if (!flat) h += '<div class="yrow">' + t("yToLong").replace("{n}", nd(dMax)) + '</div><div class="yrow">' + t("yToShort").replace("{n}", nd(dMin)) + '</div>' +
-      '<div class="yrow yexp">' + t("yExp") + '</div>';
+      '<div class="yrow yexp">' + t(viz === "line" ? "yExpLine" : "yExp") + '</div>';
     box.innerHTML = h
   }
+
+  /* Wykres roku (jak dawniej, ale bez miesięcy): oś pozioma = kąt roku (położenie Słońca na ekliptyce,
+     0° = równonoc wiosenna), oś pionowa = stopnie światła tego dnia (24 h = 360°). Kolory jak w pętli. */
+  function lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0) {
+    var X0 = 40, X1 = 350, Y0 = 12, Y1 = 166, o = "", j,
+      X = function (l) { return X0 + (X1 - X0) * l / 360 }, Y = function (h) { return Y0 + (Y1 - Y0) * (1 - h * 15 / 360) },
+      fmt = function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1) };
+    [90, 180, 270].forEach(function (g) {                              // poziome linie: stopnie światła (180° = dzień równy nocy)
+      var y = Y(g / 15);
+      o += '<line x1="' + X0 + '" x2="' + X1 + '" y1="' + y + '" y2="' + y + '" stroke="var(--mut)" stroke-opacity="' + (g === 180 ? ".6" : ".3") + '" stroke-dasharray="' + (g === 180 ? "3 4" : "2 4") + '"/>' +
+        '<text class="ylb" x="' + (X0 - 5) + '" y="' + (y + 3) + '" text-anchor="end">' + g + '°</text>'
+    });
+    o += '<line x1="' + X0 + '" x2="' + X1 + '" y1="' + Y1 + '" y2="' + Y1 + '" stroke="var(--mut)" stroke-opacity=".5"/>';
+    [0, 90, 180, 270, 360].forEach(function (g) {                    // oś pozioma: kąt roku
+      o += '<line x1="' + X(g) + '" x2="' + X(g) + '" y1="' + Y1 + '" y2="' + (Y1 + 4) + '" stroke="var(--mut)" stroke-opacity=".5"/>' +
+        '<text class="ylb" x="' + X(g) + '" y="' + (Y1 + 16) + '" text-anchor="middle">' + g + '°</text>'
+    });
+    o += '<text class="ylb" x="' + ((X0 + X1) / 2) + '" y="' + (Y1 + 32) + '" text-anchor="middle">' + t("yAxX") + '</text>' +
+      '<text class="ylb" x="' + (X0 - 5) + '" y="' + (Y0 - 2) + '" text-anchor="end">' + t("yAxY") + '</text>';
+    // dni posortowane wg kąta roku; kolor odcinka = rzeczywisty kierunek zmiany (jutro minus dziś), jak w pętli
+    var idx = []; for (j = 0; j < n; j++) idx.push(j);
+    idx.sort(function (p, q) { return lam[p] - lam[q] });
+    var runs = [], cur = null;
+    for (j = 0; j < n; j++) {
+      var i = idx[j], dd = (a[(i + 1) % n] - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z",
+        p = [X(lam[i]), Y(a[i])];
+      if (!cur || cur.k !== k) { cur = { k: k, p: cur ? [cur.p[cur.p.length - 1]] : [] }; runs.push(cur) }
+      cur.p.push(p)
+    }
+    runs.forEach(function (r) {
+      if (r.p.length > 1) o += '<polyline fill="none" stroke="' + (r.k === "r" ? "#e8a000" : r.k === "f" ? "#6a66b0" : "var(--mut)") + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + r.p.map(fmt).join(" ") + '"/>'
+    });
+    if (!flat) [[iMax, "yLongS", "#e8a000", -10], [iMin, "yShortS", "#6a66b0", 17]].forEach(function (e) {
+      if (a[e[0]] === 24 || a[e[0]] === 0) return;                    // plateau polarne nie ma jednego punktu
+      var x = X(lam[e[0]]), y = Y(a[e[0]]), an = x < 100 ? "start" : x > 290 ? "end" : "middle";
+      o += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="var(--bg)" stroke="' + e[2] + '" stroke-width="2"/>' +
+        '<text class="ylb" x="' + x.toFixed(1) + '" y="' + (y + e[3]).toFixed(1) + '" text-anchor="' + an + '">' + t(e[1]) + '</text>'
+    });
+    var mx = X(lam[today]), my = Y(h0);
+    o += '<line x1="' + mx.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y1="' + my.toFixed(1) + '" y2="' + Y1 + '" stroke="var(--fg)" stroke-opacity=".35" stroke-dasharray="3 3"/>';
+    if (!polar && !flat) {                                            // strzałka kierunku zmiany, styczna do krzywej
+      var i0 = (today - 4 + n) % n, i1 = (today + 4) % n, dl = lam[i1] - lam[i0];
+      if (dl < -180) dl += 360; else if (dl > 180) dl -= 360;
+      var an2 = Math.atan2(Y(a[i1]) - Y(a[i0]), X(dl) - X(0)), cs = Math.cos(an2), sn = Math.sin(an2), ax = mx + 15 * cs, ay = my + 15 * sn;
+      o += '<polygon fill="' + col + '" points="' + [[ax + 6 * cs, ay + 6 * sn], [ax - 3 * cs - 4 * sn, ay - 3 * sn + 4 * cs], [ax - 3 * cs + 4 * sn, ay - 3 * sn - 4 * cs]].map(fmt).join(" ") + '"/>'
+    }
+    return o + '<circle cx="' + mx.toFixed(1) + '" cy="' + my.toFixed(1) + '" r="5.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2"/>'
+  }
+
+  // Wybór wizualizacji (wykres / pętla), zapamiętany w przeglądarce
+  var viz = "line";
+  try { if (localStorage.getItem("yviz") === "loop") viz = "loop" } catch (e) {}
+  if ($("yearView")) $("yearView").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-yv]") : null;
+    if (!b || b.getAttribute("data-yv") === viz) return;
+    viz = b.getAttribute("data-yv");
+    try { localStorage.setItem("yviz", viz) } catch (e2) {}
+    render()
+  });
   window.YearClock = { render: render, last: function () { return last } };
 
   // Po północy "dziś" na zegarze roku przesuwa się samo (jak w kalendarzu).

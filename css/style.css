@@ -1,7 +1,7 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
-  --on-sun: #2b2118;   /* tekst na tle --sun: ciemny, bo biały ma za mały kontrast */
+  --on-sun: #5a3200;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,4:1) */
   --fg: #2b2118;
   --mut: #8a7863;
   --arc: #f3dfb8;
@@ -462,6 +462,7 @@ button {
 .top { align-items: flex-start; }
 .topl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .topl .seg { margin-top: 0; justify-content: flex-start; }
+.yseg { margin: 0 0 8px; }   /* przełącznik wykres / pętla w zegarze roku */
 
 /* stopnie światła pod nagłówkiem */
 .lightH { margin: 2px 0 8px; font-size: 20px; font-weight: 700; }

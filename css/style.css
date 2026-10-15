@@ -1,6 +1,7 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
+  --on-sun: #2b2118;   /* tekst na tle --sun: ciemny, bo biały ma za mały kontrast */
   --fg: #2b2118;
   --mut: #8a7863;
   --arc: #f3dfb8;
@@ -105,7 +106,7 @@ svg {
 .lang button[aria-pressed="true"] {
   background: var(--sun);
   border-color: var(--sun);
-  color: #fff;
+  color: var(--on-sun);
 }
 
 /* ===== Odczyt stopni pod tarczą ===== */
@@ -166,7 +167,7 @@ button {
 button {
   width: auto;
   background: var(--sun);
-  color: #fff;
+  color: var(--on-sun);
   border: 0;
   font-weight: 600;
   padding: 8px 14px;
@@ -305,7 +306,7 @@ button {
 .view-btn[aria-pressed="true"] {
   background: var(--sun);
   border-color: var(--sun);
-  color: #fff;
+  color: var(--on-sun);
 }
 
 /* ===== Wizualizacja 3D ===== */
@@ -390,7 +391,7 @@ button {
 .v3btns button.main {
   background: var(--sun);
   border-color: var(--sun);
-  color: #fff;
+  color: var(--on-sun);
   font-weight: 600;
 }
 
@@ -430,7 +431,7 @@ button {
 .seg button[aria-pressed="true"] {
   background: var(--sun);
   border-color: var(--sun);
-  color: #fff;
+  color: var(--on-sun);
 }
 
 
@@ -514,8 +515,8 @@ button {
 .cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }
 .cc b { display: block; margin-top: 11px; font-size: 13px; }
 .cc.today { border-color: var(--sun); }
-.cc.sel { background: var(--sun); color: #fff; }
-.cc.sel small { color: #fff; }
+.cc.sel { background: var(--sun); color: var(--on-sun); }
+.cc.sel small { color: var(--on-sun); }
 .ctoolbar { text-align: center; }
 .cdet { margin-top: 12px; padding: 12px 14px; text-align: left; background: var(--card); border-radius: 14px; }
 .cdet > div { margin-top: 4px; font-size: 14px; }

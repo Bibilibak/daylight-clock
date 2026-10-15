@@ -170,7 +170,7 @@
   // ustawia suwaki według prawdziwego Słońca w wybranym miejscu (dane z main.js)
   function sync() {
     var L = window.live;
-    if (!L) return;
+    if (!L || L.polar) return;   // dzień/noc polarna: brak wschodu, nie ma od czego liczyć obrotu
     $("v3lat").value = Math.max(-66, Math.min(66, Math.round(L.lat)));
     $("v3dec").value = Math.round(Math.max(-23.4, Math.min(23.4, L.dec)) * 10) / 10;
     $("v3g").value = L.deg.toFixed(1);

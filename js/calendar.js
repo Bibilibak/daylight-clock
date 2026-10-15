@@ -4,8 +4,18 @@
    księżycowe i początek roku można podmienić bez przepisywania widoku. */
 (function () {
   function $(i) { return document.getElementById(i) }
-  var today = new Date(); today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  function dayStart() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()) }
+  var today = dayStart();
   var sel = today, vy = today.getFullYear(), vm = today.getMonth();
+
+  // Po północy "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień, zaznaczenie idzie razem z nim.
+  setInterval(function () {
+    var n = dayStart();
+    if (same(n, today)) return;
+    if (same(sel, today) && vy === today.getFullYear() && vm === today.getMonth()) { sel = n; vy = n.getFullYear(); vm = n.getMonth() }
+    today = n;
+    if ($("calView") && !$("calView").hidden) render()
+  }, 30000);
 
   window.CalendarSystem = window.CalendarSystem || {
     label: function (d) { return Math.round(sunLonDeg(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12).getTime())) % 360 + "°" }

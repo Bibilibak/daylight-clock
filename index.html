@@ -159,8 +159,8 @@
   <details class="manual">
     <summary data-i18n="manual">Współrzędne ręcznie</summary>
     <div class="row">
-      <input id="lat" type="number" step="0.01" data-i18n-ph="latPh" placeholder="Szer.">
-      <input id="lon" type="number" step="0.01" data-i18n-ph="lonPh" placeholder="Dł.">
+      <input id="lat" type="number" step="0.01" min="-90" max="90" data-i18n-ph="latPh" placeholder="Szer.">
+      <input id="lon" type="number" step="0.01" min="-180" max="180" data-i18n-ph="lonPh" placeholder="Dł.">
       <button id="go" data-i18n="set">Ustaw</button>
     </div>
   </details>

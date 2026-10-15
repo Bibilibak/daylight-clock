@@ -1,6 +1,6 @@
-/* ===== Tłumaczenia (PL / EN / ES) =====
-   Żeby dodać język: skopiuj blok, przetłumacz teksty,
-   dodaj przycisk <button data-lang="xx"> w index.html. */
+/* ===== Tłumaczenia (PL / EN / ES; kolejne języki w js/I18n-more.js) =====
+   Żeby dodać język: dopisz blok w js/I18n-more.js
+   i pozycję <option value="xx"> w liście języków w index.html. */
 var I18N = {
   pl: {
     title: "Zegar słoneczny",
@@ -354,9 +354,9 @@ var I18N = {
 
 var lang = "pl";
 
-// t("klucz") zwraca tekst w aktualnym języku (awaryjnie po polsku)
+// t("klucz") zwraca tekst w aktualnym języku (awaryjnie po angielsku, a dla polskiego po polsku)
 function t(key) {
-  return (I18N[lang] && I18N[lang][key]) || I18N.pl[key] || key
+  return (I18N[lang] && I18N[lang][key]) || (lang !== "pl" && I18N.en[key]) || I18N.pl[key] || key
 }
 
 // Język: zapisany wybór -> język przeglądarki -> angielski
@@ -375,9 +375,10 @@ function setLang(l) {
   lang = l;
   try { localStorage.setItem("lang", l) } catch (e) {}
   document.documentElement.lang = l;
+  document.documentElement.dir = l === "ar" ? "rtl" : "ltr";   // arabski: od prawej do lewej
   document.title = t("title");
   document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")) });
   document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.getAttribute("data-i18n-ph")) });
   document.querySelectorAll("[data-i18n-aria]").forEach(function (el) { el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria"))) });
-  document.querySelectorAll(".lang button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-lang") === l) });
+  if (document.getElementById("langSel")) document.getElementById("langSel").value = l;
 }

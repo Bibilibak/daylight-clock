@@ -230,7 +230,7 @@ function nearText(deg, nd, sd) {
   var m = [[0, 0], [nd, 1], [sd, 2], [(sd + 360) / 2, 3], [360, 0]], best = m[0];
   m.forEach(function (x) { if (Math.abs(deg - x[0]) < Math.abs(deg - best[0])) best = x });
   var diff = deg - best[0], am = Math.round(Math.abs(diff) * 60), d = Math.floor(am / 60), mm = am % 60,
-    val = d ? d + "°" + (mm ? " " + mm + "′" : "") : mm + "′";
+    val = "⁦" + (d ? d + "°" + (mm ? " " + mm + "′" : "") : mm + "′") + "⁩";   // izolacja LTR: w arabskim "7° 32′" się nie rozsypie
   return val + " " + t((diff < 0 ? "nb" : "na") + best[1])
 }
 
@@ -413,18 +413,16 @@ if ($("city")) $("city").onkeydown = function (e) {
 };
 
 /* ===== Przełącznik języka ===== */
-document.querySelectorAll(".lang button").forEach(function (b) {
-  b.onclick = function () {
-    setLang(b.getAttribute("data-lang"));
-    setMsg(msgKey);   // przetłumacz komunikat pod odczytem
-    lastL = "";       // wymuś odrysowanie listy wydarzeń
-    if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
-    if ($("mphases")) buildMonthScale();            // nazwy faz pod paskiem
-    if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
-    tick();
-    refreshViews()
-  }
-});
+if ($("langSel")) $("langSel").onchange = function () {
+  setLang(this.value);
+  setMsg(msgKey);   // przetłumacz komunikat pod odczytem
+  lastL = "";       // wymuś odrysowanie listy wydarzeń
+  if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
+  if ($("mphases")) buildMonthScale();            // nazwy faz pod paskiem
+  if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
+  tick();
+  refreshViews()
+};
 
 /* ===== Przycisk widoku 3D =====
    Obsługę przycisku dodaje js/view3d.js. Jeśli ten plik się nie załadował

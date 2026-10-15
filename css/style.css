@@ -92,22 +92,31 @@ svg {
   gap: 4px;
 }
 
-.lang button {
-  background: transparent;
-  color: var(--mut);
+/* lista języków: rozwijana, ze strzałką narysowaną w CSS (wygląda tak samo w każdej przeglądarce) */
+.lang select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, var(--mut) 50%), linear-gradient(135deg, var(--mut) 50%, transparent 50%);
+  background-position: right 12px center, right 7px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  color: var(--fg);
   border: 1px solid var(--arc);
   border-radius: 8px;
-  font-size: 12px;
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 5px 26px 5px 10px;
   cursor: pointer;
 }
+.lang select:hover, .lang select:focus-visible { border-color: var(--sun); }
+.lang select option { background: var(--bg); color: var(--fg); }
+[dir="rtl"] .lang select { background-position: left 7px center, left 12px center; padding: 5px 10px 5px 26px; }
 
-.lang button[aria-pressed="true"] {
-  background: var(--sun);
-  border-color: var(--sun);
-  color: var(--on-sun);
-}
+/* arabski (od prawej do lewej): tarcza, widok 3D i pasek Księżyca zostają w układzie astronomicznym */
+[dir="rtl"] svg, [dir="rtl"] .month { direction: ltr; }
+[dir="rtl"] .box b, [dir="rtl"] #where { direction: ltr; unicode-bidi: isolate; }   /* "+76.9°" i "52.23°, 21.01°" w zwykłej kolejności */
 
 /* ===== Odczyt stopni pod tarczą ===== */
 .reading {

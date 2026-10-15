@@ -146,12 +146,16 @@ function lunarCycle(now) {
 function phaseIdx(p) {   // 0 nów, 1 sierp przyb., 2 I kwadra, 3 garb przyb., 4 pełnia, 5 garb ubyw., 6 III kwadra, 7 sierp ubyw.
   return p < 12 || p >= 348 ? 0 : p < 78 ? 1 : p < 102 ? 2 : p < 168 ? 3 : p < 192 ? 4 : p < 258 ? 5 : p < 282 ? 6 : 7
 }
-function phaseGlyph(p, cx, cy, rr) {   // ikona fazy: ciemna tarcza + jasna część (limb + terminator)
-  var c = Math.cos(p * R), wax = p < 180, top = cy - rr, bot = cy + rr,
-    lit = "M" + cx + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + cx + " " + bot +
-      "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + cx + " " + top + "Z";
-  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"/>'
-}
+function moonTilt() {   // obrót ikony Księżyca: północ 0° (jasna strona przybywającego po prawej), równik 90° ("łódka"), południe 180° (odwrotnie)
+    return Math.round(Math.max(0, Math.min(1, (23.5 - lat) / 47)) * 180)
+    }
+    function phaseGlyph(p, cx, cy, rr) {   // ikona fazy: ciemna tarcza + jasna część (limb + terminator), obrócona wg półkuli obserwatora
+      var c = Math.cos(p * R), wax = p < 180, top = cy - rr, bot = cy + rr, tilt = moonTilt(),
+          lit = "M" + cx + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + cx + " " + bot +
+                "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + cx + " " + top + "Z";
+                  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"' +
+                      (tilt ? ' transform="rotate(' + tilt + ' ' + cx + ' ' + cy + ')"' : '') + '/>'
+                      }
 var lastGlyph = "", lastIcon = "";
 
 /* ===== Wydarzenia użytkownika ===== */
@@ -276,7 +280,7 @@ function tick() {
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
       $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";   // pasek = kąt fazy
-      $("mval").textContent = Math.round(mp.ph) + "°";   // etykieta kąta fazy nad paskiem: nie zasłania podziałki
+      $("mval").textContent = t("moonPill").replace("{d}", lunarCycle(now).day).replace("{a}", Math.round(mp.ph));   // dzień cyklu + kąt fazy nad paskiem: nie zasłania podziałki
       var pW = $("mval").parentNode.clientWidth, vW = $("mval").offsetWidth;   // etykieta wyśrodkowana nad znacznikiem, przy krawędziach dosunięta do środka
       if (pW) { $("mval").style.left = Math.max(0, Math.min(pW - vW, pW * pct / 100 - vW / 2)) + "px"; $("mval").style.transform = "" }
       else { $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-50%)" }   // widok ukryty: brak wymiarów do pomiaru
@@ -301,6 +305,7 @@ function apply() {
   try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
   if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
   setMsg("sinceRise");
+  if ($("mphases")) buildMonthScale();   // ikony faz zależą od półkuli
   tick();
   refreshViews()
 }

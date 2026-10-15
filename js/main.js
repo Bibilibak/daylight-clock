@@ -409,9 +409,7 @@ function buildMonthScale() {
     ph += '<svg viewBox="-9 -9 18 18" width="18" height="18" style="' + pos + '">' + phaseGlyph(A[i], 0, 0, 8) + '</svg>';
     dg += '<span style="' + pos + '">' + (p * 3.6) + '°</span>'
   });
-  var nm = "", NM = ["ph0", "ph2", "ph4", "ph6", "ph0"];
-  P.forEach(function (p, i) { nm += '<span style="left:' + p + '%;transform:translateX(-' + p + '%)">' + t(NM[i]) + '</span>' });
-  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg; if ($("mnames")) $("mnames").innerHTML = nm
+  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg
 }
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */

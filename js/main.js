@@ -277,7 +277,9 @@ function tick() {
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
       $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";   // pasek = kąt fazy
       $("mval").textContent = Math.round(mp.ph) + "°";   // etykieta kąta fazy nad paskiem: nie zasłania podziałki
-      $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-" + pct + "%)";   // zawsze w granicach komponentu
+      var pW = $("mval").parentNode.clientWidth, vW = $("mval").offsetWidth;   // etykieta wyśrodkowana nad znacznikiem, przy krawędziach dosunięta do środka
+      if (pW) { $("mval").style.left = Math.max(0, Math.min(pW - vW, pW * pct / 100 - vW / 2)) + "px"; $("mval").style.transform = "" }
+      else { $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-50%)" }   // widok ukryty: brak wymiarów do pomiaru
       $("mcaret").style.left = pct + "%";                 // znacznik dokładnie na pozycji kąta fazy
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }

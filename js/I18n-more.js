@@ -230,7 +230,7 @@ I18N.it = {
   angleSun: "Angolo del Sole",
   sunDesc: "angolo sul quadrante",
   lightHead: "{a}° di luce",
-  moonDayLine: "{d}° giorno del ciclo lunare (di circa {l} giorni)",
+  moonDayLine: "Giorno {d} del ciclo lunare (di circa {l} giorni)",
   moonNote: "Il ciclo sinodico della Luna, da luna nuova a luna nuova, dura in media circa 29,53 giorni. La sua durata reale a volte è un po’ più breve o più lunga.",
   ph0: "Luna nuova",
   ph1: "Falce crescente",
@@ -416,6 +416,8 @@ I18N.uk = {
   yShortS: "зимове сонцестояння",
   dayOne: "день",
   dayMany: "днів",
+  dayFew: "дні",          // 2-4, 22-24…
+  dayOther: "дня",
   todayLbl: "сьогодні",
   calToday: "Сьогодні",
   calAngle: "Кут року: {a}",
@@ -513,7 +515,10 @@ I18N.ar = {
   yLongS: "الانقلاب الصيفي",
   yShortS: "الانقلاب الشتوي",
   dayOne: "يوم",
-  dayMany: "أيام",
+  dayMany: "يومًا",       // 11-99
+  dayTwo: "يومان",
+  dayFew: "أيام",         // 3-10
+  dayOther: "يوم",        // 100, 200…
   todayLbl: "اليوم",
   calToday: "اليوم",
   calAngle: "زاوية السنة: {a}",

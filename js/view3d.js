@@ -42,7 +42,7 @@
   function mid(txt, cls, p, dy) {
     return '<text class="' + cls + '" x="' + p[0].toFixed(1) + '" y="' + (p[1] + dy).toFixed(1) + '" text-anchor="middle">' + txt + '</text>'
   }
-  function fmt(n) { return n.toLocaleString(lang, { maximumFractionDigits: 1 }) }
+  function fmt(n) { return n.toLocaleString(loc(), { maximumFractionDigits: 1 }) }
 
   // współrzędne ekliptyczne (długość l, szerokość b) -> rektascensja i deklinacja
   var EPS = 23.4397 * D, INC = 5.145 * D;   // nachylenie osi Ziemi i orbity Księżyca do ekliptyki
@@ -170,10 +170,10 @@
   // ustawia suwaki według prawdziwego Słońca w wybranym miejscu (dane z main.js)
   function sync() {
     var L = window.live;
-    if (!L || L.polar) return;   // dzień/noc polarna: brak wschodu, nie ma od czego liczyć obrotu
+    if (!L) return;
     $("v3lat").value = Math.max(-66, Math.min(66, Math.round(L.lat)));
     $("v3dec").value = Math.round(Math.max(-23.4, Math.min(23.4, L.dec)) * 10) / 10;
-    $("v3g").value = L.deg.toFixed(1);
+    if (!L.polar) $("v3g").value = L.deg.toFixed(1);   // polarna: brak wschodu, więc obrotu "od wschodu" nie ustawiamy
   }
 
   // domyślny widok: patrzymy tak jak obserwator na Słońce - na półkuli północnej na południe,

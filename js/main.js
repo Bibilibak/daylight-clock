@@ -5,7 +5,9 @@ try {
   var s = JSON.parse(localStorage.getItem("sw") || "null");
   if (s && validCoords(s.lat, s.lon)) { lat = s.lat; lon = s.lon; place = s.name || ""; tz = s.tz || "" }
 } catch (e) {}
-function validCoords(a, b) { return isFinite(a) && isFinite(b) && a >= -90 && a <= 90 && b >= -180 && b <= 180 }
+function validCoords(a, b) {   // tylko prawdziwe liczby (tekst "21" z uszkodzonego localStorage psułby obliczenia)
+  return typeof a === "number" && typeof b === "number" && isFinite(a) && isFinite(b) && a >= -90 && a <= 90 && b >= -180 && b <= 180
+}
 
 // Tryb tarczy: "noon" = od południa (tarcza stała, południe u góry), "rise" = od wschodu (0° po lewej)
 var mode = "noon";
@@ -115,9 +117,9 @@ function solarNoon(day) {
 // Dzień / noc polarna: nie ma wschodu, więc doba na tarczy biegnie od słonecznej północy do następnej
 // (północ = połowa drogi między kolejnymi górowaniami). Wschód i zachód "leżą" na początku cyklu.
 function polarCycle(now) {
-  var n = [];
-  for (var o = -2; o <= 2; o++) n.push(solarNoon(new Date(now.getFullYear(), now.getMonth(), now.getDate() + o)));
-  for (var i = 0; i < 3; i++) {
+  var n = [];   // ±3 dni: wystarcza też, gdy strefa urządzenia i miasta różnią się o ponad dobę
+  for (var o = -3; o <= 3; o++) n.push(solarNoon(new Date(now.getFullYear(), now.getMonth(), now.getDate() + o)));
+  for (var i = 0; i < 5; i++) {
     var a = (n[i] + n[i + 1]) / 2, b = (n[i + 1] + n[i + 2]) / 2;
     if (now >= a && now < b) {
       var dc = sol(gam(new Date(n[i + 1]))).dc / R,
@@ -244,11 +246,24 @@ function tick() {
 
   // Wschody z pięciu kolejnych dni; szukamy cyklu [wschód, następny wschód), w którym leży "teraz".
   // (Działa dla każdego miasta, także gdy data u Ciebie i w mieście się różni.)
-  var days = [], cyc = null, A, B;
-  for (var o = -2; o <= 2; o++) days.push(times(new Date(now.getFullYear(), now.getMonth(), now.getDate() + o)));
+  var days = [], noons = [], cyc = null, A, B;
+  for (var o = -2; o <= 2; o++) {
+    var dd0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + o);
+    days.push(times(dd0)); noons.push(solarNoon(dd0))
+  }
   for (var i = 0; i < 4 && !cyc; i++) {
     A = days[i]; B = days[i + 1];
     if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise, noon: A.noon }
+    // Dni przejściowe (sąsiedni dzień bez wschodu, np. ostatni dzień przed nocą polarną): brakujący wschód
+    // szacujemy o jedną dobę słoneczną od znanego, żeby tarcza nie przeskakiwała na tryb polarny za wcześnie.
+    else if (A && !B && now >= A.rise && now < A.rise + (noons[i + 1] - noons[i])) {
+      cyc = { a: A.rise, b: A.rise + (noons[i + 1] - noons[i]), set: A.set, rise: A.rise, noon: A.noon }
+    } else if (!A && B && now < B.rise && now >= B.rise - (noons[i + 1] - noons[i])) {
+      var a0 = B.rise - (noons[i + 1] - noons[i]),
+        prevUp = 90 - Math.abs(lat - sol(gam(new Date(noons[i]))).dc / R) > -0.833,   // poprzedni dzień był polarnym dniem?
+        set0 = prevUp ? Math.min(B.rise, noons[i] + (B.set - B.noon)) : a0;          // wtedy wieczorny zachód symetrycznie do górowania
+      cyc = { a: a0, b: B.rise, set: set0, rise: a0, noon: noons[i] }
+    }
   }
   if (!cyc) cyc = polarCycle(now);
   if (!cyc) {
@@ -260,8 +275,9 @@ function tick() {
     return
   }
   var polar = cyc.polar || "";
-  if (polar) { if (msgKey !== polar) setMsg(polar) }
-  else if (msgKey === "noSun" || msgKey === "polarDay" || msgKey === "polarNight") setMsg("sinceRise");
+  var autoMsg = msgKey === "sinceRise" || msgKey === "noSun" || msgKey === "polarDay" || msgKey === "polarNight";   // błędów (np. złe współrzędne) nie nadpisujemy
+  if (polar) { if (autoMsg && msgKey !== polar) setMsg(polar) }
+  else if (autoMsg && msgKey !== "sinceRise") setMsg("sinceRise");
 
   var k = 360 / (cyc.b - cyc.a),
     deg = Math.min(359.99, k * (now - cyc.a)),

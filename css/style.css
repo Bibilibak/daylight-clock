@@ -101,22 +101,23 @@ svg {
   background-position: right 12px center, right 7px center;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
-  color: var(--fg);
+  color: var(--mut);   /* ten sam spokojny kolor co przyciski widoków po lewej */
   border: 1px solid var(--arc);
   border-radius: 8px;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 5px 26px 5px 10px;
+  padding: 4px 26px 4px 10px;
   cursor: pointer;
 }
 .lang select:hover, .lang select:focus-visible { border-color: var(--sun); }
 .lang select option { background: var(--bg); color: var(--fg); }
-[dir="rtl"] .lang select { background-position: left 7px center, left 12px center; padding: 5px 10px 5px 26px; }
+[dir="rtl"] .lang select { background-position: left 7px center, left 12px center; padding: 4px 10px 4px 26px; }
 
 /* arabski (od prawej do lewej): tarcza, widok 3D i pasek Księżyca zostają w układzie astronomicznym */
 [dir="rtl"] svg, [dir="rtl"] .month { direction: ltr; }
-[dir="rtl"] .box b, [dir="rtl"] #where { direction: ltr; unicode-bidi: isolate; }   /* "+76.9°" i "52.23°, 21.01°" w zwykłej kolejności */
+[dir="rtl"] .box b, [dir="rtl"] #where, [dir="rtl"] .ev b { direction: ltr; unicode-bidi: isolate; }
+[dir="rtl"] .mpill { direction: rtl; unicode-bidi: isolate; }   /* "اليوم 5 · 120°": arabski porządek, stopień przy liczbie */   /* "+76.9°" i "52.23°, 21.01°" w zwykłej kolejności */
 
 /* ===== Odczyt stopni pod tarczą ===== */
 .reading {

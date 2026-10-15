@@ -359,6 +359,18 @@ function t(key) {
   return (I18N[lang] && I18N[lang][key]) || (lang !== "pl" && I18N.en[key]) || I18N.pl[key] || key
 }
 
+// Słowo "dzień/dni" w odpowiedniej formie liczby mnogiej (ukraiński i arabski mają ich więcej niż dwie).
+// Brakująca forma -> dayMany.
+function dayKey(n) {
+  var c = n === 1 ? "one" : "other";
+  try { c = new Intl.PluralRules(lang).select(n) } catch (e) {}
+  var k = { one: "dayOne", two: "dayTwo", few: "dayFew", many: "dayMany", other: "dayOther" }[c] || "dayMany";
+  return I18N[lang] && I18N[lang][k] ? k : (c === "one" ? "dayOne" : "dayMany")
+}
+
+// Locale do dat i liczb: arabski z cyframi łacińskimi, jak reszta strony
+function loc() { return lang === "ar" ? "ar-u-nu-latn" : lang }
+
 // Język: zapisany wybór -> język przeglądarki -> angielski
 function detectLang() {
   try {

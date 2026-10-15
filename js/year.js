@@ -19,8 +19,8 @@
     return k
   }
   function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
-  function nd(n) { return n === 0 ? t("todayLbl") : n + " " + t(n === 1 ? "dayOne" : "dayMany") }
-  function dshort(y, i) { return new Date(Date.UTC(y, 0, 1 + i)).toLocaleDateString(lang, { day: "numeric", month: "short", timeZone: "UTC" }) }
+  function nd(n) { return n === 0 ? t("todayLbl") : n + " " + t(dayKey(n)) }   // forma liczby mnogiej wg języka
+  function dshort(y, i) { return new Date(Date.UTC(y, 0, 1 + i)).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) }
 
   /* Rok jako zamknięta pętla (nie jest to klasyczna analemma, która pokazuje deklinację i równanie czasu):
      kąt na pętli = pozycja Słońca na ekliptyce (kąt roku, bez dat kalendarzowych), przesilenie letnie u góry;
@@ -87,4 +87,13 @@
     box.innerHTML = h
   }
   window.YearClock = { render: render, last: function () { return last } };
+
+  // Po północy "dziś" na zegarze roku przesuwa się samo (jak w kalendarzu).
+  var shownDay = new Date().toDateString();
+  setInterval(function () {
+    var d = new Date().toDateString();
+    if (d === shownDay) return;
+    shownDay = d;
+    if ($("yearView") && !$("yearView").hidden) render()
+  }, 30000);
 })();

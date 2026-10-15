@@ -48,7 +48,9 @@
       col = st === "yRise" || st === "yLong" ? "#e8a000" : st === "yFall" || st === "yShort" ? "#6a66b0" : "var(--mut)";
     last = { year: y, today: today, iMax: iMax, iMin: iMin, dMax: dMax, dMin: dMin, rate: rate, state: st, flat: flat, hours: h0, lightDeg: h0 * 15, amp: a[iMax] - a[iMin], n: n };
 
-    var o = viz === "line" ? lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0) : "", i;
+    // następny dzień po danym (31 grudnia -> 1 stycznia NASTĘPNEGO roku; w roku przestępnym 1 stycznia tego roku jest za blisko)
+    var aNext = dayHours(y + 1, 0, 1), nxt = function (i) { return i === n - 1 ? aNext : a[i + 1] };
+    var o = viz === "line" ? lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0, nxt) : "", i;
     if (viz === "loop") {
     var top0 = lat >= 0 ? 90 : 270;
     var
@@ -59,7 +61,7 @@
     o += '<circle cx="180" cy="160" r="80" fill="none" stroke="var(--mut)" stroke-opacity=".4" stroke-dasharray="3 4"/>';
     var runs = [], cur = null;
     for (i = 0; i < n; i++) {                                         // cała pętla, łącznie z domknięciem ostatniego dnia z pierwszym
-      var dd = (a[(i + 1) % n] - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z";
+      var dd = (nxt(i) - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z";
       if (!cur || cur.k !== k) { cur = { k: k, p: [Pc(i)] }; runs.push(cur) }
       cur.p.push(Pc(i + 1))
     }
@@ -96,7 +98,7 @@
 
   /* Wykres roku (jak dawniej, ale bez miesięcy): oś pozioma = kąt roku (położenie Słońca na ekliptyce,
      0° = równonoc wiosenna), oś pionowa = stopnie światła tego dnia (24 h = 360°). Kolory jak w pętli. */
-  function lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0) {
+  function lineSvg(a, n, lam, today, iMax, iMin, flat, polar, col, h0, nxt) {
     var X0 = 40, X1 = 350, Y0 = 12, Y1 = 166, o = "", j,
       X = function (l) { return X0 + (X1 - X0) * l / 360 }, Y = function (h) { return Y0 + (Y1 - Y0) * (1 - h * 15 / 360) },
       fmt = function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1) };
@@ -117,7 +119,7 @@
     idx.sort(function (p, q) { return lam[p] - lam[q] });
     var runs = [], cur = null;
     for (j = 0; j < n; j++) {
-      var i = idx[j], dd = (a[(i + 1) % n] - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z",
+      var i = idx[j], dd = (nxt(i) - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z",
         p = [X(lam[i]), Y(a[i])];
       if (!cur || cur.k !== k) { cur = { k: k, p: cur ? [cur.p[cur.p.length - 1]] : [] }; runs.push(cur) }
       cur.p.push(p)
@@ -127,16 +129,19 @@
     });
     if (!flat) [[iMax, "yLongS", "#e8a000", -10], [iMin, "yShortS", "#6a66b0", 17]].forEach(function (e) {
       if (a[e[0]] === 24 || a[e[0]] === 0) return;                    // plateau polarne nie ma jednego punktu
-      var x = X(lam[e[0]]), y = Y(a[e[0]]), an = x < 100 ? "start" : x > 290 ? "end" : "middle";
+      var x = X(lam[e[0]]), y = Y(a[e[0]]), an = x < 100 ? "start" : x > 290 ? "end" : "middle",
+        ly = y + e[3] > Y1 - 4 ? y - 8 : y + e[3];                   // przy samej osi napis idzie nad punkt
       o += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="var(--bg)" stroke="' + e[2] + '" stroke-width="2"/>' +
-        '<text class="ylb" x="' + x.toFixed(1) + '" y="' + (y + e[3]).toFixed(1) + '" text-anchor="' + an + '">' + t(e[1]) + '</text>'
+        '<text class="ylb" x="' + x.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + an + '">' + t(e[1]) + '</text>'
     });
     var mx = X(lam[today]), my = Y(h0);
     o += '<line x1="' + mx.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y1="' + my.toFixed(1) + '" y2="' + Y1 + '" stroke="var(--fg)" stroke-opacity=".35" stroke-dasharray="3 3"/>';
     if (!polar && !flat) {                                            // strzałka kierunku zmiany, styczna do krzywej
       var i0 = (today - 4 + n) % n, i1 = (today + 4) % n, dl = lam[i1] - lam[i0];
       if (dl < -180) dl += 360; else if (dl > 180) dl -= 360;
-      var an2 = Math.atan2(Y(a[i1]) - Y(a[i0]), X(dl) - X(0)), cs = Math.cos(an2), sn = Math.sin(an2), ax = mx + 15 * cs, ay = my + 15 * sn;
+      var an2 = Math.atan2(Y(a[i1]) - Y(a[i0]), X(dl) - X(0)), cs = Math.cos(an2), sn = Math.sin(an2),
+        sh = mx + 21 * cs > 358 ? -15 : 15,                            // przy prawej krawędzi strzałka za kropką, żeby nie uciekła poza rysunek
+        ax = mx + sh * cs, ay = my + sh * sn;
       o += '<polygon fill="' + col + '" points="' + [[ax + 6 * cs, ay + 6 * sn], [ax - 3 * cs - 4 * sn, ay - 3 * sn + 4 * cs], [ax - 3 * cs + 4 * sn, ay - 3 * sn - 4 * cs]].map(fmt).join(" ") + '"/>'
     }
     return o + '<circle cx="' + mx.toFixed(1) + '" cy="' + my.toFixed(1) + '" r="5.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2"/>'

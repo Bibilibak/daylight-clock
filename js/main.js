@@ -77,8 +77,9 @@ var lastML = "";   // ostatnio narysowane opisy znaczników
 /* ===== Obliczenia astronomiczne (algorytm NOAA) ===== */
 // gam: kąt ułamkowy roku (w radianach)
 function gam(d) {
-  var n = Math.floor((d - Date.UTC(d.getUTCFullYear(), 0, 0)) / 864e5);
-  return 2 * Math.PI / 365 * (n - 1 + (d.getUTCHours() - 12) / 24)
+  var y = d.getUTCFullYear(), n = Math.floor((d - Date.UTC(y, 0, 0)) / 864e5),
+    yl = (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 864e5;   // 365 albo 366 dni (NOAA: w roku przestępnym 366)
+  return 2 * Math.PI / yl * (n - 1 + (d.getUTCHours() - 12) / 24)
 }
 
 // sol: równanie czasu (eq, minuty) i deklinacja Słońca (dc, radiany)
@@ -116,14 +117,18 @@ function solarNoon(day) {
 
 // Dzień / noc polarna: nie ma wschodu, więc doba na tarczy biegnie od słonecznej północy do następnej
 // (północ = połowa drogi między kolejnymi górowaniami). Wschód i zachód "leżą" na początku cyklu.
+// Gdy Słońce nie wschodzi lub nie zachodzi: dzień polarny, jeśli Słońce jest po stronie naszej półkuli
+// (albo przy biegunie nawet o północy stoi nad horyzontem). Sama wysokość w górowaniu myliła się
+// w pierwszym/ostatnim dniu nocy polarnej, gdy Słońce ledwo nie dochodzi do horyzontu.
+function sunAlwaysUp(dc) { return lat * dc > 0 || Math.abs(lat + dc) - 90 > -0.833 }
+
 function polarCycle(now) {
   var n = [];   // ±3 dni: wystarcza też, gdy strefa urządzenia i miasta różnią się o ponad dobę
   for (var o = -3; o <= 3; o++) n.push(solarNoon(new Date(now.getFullYear(), now.getMonth(), now.getDate() + o)));
   for (var i = 0; i < 5; i++) {
     var a = (n[i] + n[i + 1]) / 2, b = (n[i + 1] + n[i + 2]) / 2;
     if (now >= a && now < b) {
-      var dc = sol(gam(new Date(n[i + 1]))).dc / R,
-        up = 90 - Math.abs(lat - dc) > -0.833;   // Słońce w górowaniu nad horyzontem = dzień polarny
+      var up = sunAlwaysUp(sol(gam(new Date(n[i + 1]))).dc / R);
       return { a: a, b: b, noon: n[i + 1], rise: a, set: up ? b : a, polar: up ? "polarDay" : "polarNight" }
     }
   }
@@ -256,13 +261,17 @@ function tick() {
     if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise, noon: A.noon }
     // Dni przejściowe (sąsiedni dzień bez wschodu, np. ostatni dzień przed nocą polarną): brakujący wschód
     // szacujemy o jedną dobę słoneczną od znanego, żeby tarcza nie przeskakiwała na tryb polarny za wcześnie.
-    else if (A && !B && now >= A.rise && now < A.rise + (noons[i + 1] - noons[i])) {
-      cyc = { a: A.rise, b: A.rise + (noons[i + 1] - noons[i]), set: A.set, rise: A.rise, noon: A.noon }
-    } else if (!A && B && now < B.rise && now >= B.rise - (noons[i + 1] - noons[i])) {
-      var a0 = B.rise - (noons[i + 1] - noons[i]),
-        prevUp = 90 - Math.abs(lat - sol(gam(new Date(noons[i]))).dc / R) > -0.833,   // poprzedni dzień był polarnym dniem?
-        set0 = prevUp ? Math.min(B.rise, noons[i] + (B.set - B.noon)) : a0;          // wtedy wieczorny zachód symetrycznie do górowania
-      cyc = { a: a0, b: B.rise, set: set0, rise: a0, noon: noons[i] }
+    // Gdy brakuje tylko jednego dnia, oba szacunki stykają się w połowie między znanymi wschodami (bez dziury).
+    else if (A && !B) {
+      var bEnd = i + 2 < days.length && days[i + 2] ? (A.rise + days[i + 2].rise) / 2 : A.rise + (noons[i + 1] - noons[i]);
+      if (now >= A.rise && now < bEnd) cyc = { a: A.rise, b: bEnd, set: A.set, rise: A.rise, noon: A.noon }
+    } else if (!A && B) {
+      var a0 = i > 0 && days[i - 1] ? (days[i - 1].rise + B.rise) / 2 : B.rise - (noons[i + 1] - noons[i]);
+      if (now >= a0 && now < B.rise) {
+        var prevUp = sunAlwaysUp(sol(gam(new Date(noons[i]))).dc / R),               // poprzedni dzień był polarnym dniem?
+          set0 = prevUp ? Math.max(a0, Math.min(B.rise, noons[i] + (B.set - B.noon))) : a0;   // wtedy wieczorny zachód symetrycznie do górowania
+        cyc = { a: a0, b: B.rise, set: set0, rise: a0, noon: noons[i], noDay: !prevUp }   // noDay: koniec nocy polarnej, bez zachodu
+      }
     }
   }
   if (!cyc) cyc = polarCycle(now);
@@ -289,7 +298,8 @@ function tick() {
     nz = mode === "noon";
   drawEv(cyc, k, now, off, nd);
   put("sun", deg + off); put("set", sd + off); put("noon", nd + off);
-  ["set", "rise0", "mid"].forEach(function (id) { if ($(id)) $(id).style.display = polar ? "none" : "" });   // w polarnej nie ma wschodu ani zachodu
+  var noSet = polar || cyc.noDay;             // brak zachodu w tym cyklu (polarna albo ostatnia doba nocy polarnej)
+  ["set", "rise0", "mid"].forEach(function (id) { if ($(id)) $(id).style.display = polar || (noSet && id !== "rise0") ? "none" : "" });
   if ($("sunnum")) {
     put("mid", (sd + 360) / 2 + off);         // środek nocy
     if ($("rise0")) put("rise0", off);        // wschód
@@ -298,6 +308,7 @@ function tick() {
     $("sunnum").textContent = mode === "noon" ? (hh < -0.5 ? "−" : "") + Math.abs(Math.round(hh)) : Math.round(deg);
     var ml = "";                              // liczby przy znacznikach: wschód, górowanie, zachód, północ
     (polar ? [[nd + off, nz ? "0" : Math.round(nd)], [off, nz ? "180" : "0"]] :   // polarna: tylko górowanie i północ
+    noSet ? [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)]] :   // bez zachodu: wschód i górowanie
     [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)],
      [sd + off, nz ? "+" + Math.round(sd - nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
     ]).forEach(function (m) {
@@ -339,8 +350,8 @@ function tick() {
   if ($("lightH")) $("lightH").textContent = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy
   $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
-  $("sd").textContent = polar ? "--°" : nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
-  if ($("near")) $("near").textContent = polar ? "" : nearText(deg, nd, sd);
+  $("sd").textContent = noSet ? "--°" : nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
+  if ($("near")) $("near").textContent = noSet ? "" : nearText(deg, nd, sd);
 
   live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null,
     sLon: sunLonDeg(now.getTime()), mLon: mp ? mp.lon : null, node: mp ? mp.node : null };   // dla js/view3d.js
@@ -451,7 +462,7 @@ if ($("viewBtn")) $("viewBtn").addEventListener("click", function () {
 function setMode(m) {
   mode = m; lastML = "";
   try { localStorage.setItem("mode", m) } catch (e) {}
-  document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-mode") === m ? "true" : "false") });
+  document.querySelectorAll(".seg button[data-mode]").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-mode") === m ? "true" : "false") });
   tick()
 }
 document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
@@ -496,5 +507,5 @@ window.addEventListener("load", function () {
   var sv = null;
   try { sv = sessionStorage.getItem("view") } catch (e) {}
   if (sv === "year" || sv === "cal") showView(sv)
-  else if (sv === "3d" && $("viewBtn")) $("viewBtn").click()
+  else if (sv === "3d" && window.Sun3D && $("viewBtn")) $("viewBtn").click()
 });

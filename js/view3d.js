@@ -173,7 +173,7 @@
     if (!L) return;
     $("v3lat").value = Math.max(-66, Math.min(66, Math.round(L.lat)));
     $("v3dec").value = Math.round(Math.max(-23.4, Math.min(23.4, L.dec)) * 10) / 10;
-    if (!L.polar) $("v3g").value = L.deg.toFixed(1);   // polarna: brak wschodu, więc obrotu "od wschodu" nie ustawiamy
+    $("v3g").value = L.deg.toFixed(1);   // polarna: obrót liczony od słonecznej północy (wschodu nie ma), ale aktualny
   }
 
   // domyślny widok: patrzymy tak jak obserwator na Słońce - na półkuli północnej na południe,

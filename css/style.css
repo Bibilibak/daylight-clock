@@ -1,7 +1,7 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
-  --on-sun: #5a3200;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,4:1) */
+  --on-sun: #4f2c00;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,9:1) */
   --fg: #2b2118;
   --mut: #8a7863;
   --arc: #f3dfb8;
@@ -117,7 +117,7 @@ svg {
 /* arabski (od prawej do lewej): tarcza, widok 3D i pasek Księżyca zostają w układzie astronomicznym */
 [dir="rtl"] svg, [dir="rtl"] .month { direction: ltr; }
 [dir="rtl"] .box b, [dir="rtl"] #where, [dir="rtl"] .ev b { direction: ltr; unicode-bidi: isolate; }
-[dir="rtl"] .mpill { direction: rtl; unicode-bidi: isolate; }   /* "اليوم 5 · 120°": arabski porządek, stopień przy liczbie */   /* "+76.9°" i "52.23°, 21.01°" w zwykłej kolejności */
+[dir="rtl"] .mpill { direction: rtl; unicode-bidi: isolate; }   /* "اليوم 5 · 120°": arabski porządek, stopień przy liczbie */
 
 /* ===== Odczyt stopni pod tarczą ===== */
 .reading {

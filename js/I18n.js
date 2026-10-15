@@ -378,7 +378,7 @@ function t(key) {
 // Brakująca forma -> dayMany.
 function dayKey(n) {
   var c = n === 1 ? "one" : "other";
-  try { c = new Intl.PluralRules(lang).select(n) } catch (e) {}
+  try { c = new Intl.PluralRules(lang).select(n) } catch (e) { c = n === 1 ? "one" : "many" }   // stara przeglądarka: zwykła liczba mnoga
   var k = { one: "dayOne", two: "dayTwo", few: "dayFew", many: "dayMany", other: "dayOther" }[c] || "dayMany";
   return I18N[lang] && I18N[lang][k] ? k : (c === "one" ? "dayOne" : "dayMany")
 }

@@ -572,3 +572,12 @@ button {
 .mcaret { position: absolute; top: 16px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-top-color: rgba(43, 33, 24, .88); border-bottom: 0; }
 .mbar { margin-top: 0; }
 .yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }
+
+/* Szersze ekrany (komputer, tablet): tarcza, widok 3D i zegar roku rosną do szerokości okna,
+   ale nie wyżej niż ok. 2/3 jego wysokości, żeby odczyty pod spodem dalej było widać. Telefon bez zmian. */
+@media (min-width: 600px) {
+  #dialView > svg, #v3svg { max-width: min(640px, 68vh); }
+  #yearView { max-width: min(600px, 75vh); }
+  #yearView .ysvg { max-width: none; }   /* ogólny limit svg (380 px) nie dotyczy wykresu roku */
+  #calView { max-width: 520px; }
+}

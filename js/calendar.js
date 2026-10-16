@@ -54,15 +54,20 @@
     var y = d.getFullYear(), m = d.getMonth(), dd = d.getDate(), T = times(new Date(y, m, dd)), T2 = times(new Date(y, m, dd + 1)),
       noon = new Date(y, m, dd, 12), ph = elong(noon.getTime()), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(noon),
       light = T && T2 ? Math.round(360 * (T.set - T.rise) / (T2.rise - T.rise)) : null,
-      o = OrbitCal.date(d), ap = OrbitCal.apsisOn(OrbitCal.dayN(d)), ring = cvO === "ring";
+      o = OrbitCal.date(d), n = OrbitCal.dayN(d), ap = OrbitCal.apsisOn(n), ring = cvO === "ring",
+      ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1) - 1), k = o.month,
+      // dzień 1 miesiąca: chwila przejścia przez granicę (równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica 30°·k)
+      cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
     return '<div class="cdet"><div class="cg1">' + d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
       '<div class="cp">' + mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) + '</div>' +
       '<div>' + (ring ? "" : t("calAngle").replace("{a}", CalendarSystem.label(d)) + ' · ') +
       t("calODay").replace("{n}", o.yday).replace("{d}", o.ylen).replace("{y}", o.year) + '</div>' +
-      (ap ? '<div class="cap">' + t(ap.far ? "calAph" : "calPeri").replace("{k}", num(ap.km / 1e6, 1)) + '</div>' : '') +
+      (cross ? '<div class="cap">' + cross + '</div>' : '') +
+      (ap ? '<div class="cap">' + t(ap.far ? "calAph" : "calPeri").replace("{k}", num(ap.km / 1e6, 1)) + ': ' + whenTxt(ap.ms) + '</div>' : '') +
       '<div>' + (light === null ? t("calPolar") : t("lightHead").replace("{a}", light)) + '</div>' +
       '<div>' + t("ph" + phaseIdx(ph)) + ' · ' + t("moonIll").replace("{i}", il) + '</div>' +
       '<div>' + t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ",")) + '</div>' +
+      ev.map(function (e) { return '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' }).join("") +
       '<p class="cnote">' + t("moonNote") + '</p></div>'
   }
 

@@ -511,13 +511,19 @@ button {
 .mrow { margin-top: 6px; text-align: left; }
 .mrl { display: block; margin: 0 0 3px 2px; font-size: 11px; color: var(--mut); }
 .mcells { display: grid; gap: 3px; }   /* kolumny mogą się zwężać poniżej treści: 16 dni mieści się na wąskim telefonie */
-.md { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-width: 0; min-height: 34px; padding-top: 3px; background: var(--card); border: 1.5px solid transparent; border-radius: 6px; }
+.md { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: auto; min-width: 0; min-height: 34px; margin: 0; padding: 3px 0 0; background: var(--card); color: var(--fg); border: 1.5px solid transparent; border-radius: 6px; font-weight: 400; cursor: pointer; }
+.md:hover { border-color: var(--arc); }
 .md b { font-size: 11px; font-weight: 600; line-height: 1; }
 @media (max-width: 380px) { .mcells { gap: 2px; } .md { border-radius: 4px; } .md b { font-size: 10px; letter-spacing: -.3px; } }
 .md svg { width: 70%; max-width: 16px; height: auto; margin-top: auto; margin-bottom: 3px; }
 .md.past { opacity: .5; }
-.md.today { border-color: var(--sun); background: var(--sun); color: var(--on-sun); opacity: 1; }
-.mval { margin-top: 8px; font-size: 13px; font-weight: 700; }
+.md.today { border-color: var(--sun); opacity: 1; }                       /* dziś: pomarańczowe obramowanie */
+.md.sel { background: var(--sun); color: var(--on-sun); opacity: 1; }   /* wybrany dzień: pomarańczowe tło */
+.mdet { margin-top: 10px; padding: 12px 14px; text-align: left; background: var(--card); border-radius: 14px; font-size: 14px; }
+.mdet > div { margin-top: 4px; }
+.mdet .mdt { margin: 0; font-size: 18px; font-weight: 700; }
+.mdet .mdt small { font-size: 12px; font-weight: 600; color: var(--sun); }
+.mdet:empty { display: none; }
 .mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
 /* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */

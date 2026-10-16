@@ -53,12 +53,12 @@ var OrbitCal = (function () {
   function lonAt(n) { var m = n * 864e5 + 432e5; return sunLonDeg(m - tzOffset(m)) }
   // doba, w której Słońce jest na kącie l w roku orbity Y
   function dayAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return dateOf(sunDay(cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5))) }
-  // aphelium albo peryhelium w danej dobie: { far, km } lub null
+  // aphelium albo peryhelium w danej dobie: { far, km, ms } lub null
   function apsisOn(n) {
     var Y = dateOf(n).getFullYear(); if (n < starts(Y)[0]) Y--;
     var o = year(Y), d = days(Y);
-    if (d.aph === n) return { far: true, km: o.aph.km };
-    if (d.peri === n) return { far: false, km: o.peri.km };
+    if (d.aph === n) return { far: true, km: o.aph.km, ms: o.aph.ms };
+    if (d.peri === n) return { far: false, km: o.peri.km, ms: o.peri.ms };
     return null
   }
   // doby aphelium i peryhelium roku orbity Y

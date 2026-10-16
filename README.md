@@ -1,6 +1,6 @@
 # Zegar słoneczny (daylight-clock)
 
-Interaktywny zegar słoneczny w przeglądarce. Czas pokazuje w **stopniach obrotu Ziemi**, a nie w godzinach: liczy od wschodu albo od południa słonecznego w wybranym miejscu na Ziemi.
+Interaktywny zegar słoneczny w przeglądarce. Czas pokazuje w **stopniach obrotu Ziemi**, a nie w godzinach: liczy od wschodu Słońca w wybranym miejscu na Ziemi.
 
 **▶ Otwórz: https://bibilibak.github.io/daylight-clock/**
 
@@ -11,13 +11,13 @@ Strona działa na komputerze i telefonie. Nic nie trzeba instalować.
 ### Tarcza zegara
 - **Pierścień dnia i nocy**: jasny łuk to dzień, ciemny to noc, w wybranym miejscu i w dzisiejszym dniu.
 - **Wskazówka Słońca** pokazuje kąt Słońca. Nad tarczą widać, ile **stopni światła** ma dziś dzień, a w dzień także, ile ich jeszcze zostało.
-- **Dwa tryby tarczy**: *od południa* (górowanie Słońca u góry) albo *od wschodu* (0° po lewej).
+- Tarcza liczy od wschodu: wschód to 0° po lewej stronie.
 - Na tarczy są zaznaczone **wschód**, **górowanie**, **zachód** i **środek nocy**.
 - **Księżyc**: srebrna wskazówka oraz łuk pokazujący, kiedy Księżyc jest nad horyzontem.
-- **Wydarzenia**: możesz dodać własne punkty dnia, np. „Lekcja 08:00”, i zobaczyć je na tarczy. Godzina odnosi się do strefy czasowej wybranego miasta.
+- **Wydarzenia**: możesz dodać własne punkty dnia, np. „Lekcja 08:00”, i zobaczyć je na tarczy. Przy każdym wydarzeniu widać, ile stopni dzieli je od najbliższego punktu doby, np. „14° 56′ po wschodzie”. Godzina odnosi się do strefy czasowej wybranego miasta.
 
 ### Słońce i Księżyc w liczbach
-- Kąt Słońca, wysokość Słońca nad horyzontem, kąt górowania i zachodu na tarczy.
+- Kąt Słońca od wschodu (kąt doby), wysokość Słońca nad horyzontem i największa wysokość Słońca dzisiaj (w chwili górowania).
 - Faza Księżyca (nów, kwadry, pełnia…), procent oświetlenia, dzień cyklu i pasek miesiąca księżycowego.
 - **Miesiąc księżycowy** jako siatka dni w dwóch rzędach: *przybywa* (od nowiu do pełni) i *ubywa* (od pełni do nowiu). Dni liczą się od północy w strefie czasowej wybranego miasta: dzień 1 to dzień nowiu, a cykl ma 29 albo 30 dni. Ikony faz stoją w dniach, w których fazy naprawdę wypadają. Dzisiejszy dzień jest wyróżniony.
 - Obsługa **dnia polarnego** i **nocy polarnej**.

@@ -80,13 +80,14 @@ svg {
   margin: 0 auto;
 }
 
-/* opisy stopni z obwódką w kolorze tła, żeby wskazówka ich nie zasłaniała */
-#labels {
+/* opisy stopni i odczyt w środku z obwódką w kolorze tła, żeby wskazówka ich nie zasłaniała */
+#labels, #near {
   paint-order: stroke;
   stroke: var(--bg);
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+#near { stroke-width: 6px; }   /* większy tekst, szersza obwódka: wskazówka "chowa się" pod odczytem */
 
 /* ===== Przełącznik języka (prawy górny róg) ===== */
 .lang {
@@ -435,21 +436,14 @@ button {
   font-weight: 600;
 }
 
-/* odczyt względem najbliższego znacznika (np. "12° 30′ do południa") */
-.near {
-  margin-top: 8px;
-  font-size: 26px;
-  font-weight: 700;
-}
-
 /* ile stopni światła ma dzień i ile zostało */
 .light {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 14px;
   color: var(--mut);
 }
 
-/* ===== Przełącznik tarczy: od południa / od wschodu ===== */
+/* ===== Przełączniki (zegar roku, kalendarz) ===== */
 .seg {
   display: flex;
   justify-content: center;
@@ -488,10 +482,9 @@ button {
 
 [hidden] { display: none !important; }
 
-/* górny pasek: pod przyciskiem 3D stoi przełącznik orientacji tarczy */
+/* górny pasek */
 .top { align-items: flex-start; }
 .topl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-.topl .seg { margin-top: 0; justify-content: flex-start; }
 .yseg { margin: 0 0 8px; }   /* przełącznik wykres / pętla w zegarze roku */
 
 /* stopnie światła pod nagłówkiem */

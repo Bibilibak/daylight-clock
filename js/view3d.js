@@ -201,9 +201,9 @@
   }
 
   function setBtn() {
-    var on = !$("v3").hidden, b = $("viewBtn");
-    b.textContent = t(on ? "toDial" : "to3d");
-    b.setAttribute("aria-pressed", on ? "true" : "false");
+    var b = $("viewBtn");
+    b.textContent = t("to3d");
+    b.setAttribute("aria-pressed", $("v3").hidden ? "false" : "true");
   }
 
   /* ----- przycisk w lewym górnym rogu: tarcza <-> wizualizacja 3D ----- */

@@ -9,9 +9,6 @@ function validCoords(a, b) {   // tylko prawdziwe liczby (tekst "21" z uszkodzon
   return typeof a === "number" && typeof b === "number" && isFinite(a) && isFinite(b) && a >= -90 && a <= 90 && b >= -180 && b <= 180
 }
 
-// Tryb tarczy: "noon" = od południa (tarcza stała, południe u góry), "rise" = od wschodu (0° po lewej)
-var mode = "noon";
-try { if (localStorage.getItem("mode") === "rise") mode = "rise" } catch (e) {}
 
 function $(i) { return document.getElementById(i) }
 
@@ -57,8 +54,7 @@ function arcSeg(a0, a1, rad) {
   return "M" + p[0] + " " + p[1] + " A" + rad + " " + rad + " 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + q[0] + " " + q[1]
 }
 function normDeg(x) { return ((x + 180) % 360 + 360) % 360 - 180 }   // do zakresu -180..180
-// kąt od południa w zakresie -180..180 (g = stopnie od wschodu, nd = stopień górowania)
-function hourAngle(g, nd) { var h = g - nd; return h > 180 ? h - 360 : h }
+// liczba ze znakiem: "+" nad horyzontem, "−" pod
 function signedTxt(h, d) { return (h > 0.05 ? "+" : h < -0.05 ? "−" : "") + Math.abs(h).toFixed(d) }
 function put(id, a) { var p = pt(a); $(id).setAttribute("cx", p[0]); $(id).setAttribute("cy", p[1]) }
 
@@ -140,7 +136,7 @@ function polarCycle(now) {
    1. kąt fazy ph (0-360°): miejsce w cyklu synodycznym od nowiu do nowiu. Pokazuje go pasek miesiąca.
    2. oświetlenie illum (0-1): jaka część widocznej tarczy jest jasna (tekst "5% oświetlenia").
    3. kąt na tarczy dobowej: położenie względem lokalnego południka, w tym samym układzie co Słońce
-      (H z moonPos, odłożone od znacznika górowania Słońca nd + off). Pokazuje go wskazówka i znacznik na tarczy. */
+      (H z moonPos, odłożone od znacznika górowania Słońca nd). Pokazuje go wskazówka i znacznik na tarczy. */
 /* ===== Księżyc: uproszczone położenie (kilka wyrazów wzoru, dokładność rzędu 1°) =====
    Zwraca kąt godzinny Księżyca H (stopnie od jego górowania, na zachód dodatni),
    wysokość nad horyzontem i deklinację. */
@@ -227,7 +223,7 @@ $("evl").onclick = function (e) {
 };
 
 var lastL = "";
-function drawEv(cyc, k, now, off, nd) {
+function drawEv(cyc, k, now, nd, sd, noSet) {
   var g = "", l = "", c = tzParts(now.getTime());   // dzisiejsza data w wybranym mieście
   evs.forEach(function (v, i) {
     var hh = v.t.split(":"), deg = null;
@@ -236,9 +232,10 @@ function drawEv(cyc, k, now, off, nd) {
       if (dt >= cyc.a && dt < cyc.b) { deg = k * (dt - cyc.a) }
     }
     if (deg === null) return;
-    var p = pt(deg + off, r + 32);
+    var p = pt(deg, r + 32), np = noSet ? null : nearParts(deg, nd, sd),   // jak pod tarczą: odstęp od najbliższego znacznika doby
+      near = np ? '<b>' + np[0] + '</b> <i>' + np[1] + '</i>' : '<b>' + deg.toFixed(1) + '°</b>';
     g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>';
-    l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span><b>' + (mode === "noon" ? signedTxt(hourAngle(deg, nd), 1) : deg.toFixed(1)) + '°</b><a data-i="' + i + '">×</a></span></div>'
+    l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span>' + near + '<a data-i="' + i + '">×</a></span></div>'
   });
   $("evs").innerHTML = g;
   if (l !== lastL) { $("evl").innerHTML = l; lastL = l }
@@ -247,12 +244,16 @@ function drawEv(cyc, k, now, off, nd) {
 /* ===== Odczyt względem najbliższego znacznika =====
    Znaczniki doby: wschód (0°), południe, zachód, północ (środek nocy).
    Zamiast dużej liczby od wschodu: małe "12° 30′ do południa". 1′ (minuta łuku) = 4 s. */
-function nearText(deg, nd, sd) {
+function nearParts(deg, nd, sd) {
   var m = [[0, 0], [nd, 1], [sd, 2], [(sd + 360) / 2, 3], [360, 0]], best = m[0];
   m.forEach(function (x) { if (Math.abs(deg - x[0]) < Math.abs(deg - best[0])) best = x });
   var diff = deg - best[0], am = Math.round(Math.abs(diff) * 60), d = Math.floor(am / 60), mm = am % 60,
     val = "⁦" + (d ? d + "°" + (mm ? " " + mm + "′" : "") : mm + "′") + "⁩";   // izolacja LTR: w arabskim "7° 32′" się nie rozsypie
-  return val + " " + t((diff < 0 ? "nb" : "na") + best[1])
+  return [val, t((diff < 0 ? "nb" : "na") + best[1])]
+}
+function showNear(np) {   // w środku tarczy: wartość nad nazwą znacznika
+  if (!$("nearV")) return;
+  $("nearV").textContent = np ? np[0] : ""; $("nearL").textContent = np ? np[1] : ""
 }
 
 /* ===== Odświeżanie zegara (co sekundę) ===== */
@@ -292,7 +293,7 @@ function tick() {
   if (!cyc) {
     live = null;
     $("deg").textContent = "--°";
-    if ($("near")) $("near").textContent = "";
+    showNear(null);
     if ($("light")) $("light").textContent = "";
     setMsg("noSun");
     return
@@ -307,24 +308,20 @@ function tick() {
     sd = k * (cyc.set - cyc.a),
     nd = k * (cyc.noon - cyc.a)   // górowanie to nie zawsze dokładny środek łuku;
 
-  var off = mode === "noon" ? 90 - nd : 0,    // obrót tarczy: "od południa" = południe zawsze u góry (90° na tarczy)
-    hh = hourAngle(deg, nd),                  // kąt Słońca od południa
-    nz = mode === "noon";
-  drawEv(cyc, k, now, off, nd);
-  put("sun", deg + off); put("set", sd + off); put("noon", nd + off);
   var noSet = polar || cyc.noDay;             // brak zachodu w tym cyklu (polarna albo ostatnia doba nocy polarnej)
+  drawEv(cyc, k, now, nd, sd, noSet);
+  put("sun", deg); put("set", sd); put("noon", nd);
   ["set", "rise0", "mid"].forEach(function (id) { if ($(id)) $(id).style.display = polar || (noSet && id !== "rise0") ? "none" : "" });
   if ($("sunnum")) {
-    put("mid", (sd + 360) / 2 + off);         // środek nocy
-    if ($("rise0")) put("rise0", off);        // wschód
-    var sp = pt(deg + off);                   // dokładny stopień w kółku ze Słońcem
+    put("mid", (sd + 360) / 2);         // środek nocy
+    if ($("rise0")) put("rise0", 0);          // wschód
+    var sp = pt(deg);                   // dokładny stopień w kółku ze Słońcem
     $("sunnum").setAttribute("x", sp[0]); $("sunnum").setAttribute("y", sp[1] + 3.5);
-    $("sunnum").textContent = mode === "noon" ? (hh < -0.5 ? "−" : "") + Math.abs(Math.round(hh)) : Math.round(deg);
+    $("sunnum").textContent = Math.round(deg);
     var ml = "";                              // liczby przy znacznikach: wschód, górowanie, zachód, północ
-    (polar ? [[nd + off, nz ? "0" : Math.round(nd)], [off, nz ? "180" : "0"]] :   // polarna: tylko górowanie i północ
-    noSet ? [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)]] :   // bez zachodu: wschód i górowanie
-    [[off, nz ? "−" + Math.round(nd) : "0"], [nd + off, nz ? "0" : Math.round(nd)],
-     [sd + off, nz ? "+" + Math.round(sd - nd) : Math.round(sd)], [(sd + 360) / 2 + off, nz ? "180" : Math.round((sd + 360) / 2)]
+    (polar ? [[nd, Math.round(nd)], [0, "0"]] :   // polarna: tylko górowanie i północ
+    noSet ? [[0, "0"], [nd, Math.round(nd)]] :   // bez zachodu: wschód i górowanie
+    [[0, "0"], [nd, Math.round(nd)], [sd, Math.round(sd)], [(sd + 360) / 2, Math.round((sd + 360) / 2)]
     ]).forEach(function (m) {
       var q = pt(m[0], r - 36);
       ml += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '">' + m[1] + '°</text>'
@@ -333,13 +330,13 @@ function tick() {
   }
   if ($("light")) $("light").textContent = !polar && deg < sd ? t("lightDay").replace("{b}", Math.round(sd - deg)) : "";
   // wskazówka centralna: obrót o kąt Słońca na tarczy
-  $("hand").setAttribute("transform", "rotate(" + (deg + off) + " " + cx + " " + cy + ")");
-  $("day").setAttribute("d", sd > 0 ? arcSeg(off, sd + off) : "");   // noc polarna: brak łuku dnia
-  $("prog").setAttribute("d", deg > 0.1 ? arcSeg(off, deg + off) : "");
-  if ($("moonhand")) {                        // Księżyc na TEJ SAMEJ tarczy co Słońce: ten sam środek, skala i obrót "off"
-    var mp = moonPos(now), c = nd + off,      // c = miejsce lokalnego górowania Słońca na tarczy (tam Księżyc ma H = 0)
+  $("hand").setAttribute("transform", "rotate(" + (deg) + " " + cx + " " + cy + ")");
+  $("day").setAttribute("d", sd > 0 ? arcSeg(0, sd) : "");   // noc polarna: brak łuku dnia
+  $("prog").setAttribute("d", deg > 0.1 ? arcSeg(0, deg) : "");
+  if ($("moonhand")) {                        // Księżyc na TEJ SAMEJ tarczy co Słońce: ten sam środek i skala
+    var mp = moonPos(now), c = nd,      // c = miejsce lokalnego górowania Słońca na tarczy (tam Księżyc ma H = 0)
       dialAng = c + mp.H,                     // kąt Księżyca na tarczy dobowej (nie to samo co faza ani oświetlenie)
-      dd = Math.abs(normDeg(dialAng - (deg + off))),   // odstęp od Słońca na tarczy
+      dd = Math.abs(normDeg(dialAng - (deg))),   // odstęp od Słońca na tarczy
       mr = dd < 10 ? 158 : r,                 // blisko Słońca znacznik wysuwamy poza pierścień (kąt zostaje prawdziwy)
       cH = (Math.sin(0.125 * R) - Math.sin(lat * R) * Math.sin(mp.dec * R)) / (Math.cos(lat * R) * Math.cos(mp.dec * R)),
       h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, mq = pt(dialAng, mr), gl = phaseGlyph(mp.ph, 0, 0, 8);
@@ -363,12 +360,11 @@ function tick() {
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
-  if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t(nz ? "modeNoon" : "modeRise") }
+  if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t("modeRise") }
   if ($("lightH")) $("lightH").textContent = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy
-  $("deg").textContent = nz ? signedTxt(hh, 1) + "°" : deg.toFixed(1) + "°";
+  $("deg").textContent = deg.toFixed(1) + "°";
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
-  $("sd").textContent = noSet ? "--°" : nz ? "+" + (sd - nd).toFixed(1) + "°" : sd.toFixed(1) + "°";
-  if ($("near")) $("near").textContent = noSet ? "" : nearText(deg, nd, sd);
+  showNear(noSet ? null : nearParts(deg, nd, sd));
 
   live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null,
     sLon: sunLonDeg(now.getTime()), mLon: mp ? mp.lon : null, node: mp ? mp.node : null };   // dla js/view3d.js
@@ -509,15 +505,6 @@ if ($("viewBtn")) $("viewBtn").addEventListener("click", function () {
   if (!window.Sun3D) setMsg("no3d")
 });
 
-/* ===== Przełącznik tarczy: od południa (stała) / od wschodu ===== */
-function setMode(m) {
-  mode = m; lastML = "";
-  try { localStorage.setItem("mode", m) } catch (e) {}
-  document.querySelectorAll(".seg button[data-mode]").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-mode") === m ? "true" : "false") });
-  tick()
-}
-document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
-
 /* ===== Miesiąc księżycowy jako siatka dni =====
    Dni od północy: dzień 1 = dzień nowiu, ostatni = dzień przed następnym nowiem (29 albo 30 dni).
    Ikona fazy stoi w dniu kalendarzowym, w którym faza naprawdę wypada (strefa czasowa miasta). Przerwa między rzędami przy pełni:
@@ -550,19 +537,18 @@ function showView(v) {
   if ($("yearView")) $("yearView").hidden = v !== "year";
   if ($("calView")) $("calView").hidden = v !== "cal";
   if ($("dialExtras")) $("dialExtras").hidden = v === "year" || v === "cal";   // kafelki i Księżyc tylko przy zegarze i 3D
-  if ($("modeSeg")) $("modeSeg").hidden = v !== "dial";
-  [["yearBtn", "year"], ["calBtn", "cal"]].forEach(function (x) { if ($(x[0])) $(x[0]).setAttribute("aria-pressed", v === x[1] ? "true" : "false") });
+  [["dialBtn", "dial"], ["viewBtn", "3d"], ["yearBtn", "year"], ["calBtn", "cal"]].forEach(function (x) { if ($(x[0])) $(x[0]).setAttribute("aria-pressed", v === x[1] ? "true" : "false") });
   if (v === "year" && window.YearClock) YearClock.render();
   if (v === "cal" && window.Cal) Cal.render();
   if (window.Sun3D) Sun3D.refresh()
 }
+if ($("dialBtn")) $("dialBtn").onclick = function () { showView("dial") };
 if ($("yearBtn")) $("yearBtn").onclick = function () { showView(curView === "year" ? "dial" : "year") };
 if ($("calBtn")) $("calBtn").onclick = function () { showView(curView === "cal" ? "dial" : "cal") };
 
 /* ===== Start ===== */
 setLang(detectLang());
 if ($("mgrid")) buildMonthScale();
-setMode(mode);
 apply();
 setInterval(tick, 1000);
 // Przywróć ostatni widok po odświeżeniu - dopiero po załadowaniu wszystkich skryptów (zegar roku, 3D, kalendarz)

@@ -9,10 +9,12 @@
   try { if (localStorage.getItem("cview") === "ring") cvO = "ring"; localStorage.removeItem("cviews") } catch (e) {}   // cviews: zapis starszej wersji (z kalendarzem gregoriańskim)
   try {   // ostatnio oglądany miesiąc i wybrany dzień (po przeładowaniu strony widok zostaje)
     var cs = JSON.parse(localStorage.getItem("calsel") || "null");
-    if (cs && isFinite(cs.sy) && isFinite(cs.sm) && isFinite(cs.d)) sel = new Date(cs.sy, cs.sm, cs.d)
+    // tylko sensowne wartości (zapis mógł zostać uszkodzony albo zmieniony ręcznie)
+    if (cs && inYears(cs.sy) && cs.sm >= 0 && cs.sm < 12 && cs.d >= 1 && cs.d <= 31 && cs.sm % 1 === 0 && cs.d % 1 === 0) sel = new Date(cs.sy, cs.sm, cs.d)
   } catch (e) {}
+  function inYears(y) { return typeof y === "number" && y % 1 === 0 && y >= 1000 && y <= 3000 }   // lata 1000–3000, jak pole roku
   var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok i miesiąc orbity
-  if (cs && isFinite(cs.oy) && cs.om >= 0 && cs.om < 12) { oy = cs.oy; om = cs.om }
+  if (cs && inYears(cs.oy) && cs.om >= 0 && cs.om < 12 && cs.om % 1 === 0) { oy = cs.oy; om = cs.om }
 
   // O wschodzie Słońca (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
   // zaznaczenie idzie razem z nim. Zwraca true, gdy "dziś" się zmieniło.
@@ -98,7 +100,14 @@
       closeYear(e.key === "Enter"); render();
       var c = $("calView").querySelector(".cyl"); if (c) c.focus()   // fokus wraca na napis roku
     };
-    inp.onblur = function () { if (closeYear(true)) render() };
+    inp.onblur = function (e) {   // wyjście z pola (np. Tab): przyjmij rok; fokus na ten sam przycisk po przerysowaniu
+      var to = e.relatedTarget, key = null;
+      if (to && $("calView").contains(to))
+        ["data-a", "data-cv", "data-n", "data-om"].some(function (at) { var v = to.getAttribute(at); if (v !== null) key = '[' + at + '="' + v + '"]'; return key });
+      if (!closeYear(true)) return;
+      render();
+      var f = key && $("calView").querySelector(key); if (f) f.focus()
+    };
     b.parentNode.replaceChild(inp, b); inp.focus(); inp.select()
   }
   function closeYear(ok) {   // zamyka pole roku (bez rysowania); ok: przyjmij wpisany rok. Zwraca false, gdy pole było już zamknięte.

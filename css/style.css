@@ -580,6 +580,22 @@ button {
 .yd.sel.sn::after { background: var(--on-sun); }
 @media (min-width: 520px) { .cyear { grid-template-columns: repeat(3, 1fr); } }
 
+/* Kalendarz orbity: koło roku, miesiąc po 10 dni w rzędzie, siatka roku (na szerokim ekranie rząd = pora roku) */
+.oring { display: block; width: 100%; max-width: 360px; margin: 4px auto 6px; cursor: pointer; }
+.onav b { text-transform: none; font-size: 15px; }
+.onav b small { display: block; font-size: 11px; font-weight: 400; color: var(--mut); }
+.ogrid { grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.ogrid .cc { height: 40px; }
+.ogrid .cc small { left: 3px; font-size: 9px; white-space: nowrap; }
+.ogrid .cc b { margin-top: 12px; }
+.cc.ap::after, .yd.ap::after { content: "◆"; position: absolute; bottom: 0; right: 2px; font-size: 8px; line-height: 1; color: var(--fg); }
+.yd.ap::after { top: 0; bottom: auto; right: 0; font-size: 7px; }
+.cc.sel.ap::after, .yd.sel.ap::after { color: var(--on-sun); }
+.oyear .ymh { text-transform: none; font-size: 13px; border-radius: 0; }
+.ymsub { margin-bottom: 3px; font-size: 10px; color: var(--mut); }
+.oymg { grid-template-columns: repeat(10, 1fr); }
+.cdet .cap { font-weight: 600; }
+
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */
 .yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }
 
@@ -592,6 +608,7 @@ button {
   #calView { max-width: 400px; zoom: 1.3; }
   #calView.yearMode { max-width: 760px; zoom: 1; }
   #calView.yearMode .cyear { grid-template-columns: repeat(4, 1fr); gap: 18px 16px; }
+  #calView.yearMode .cyear.oyear { grid-template-columns: repeat(3, 1fr); }
   #calView.yearMode .ymg { font-size: 12px; }
   #calView.yearMode .yd { height: 24px; line-height: 22px; font-size: 12px; }
   /* reszta informacji rośnie razem z tarczą (cały blok w skali, proporcje bez zmian) */

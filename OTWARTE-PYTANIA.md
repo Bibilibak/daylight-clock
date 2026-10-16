@@ -35,3 +35,31 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 - `js/main.js`, funkcja `localDay()`: numer doby kalendarzowej w strefie miasta. Używa jej tylko możliwość A.
 - `js/main.js`, funkcja `buildMonthScale()`: buduje siatkę dni i przypisuje fazy do dni.
 - Wersja liczona od chwili nowiu jest w historii gita w commicie `971d7ea` (przed `ba33f75`).
+
+---
+
+## ❓ Kalendarz orbity: od kiedy liczyć dni miesiąca (północ czy chwila przejścia przez 30°)?
+
+**Stan obecny (tymczasowy):** od północy w strefie miasta, dni miesiąca numerowane od 1. Wybrane 16 października 2026, do przemyślenia.
+
+### Możliwość A: od północy (obecnie)
+- Dzień 1 miesiąca to dzień kalendarzowy, w którym Słońce przechodzi przez granicę 30°·k (równonoc, przesilenie albo granicę miesiąca).
+- Miesiące mają **29–32 pełnych dni**, a rok orbity ma 365 albo 366 dni.
+- ✅ Każdy dzień jest pełny, a numer zmienia się o północy.
+- ⚠️ Gdy przejście wypada blisko północy, wynik zależy od strefy czasowej. W różnych miastach ten sam miesiąc może zacząć się o dzień wcześniej albo później.
+
+### Możliwość B: od chwili przejścia przez granicę
+- Dzień 1 zaczyna się dokładnie w chwili, gdy kąt roku osiąga 30°·k. Taki wynik jest jeden dla całej Ziemi.
+- ⚠️ Ostatni dzień miesiąca jest niepełny, a numer dnia zmienia się codziennie o innej godzinie.
+
+### Możliwość C: sam kąt zamiast dni
+- Datą jest sam kąt roku, np. 213,4°, bez podziału na doby.
+
+### Do ustalenia przy okazji
+- Ta sama zasada co dla dni miesiąca księżycowego (pytanie wyżej). Oba kalendarze powinny liczyć dobę tak samo.
+- **Nazwy miesięcy:** teraz „miesiąc 1–3” w porze roku. Może nadać im nazwy?
+- **Tropiki:** granica |szerokość| < 23,44° (zwrotniki). Między zwrotnikami zamiast pór roku są ćwiartki kąta. Może lepsze byłyby pory deszczowa i sucha?
+
+### Gdzie to jest w kodzie
+- `js/orbit.js`, funkcje `starts()` i `date()`: tu zaczynają się miesiące i liczone są dni.
+- `js/calendar.js`: widoki Koło i Siatka oraz nazwy i kolory pór roku (`qName`, `qColor`).

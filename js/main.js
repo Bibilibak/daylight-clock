@@ -162,13 +162,19 @@ function dayCycle(now) {
   return cyc || polarCycle(now)
 }
 // numer doby tarczy (od wschodu do wschodu), w której leży chwila ms: dzień kalendarzowy jej górowania w strefie miasta
-function sunDay(ms) { var c = dayCycle(new Date(ms)); return localDay(c ? c.noon : ms) }
+function sunDay(ms) { var c = dayCycle(new Date(ms)); return dayNum(c ? c.noon : ms) }
+// numer daty chwili ms: w strefie miasta, a bez strefy (współrzędne wpisane ręcznie albo z lokalizacji) według
+// czasu słonecznego miejsca, a nie strefy urządzenia (inaczej przy zmianie czasu doba mogłaby zniknąć albo się zdublować)
+function dayNum(ms) { return tz ? localDay(ms) : Math.floor((ms + lon * 24e4) / 864e5) }
+// górowanie w dobie n. Górowanie na dacie UTC n nie zawsze wypada w dacie lokalnej n (np. Samoa, UTC+13), więc poprawiamy o różnicę.
+function sunNoon(n) {
+  function at(m) { var x = new Date(m * 864e5); return solarNoon(new Date(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate())) }
+  var ms = at(n), k = n - dayNum(ms);
+  return k ? at(n + k) : ms
+}
 // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ); zaokrąglona w górę do ms,
 // żeby sunDay(sunDayStart(n)) === n (new Date() obcina ułamki ms)
-function sunDayStart(n) {
-  var u = new Date(n * 864e5), c = dayCycle(new Date(solarNoon(new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()))));
-  return c ? Math.ceil(c.a) : n * 864e5
-}
+function sunDayStart(n) { var c = dayCycle(new Date(sunNoon(n))); return c ? Math.ceil(c.a) : n * 864e5 }
 
 /* ===== TRZY RÓŻNE WARTOŚCI KSIĘŻYCA (nie mylić) =====
    1. kąt fazy ph (0-360°): miejsce w cyklu synodycznym od nowiu do nowiu. Pokazuje go pasek miesiąca.
@@ -263,19 +269,24 @@ $("evl").onclick = function (e) {
 };
 
 var lastL = "";
+// tekst z przeglądarki (nazwa i godzina wydarzenia) wstawiany do HTML: bez znaków, które tworzą znaczniki
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }
 function drawEv(cyc, k, now, nd, sd, noSet) {
   var g = "", l = "", c = tzParts(now.getTime());   // dzisiejsza data w wybranym mieście
   evs.forEach(function (v, i) {
-    var hh = v.t.split(":"), deg = null;
-    for (var o = -1; o <= 1; o++) {
-      var dt = zoned(c.year, c.month - 1, c.day + o, +hh[0], +hh[1]);   // godzina wg zegara miasta
+    var hh = /^(\d{1,2}):(\d{2})$/.exec(v.t), deg = null;   // zepsuta godzina (np. ręcznie zmieniony zapis): bez miejsca na tarczy
+    if (hh) for (var o = -1; o <= 1; o++) {
+      var dt = zoned(c.year, c.month - 1, c.day + o, +hh[1], +hh[2]);   // godzina wg zegara miasta
       if (dt >= cyc.a && dt < cyc.b) { deg = k * (dt - cyc.a) }
     }
-    if (deg === null) return;
-    var p = pt(deg, r + 32), np = noSet ? null : nearParts(deg, nd, sd),   // jak pod tarczą: odstęp od najbliższego znacznika doby
+    if (deg === null && hh) return;
+    var near = "--";                                          // zostaje na liście, żeby dało się je usunąć
+    if (deg !== null) {
+      var p = pt(deg, r + 32), np = noSet ? null : nearParts(deg, nd, sd);   // jak pod tarczą: odstęp od najbliższego znacznika doby
       near = np ? '<b>' + np[0] + '</b> <i>' + np[1] + '</i>' : '<b>' + deg.toFixed(1) + '°</b>';
-    g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>';
-    l += '<div><span>' + (i + 1) + '. ' + (v.n || t("event")).replace(/</g, "&lt;") + ' <i>(' + v.t + ')</i></span><span>' + near + '<a data-i="' + i + '">×</a></span></div>'
+      g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>'
+    }
+    l += '<div><span>' + (i + 1) + '. ' + esc(v.n || t("event")) + ' <i>(' + esc(v.t) + ')</i></span><span>' + near + '<a data-i="' + i + '">×</a></span></div>'
   });
   $("evs").innerHTML = g;
   if (l !== lastL) { $("evl").innerHTML = l; lastL = l }
@@ -546,10 +557,9 @@ function buildMonthScale(cyc) {
 /* ===== Chwile w stopniach doby =====
    Każde zdarzenie (faza Księżyca, równonoc, aphelium…) podajemy tak jak tarcza: kąt Słońca od wschodu
    w dobie, w której wypada (w dzień / noc polarną od słonecznej północy). */
-function degTxt(x) {   // 137.4 -> "137° 24′" (izolacja LTR jak w nearParts)
-  var am = Math.round(x * 60), d = Math.floor(am / 60), m = am % 60;
-  return "⁦" + d + "°" + (m ? " " + m + "′" : "") + "⁩"
-}
+// 137.4 -> "137°" (izolacja LTR jak w nearParts). Pełne stopnie (1° = 4 min): uproszczony model Księżyca
+// myli się nawet o kilka godzin, więc minuty łuku udawałyby dokładność, której nie ma.
+function degTxt(x) { return "⁦" + Math.min(359, Math.round(x)) + "°⁩" }
 // "137° 24′ od wschodu": kąt Słońca w dobie, w której wypada chwila ms
 function whenTxt(ms) {
   var c = dayCycle(new Date(ms));

@@ -49,8 +49,8 @@ var OrbitCal = (function () {
   }
   // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ)
   function dayStart(n) { return sunDayStart(n) }
-  // kąt roku w południe danego dnia (w strefie miasta)
-  function lonAt(n) { var m = n * 864e5 + 432e5; return sunLonDeg(m - tzOffset(m)) }
+  // kąt roku w chwili górowania Słońca w dobie n
+  function lonAt(n) { return sunLonDeg(sunNoon(n)) }
   // doba, w której Słońce jest na kącie l w roku orbity Y
   function dayAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return dateOf(sunDay(cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5))) }
   // aphelium albo peryhelium w danej dobie: { far, km, ms } lub null

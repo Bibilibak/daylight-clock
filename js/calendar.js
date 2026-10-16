@@ -14,14 +14,16 @@
   var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok i miesiąc orbity
   if (cs && isFinite(cs.oy) && cs.om >= 0 && cs.om < 12) { oy = cs.oy; om = cs.om }
 
-  // O wschodzie Słońca "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień, zaznaczenie idzie razem z nim.
-  setInterval(function () {
+  // O wschodzie Słońca (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
+  // zaznaczenie idzie razem z nim. Zwraca true, gdy "dziś" się zmieniło.
+  function syncToday() {
     var n = dayStart();
-    if (same(n, today)) return;
+    if (same(n, today)) return false;
     if (same(sel, today)) { sel = n; var o = OrbitCal.date(n); oy = o.year; om = o.month }
     today = n;
-    if ($("calView") && !$("calView").hidden) render()
-  }, 30000);
+    return true
+  }
+  setInterval(function () { if (syncToday() && $("calView") && !$("calView").hidden) render() }, 30000);
 
   function deg(l) { return Math.round(l) % 360 + "°" }
   window.CalendarSystem = window.CalendarSystem || {
@@ -81,19 +83,27 @@
     return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
       '</button><button data-a="ny" aria-label="+1">»</button></div>'
   }
-  // kliknięcie w rok: pole do wpisania roku orbity (Enter albo wyjście z pola zatwierdza, Esc anuluje)
+  /* Kliknięcie w rok: pole do wpisania roku orbity. Enter albo wyjście z pola zatwierdza, Esc anuluje.
+     Kliknięcie innego przycisku kalendarza przy otwartym polu najpierw przyjmuje rok, potem działa normalnie
+     (mousedown nie zabiera fokusu z pola, więc przycisk nie znika przed kliknięciem). */
+  var Y0 = 1000, Y1 = 3000, yearInp = null;
   function editYear(b) {
-    var inp = document.createElement("input"), done = false;
-    inp.type = "number"; inp.className = "cyin"; inp.value = oy; inp.min = 1000; inp.max = 3000; inp.setAttribute("aria-label", t("calYearEdit"));
-    function fin(ok) {
-      if (done) return; done = true;
-      var y = Math.round(+inp.value);
-      if (ok && y >= 1000 && y <= 3000) oy = y;
-      render()
-    }
-    inp.onkeydown = function (e) { if (e.key === "Enter") fin(true); else if (e.key === "Escape") fin(false) };
-    inp.onblur = function () { fin(true) };
+    var inp = yearInp = document.createElement("input");
+    inp.type = "number"; inp.className = "cyin"; inp.value = oy; inp.min = Y0; inp.max = Y1; inp.setAttribute("aria-label", t("calYearEdit"));
+    inp.onkeydown = function (e) {
+      if (e.key !== "Enter" && e.key !== "Escape") return;
+      closeYear(e.key === "Enter"); render();
+      var c = $("calView").querySelector(".cyl"); if (c) c.focus()   // fokus wraca na napis roku
+    };
+    inp.onblur = function () { if (closeYear(true)) render() };
     b.parentNode.replaceChild(inp, b); inp.focus(); inp.select()
+  }
+  function closeYear(ok) {   // zamyka pole roku (bez rysowania); ok: przyjmij wpisany rok. Zwraca false, gdy pole było już zamknięte.
+    var inp = yearInp; if (!inp) return false;
+    yearInp = null;
+    var y = Math.round(+inp.value);
+    if (ok && y >= Y0 && y <= Y1) oy = y;
+    return true
   }
   function oNote() { return '<p class="cnote">' + t("calONote") + (OrbitCal.zone() === "T" ? " " + t("calTrop") : "") + '</p>' }
 
@@ -179,6 +189,7 @@
 
   function render() {
     var box = $("calView"); if (!box) return;
+    syncToday();
     try {
       localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om }));
       localStorage.setItem("cview", cvO)
@@ -193,16 +204,19 @@
     var o = OrbitCal.date(d); oy = o.year; om = o.month
   }
 
+  if ($("calView")) $("calView").onmousedown = function (e) { if (yearInp && e.target !== yearInp) e.preventDefault() };
   if ($("calView")) $("calView").onclick = function (e) {
+    if (e.target === yearInp) return;
+    var closed = closeYear(true);   // otwarte pole roku: przyjmij rok, potem obsłuż kliknięcie
     var ring = e.target.closest(".oring");
     if (ring) {   // kliknięcie w pierścień: dzień o tym kącie roku
       var rc = ring.getBoundingClientRect(), dx = (e.clientX - rc.left) / rc.width * 360 - 180, dy = (e.clientY - rc.top) / rc.height * 360 - 180,
         rr = Math.sqrt(dx * dx + dy * dy);
-      if (rr < 100 || rr > 150) return;
-      pick(OrbitCal.dayAt(oy, Math.atan2(dx, -dy) / R + top0));
+      if (rr >= 100 && rr <= 150) pick(OrbitCal.dayAt(oy, Math.atan2(dx, -dy) / R + top0));
+      else if (!closed) return;
       return render()
     }
-    var b = e.target.closest("button"); if (!b) return;
+    var b = e.target.closest("button"); if (!b) { if (closed) render(); return }
     var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om");
     if (v) cvO = v;
     else if (n !== null) pick(OrbitCal.dateOf(+n));
@@ -212,6 +226,7 @@
     else if (a === "py") oy--; else if (a === "ny") oy++;
     else if (a === "pm") { om--; if (om < 0) { om = 11; oy-- } }
     else if (a === "nm") { om++; if (om > 11) { om = 0; oy++ } }
+    oy = Math.max(Y0, Math.min(Y1, oy));   // strzałki też nie wychodzą poza lata 1000–3000
     render()
   };
   window.Cal = { render: render, selected: function () { return sel },

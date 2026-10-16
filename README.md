@@ -19,6 +19,7 @@ Strona działa na komputerze i telefonie. Nic nie trzeba instalować.
 ### Słońce i Księżyc w liczbach
 - Kąt Słońca, wysokość Słońca nad horyzontem, kąt górowania i zachodu na tarczy.
 - Faza Księżyca (nów, kwadry, pełnia…), procent oświetlenia, dzień cyklu i pasek miesiąca księżycowego.
+- Pasek miesiąca księżycowego jest osią **dni** od nowiu do nowiu, z rzeczywistą długością tego cyklu. Ma kreskę co dobę i obrysowany dzisiejszy dzień. Ikony faz stoją tam, gdzie fazy naprawdę wypadają.
 - Obsługa **dnia polarnego** i **nocy polarnej**.
 
 ### Wizualizacja 3D
@@ -29,6 +30,9 @@ Długość dnia w ciągu całego roku jako **wykres** lub **pętla**. Pokazuje, 
 
 ### Kalendarz
 Nawigacja po dniach z podwójną datą: zwykłą i roboczym **kątem roku** (0° = równonoc wiosenna).
+- **Widok miesiąca** albo **widok całego roku**: 12 miesięcy z numerami tygodni (ISO 8601), skrótami nazw dni i zaznaczonymi weekendami.
+- Kropka oznacza równonoc lub przesilenie (kąt roku 0°, 90°, 180°, 270°).
+- Przy każdym dniu: numer dnia w roku, numer tygodnia i kąt roku.
 
 ### Miejsce
 - Wyszukiwanie miasta po nazwie,

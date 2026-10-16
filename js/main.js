@@ -158,9 +158,10 @@ function moonPos(now) {
 }
 
 // faza Księżyca = o ile jego długość ekliptyczna wyprzedza Słońce (0 nów, 90 pierwsza kwadra, 180 pełnia, 270 ostatnia)
-function sunLonDeg(ms) {   // długość ekliptyczna Słońca w stopniach (0° = równonoc wiosenna)
+function sunLonDeg(ms) {   // długość ekliptyczna Słońca w stopniach (0° = równonoc wiosenna, na dany rok)
+  // peryhelium liczone od równonocy danej daty (precesja ok. 1,7° na stulecie), -0,0057° = aberracja
   var d = ms / 864e5 - 10957.5, Ms = R * (357.5291 + 0.98560028 * d);
-  return (((Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * 102.9372 + Math.PI) / R) % 360 + 360) % 360
+  return (((Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * (102.9372 + 4.70935e-5 * d - 0.0057) + Math.PI) / R) % 360 + 360) % 360
 }
 function elong(ms) {
   var d = ms / 864e5 - 10957.5, M = R * (134.963 + 13.064993 * d), l = R * (218.316 + 13.176396 * d) + R * 6.289 * Math.sin(M);
@@ -174,7 +175,13 @@ function lunarCycle(now) {
   if (last > t) last = newMoonNear(last - 29.53 * 864e5);
   var next = newMoonNear(last + 29.53 * 864e5);
   if (next <= t) { last = next; next = newMoonNear(last + 29.53 * 864e5) }
-  return { day: Math.floor((t - last) / 864e5) + 1, elapsed: (t - last) / 864e5, length: (next - last) / 864e5 }
+  return { day: Math.floor((t - last) / 864e5) + 1, elapsed: (t - last) / 864e5, length: (next - last) / 864e5, last: last, next: next }
+}
+// moment fazy k (1 = I kwadra, 2 = pełnia, 3 = III kwadra) w cyklu zaczętym nowiem "last"
+function quarterAt(last, len, k) {
+  var ms = last + len * k / 4 * 864e5;
+  for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms) - 90 * k) / 12.19 * 864e5;
+  return ms
 }
 function phaseIdx(p) {   // 0 nów, 1 sierp przyb., 2 I kwadra, 3 garb przyb., 4 pełnia, 5 garb ubyw., 6 III kwadra, 7 sierp ubyw.
   return p < 12 || p >= 348 ? 0 : p < 78 ? 1 : p < 102 ? 2 : p < 168 ? 3 : p < 192 ? 4 : p < 258 ? 5 : p < 282 ? 6 : 7
@@ -335,15 +342,20 @@ function tick() {
     $("moonmark").setAttribute("transform", "translate(" + mq[0] + " " + mq[1] + ")");
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 152) : arcSeg(c - h0, c + h0, 152));
     if ($("mname")) {                         // sekcja Księżyca
-      var pct = mp.ph / 360 * 100, ig = phaseGlyph(mp.ph, 0, 0, 18);
+      var lc = lunarCycle(now), ig = phaseGlyph(mp.ph, 0, 0, 18);
+      if (lc.last !== monthLast) buildMonthScale(lc);   // nowy cykl: inne położenie kwadr i inna liczba dni
+      var pct = lc.elapsed / lc.length * 100;
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
-      $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)"; $("mnow").style.left = pct + "%";   // pasek = kąt fazy
-      $("mval").textContent = t("moonPill").replace("{d}", lunarCycle(now).day).replace("{a}", Math.round(mp.ph));   // dzień cyklu + kąt fazy nad paskiem: nie zasłania podziałki
+      // pasek = CZAS od nowiu do nowiu (dni), nie kąt fazy: kreska co dobę, obrysowany bieżący dzień cyklu
+      $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)";
+      $("mday").style.left = (lc.day - 1) / lc.length * 100 + "%";
+      $("mday").style.width = Math.min(1, lc.length - lc.day + 1) / lc.length * 100 + "%";
+      $("mval").textContent = t("moonPill").replace("{d}", lc.day).replace("{a}", Math.round(mp.ph));   // dzień cyklu + kąt fazy nad paskiem
       var pW = $("mval").parentNode.clientWidth, vW = $("mval").offsetWidth;   // etykieta wyśrodkowana nad znacznikiem, przy krawędziach dosunięta do środka
       if (pW) { $("mval").style.left = Math.max(0, Math.min(pW - vW, pW * pct / 100 - vW / 2)) + "px"; $("mval").style.transform = "" }
       else { $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-50%)" }   // widok ukryty: brak wymiarów do pomiaru
-      $("mcaret").style.left = pct + "%";                 // znacznik dokładnie na pozycji kąta fazy
+      $("mcaret").style.left = pct + "%";                 // znacznik dokładnie na pozycji w czasie
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
@@ -502,15 +514,24 @@ function setMode(m) {
 }
 document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
 
-/* ===== Skala paska miesiąca: ikony faz i stopnie w pozycjach 0, 25, 50, 75, 100% ===== */
-function buildMonthScale() {
-  var ph = "", dg = "", P = [0, 25, 50, 75, 100], A = [0, 90, 180, 270, 0];
-  P.forEach(function (p, i) {
-    var pos = "position:absolute;left:" + p + "%;transform:translateX(-" + p + "%)";
-    ph += '<svg viewBox="-9 -9 18 18" width="18" height="18" style="' + pos + '">' + phaseGlyph(A[i], 0, 0, 8) + '</svg>';
-    dg += '<span style="' + pos + '">' + (p * 3.6) + '°</span>'
+/* ===== Skala paska miesiąca księżycowego =====
+   Oś = czas od nowiu do następnego nowiu (rzeczywista długość tego cyklu, 29,3–29,8 doby).
+   Ikony faz stoją w chwilach, gdy faza naprawdę wypada; pod każdą dzień cyklu tej fazy. */
+var monthLast = null;
+function buildMonthScale(cyc) {
+  cyc = cyc || lunarCycle(new Date());
+  monthLast = cyc.last;
+  var L = cyc.length, ph = "",
+    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, L, k) }), [cyc.next]);
+  T.forEach(function (ms, k) {
+    var p = (ms - cyc.last) / (cyc.next - cyc.last) * 100,
+      pos = "position:absolute;left:" + p + "%;transform:translateX(-" + (k === 0 ? 0 : k === 4 ? 100 : 50) + "%)";
+    // ikona fazy + dzień cyklu, w którym faza wypada (ćwiartki mają różną długość: orbita Księżyca jest eliptyczna)
+    ph += '<span class="mph" style="' + pos + '" title="' + t("ph" + [0, 2, 4, 6, 0][k]) + '"><svg viewBox="-9 -9 18 18" width="18" height="18">' +
+      phaseGlyph(90 * k % 360, 0, 0, 8) + '</svg><small>' + t("moonDayS").replace("{d}", Math.floor((ms - cyc.last) / 864e5) + 1) + '</small></span>'
   });
-  $("mphases").innerHTML = ph; $("mdegs").innerHTML = dg
+  $("mphases").innerHTML = ph;
+  $("mticks").style.backgroundSize = (100 / L) + "% 100%"   // kreska dokładnie co jedną dobę tego cyklu
 }
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */

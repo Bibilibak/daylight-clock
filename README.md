@@ -29,10 +29,11 @@ Sfera niebieska, którą można obracać, przeciągając rysunek: horyzont, drog
 Długość dnia w ciągu całego roku jako **wykres** lub **pętla**. Pokazuje, czy światła przybywa, czy ubywa (i o ile stopni na dobę), ile trwa dzień oraz ile dni zostało do najdłuższego i najkrótszego dnia.
 
 ### Kalendarz
-Nawigacja po dniach z podwójną datą: zwykłą i roboczym **kątem roku** (0° = równonoc wiosenna).
-- **Widok miesiąca** albo **widok całego roku**: 12 miesięcy z numerami tygodni (ISO 8601), skrótami nazw dni i zaznaczonymi weekendami.
-- Kropka oznacza równonoc lub przesilenie (kąt roku 0°, 90°, 180°, 270°).
-- Przy każdym dniu: numer dnia w roku, numer tygodnia i kąt roku.
+Kalendarz orbity: rok zaczyna się w dniu równonocy marcowej (kąt roku 0°), tym samym dla całej Ziemi. Każda pora roku to 90° drogi Ziemi wokół Słońca, podzielone na 3 miesiące po 30°: **wczesna**, **pełna** i **późna** (np. wczesna wiosna, pełna wiosna, późna wiosna). Na półkuli południowej pory roku są odwrócone, a między zwrotnikami miesiące nazywa się zakresem kąta (np. „Miesiąc 0–30°”). Miesiące mają od 29 do 32 dni.
+- **Kalendarz** (widok domyślny): cały rok orbity, 12 miesięcy w rzędach po 10 dni.
+- **Koło**: rok jako koło kąta roku i dni wybranego miesiąca.
+- Kropka oznacza równonoc lub przesilenie, ◆ aphelium lub peryhelium.
+- Przy wybranym dniu: data, kąt roku, dzień roku orbity, światło dnia, faza Księżyca i dzień cyklu księżycowego.
 
 ### Miejsce
 - Wyszukiwanie miasta po nazwie,

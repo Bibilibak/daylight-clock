@@ -57,9 +57,9 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 ### Do ustalenia przy okazji
 - Ta sama zasada co dla dni miesiąca księżycowego (pytanie wyżej). Oba kalendarze powinny liczyć dobę tak samo.
-- **Nazwy miesięcy:** teraz „miesiąc 1–3” w porze roku. Może nadać im nazwy?
+- ✅ **Nazwy miesięcy:** wczesna / pełna / późna pora roku (np. „Pełne lato”); między zwrotnikami zakres kąta, np. „Miesiąc 0–30°”.
 - **Tropiki:** granica |szerokość| < 23,44° (zwrotniki). Między zwrotnikami zamiast pór roku są ćwiartki kąta. Może lepsze byłyby pory deszczowa i sucha?
 
 ### Gdzie to jest w kodzie
 - `js/orbit.js`, funkcje `starts()` i `date()`: tu zaczynają się miesiące i liczone są dni.
-- `js/calendar.js`: widoki Koło i Siatka oraz nazwy i kolory pór roku (`qName`, `qColor`).
+- `js/calendar.js`: widoki Kalendarz i Koło oraz nazwy i kolory pór roku i miesięcy (`qName`, `qColor`, `mName`).

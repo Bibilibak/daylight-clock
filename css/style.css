@@ -544,7 +544,6 @@ button {
 .cnav b { flex: 1; text-transform: capitalize; }
 .cnav button, .ctoday { width: auto; padding: 4px 10px; background: transparent; color: var(--fg); border: 1px solid var(--arc); border-radius: 8px; font-weight: 600; cursor: pointer; }
 .cgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; }
-.cgrid .wd { font-size: 11px; color: var(--mut); text-transform: capitalize; }
 .cc { position: relative; width: auto; height: 46px; padding: 2px; background: var(--card); color: var(--fg); border: 1px solid transparent; border-radius: 10px; font-weight: 400; cursor: pointer; }
 .cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }
 .cc b { display: block; margin-top: 11px; font-size: 13px; }
@@ -559,7 +558,7 @@ button {
 .cdet .cp { font-size: 18px; font-weight: 700; }
 .cnote { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
-/* Kalendarz: przełącznik miesiąc / rok i widok całego roku (12 małych miesięcy) */
+/* Kalendarz: przełącznik Kalendarz / Koło i widok całego roku (12 miesięcy) */
 .cseg { margin: 0 auto 10px; }
 #calView.yearMode { max-width: 760px; }
 .ysum { margin: 4px 0 10px; font-size: 13px; color: var(--mut); }
@@ -568,12 +567,8 @@ button {
 .ymh { width: auto; margin: 0 0 4px; padding: 2px 8px; background: transparent; color: var(--fg); border: 0; border-radius: 8px; font-size: 14px; font-weight: 700; text-transform: capitalize; cursor: pointer; }
 .ymh:hover { background: var(--card); }
 .ymg { display: grid; grid-template-columns: 1.3fr repeat(7, 1fr); gap: 1px; font-size: 11px; }
-.ymg .wd { font-size: 10px; color: var(--mut); text-transform: uppercase; }
-.ymg .wk { display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--mut); opacity: .75; }
-.ymg .we { color: #c0504d; }
 .yd { position: relative; width: auto; height: 20px; padding: 0; background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 400; line-height: 18px; cursor: pointer; }
 .yd:hover { background: var(--card); }
-.yd.we { color: #c0504d; }
 .yd.today { border-color: var(--sun); font-weight: 700; }
 .yd.sel { background: var(--sun); color: var(--on-sun); }
 .yd.sn::after { content: ""; position: absolute; top: 1px; right: 1px; width: 4px; height: 4px; border-radius: 50%; background: var(--sun); }
@@ -607,8 +602,7 @@ button {
   #yearView .ysvg { max-width: none; }   /* ogólny limit svg (380 px) nie dotyczy wykresu roku */
   #calView { max-width: 400px; zoom: 1.3; }
   #calView.yearMode { max-width: 760px; zoom: 1; }
-  #calView.yearMode .cyear { grid-template-columns: repeat(4, 1fr); gap: 18px 16px; }
-  #calView.yearMode .cyear.oyear { grid-template-columns: repeat(3, 1fr); }
+  #calView.yearMode .cyear { grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
   #calView.yearMode .ymg { font-size: 12px; }
   #calView.yearMode .yd { height: 24px; line-height: 22px; font-size: 12px; }
   /* reszta informacji rośnie razem z tarczą (cały blok w skali, proporcje bez zmian) */

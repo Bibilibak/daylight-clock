@@ -65,3 +65,4 @@ Po zmianie plików CSS lub JS podnieś numer `?v=` w `index.html`, żeby przegl�
 - [ ] Równanie czasu
 - [ ] Reguły i nazwy okresów w kalendarzu „kąta roku”
 - [ ] Nowa grafika tarczy
+- [ ] Od kiedy liczyć dni miesiąca księżycowego: od północy czy od nowiu? (zob. [OTWARTE-PYTANIA.md](OTWARTE-PYTANIA.md))

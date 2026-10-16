@@ -1,10 +1,11 @@
 /* ===== Kalendarz orbity: obliczenia =====
    Rok orbity zaczyna się w dniu równonocy marcowej (kąt roku 0°), wspólnym dla całej Ziemi.
    4 pory roku po 90°, w każdej 3 miesiące po 30° kąta orbity. Ziemia biegnie po orbicie nierówno
-   (najszybciej w peryhelium), więc miesiące mają 29–32 dni. Dni miesiąca liczone od 1, od północy w strefie miasta
-   (to samo co dni miesiąca księżycowego; zob. OTWARTE-PYTANIA.md). */
+   (najszybciej w peryhelium), więc miesiące mają 29–32 dni. Doba zaczyna się od wschodu Słońca, jak na tarczy
+   (w dzień / noc polarną od słonecznej północy): dzień 1 miesiąca to doba, w której Słońce przechodzi przez
+   granicę 30°·k. Dobę nazywamy datą jej górowania (strefa miasta). Zob. OTWARTE-PYTANIA.md. */
 var OrbitCal = (function () {
-  var cache = {};
+  var cache = {}, local = {};
 
   // chwila, w której Słońce przechodzi przez kąt a (Newton; Słońce idzie ok. 0,9856° na dobę)
   function cross(a, ms) { for (var i = 0; i < 6; i++) ms -= normDeg(sunLonDeg(ms) - a) / 0.9856 * 864e5; return ms }
@@ -31,28 +32,40 @@ var OrbitCal = (function () {
 
   function dayN(d) { return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5) }
   function dateOf(n) { var u = new Date(n * 864e5); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()) }
-  function starts(Y) { return year(Y).b.map(localDay) }   // numery dób, w których zaczynają się miesiące (ostatni = następny rok)
+  // doby roku Y w wybranym miejscu: s = numery dób, w których zaczynają się miesiące (ostatni = następny rok),
+  // aph / peri = doby aphelium i peryhelium. Zależą od miejsca (wschody Słońca), więc pamiętane osobno dla miejsca.
+  function days(Y) {
+    var key = Y + "|" + lat + "|" + lon + "|" + tz, o = year(Y);
+    return local[key] || (local[key] = { s: o.b.map(sunDay), aph: sunDay(o.aph.ms), peri: sunDay(o.peri.ms) })
+  }
+  function starts(Y) { return days(Y).s }
 
-  // data w kalendarzu orbity dla dnia kalendarzowego d (w strefie miasta)
+  // data w kalendarzu orbity dla doby d (data jej górowania w strefie miasta)
   function date(d) {
     var n = dayN(d), Y = d.getFullYear(), s = starts(Y), k = 11;
     if (n < s[0]) { Y--; s = starts(Y) }
     while (s[k] > n) k--;
     return { year: Y, month: k, season: k / 3 | 0, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], yday: n - s[0] + 1, ylen: s[12] - s[0] }
   }
+  // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ)
+  function dayStart(n) { var c = dayCycle(new Date(solarNoon(dateOf(n)))); return c ? c.a : n * 864e5 }
   // kąt roku w południe danego dnia (w strefie miasta)
   function lonAt(n) { var m = n * 864e5 + 432e5; return sunLonDeg(m - tzOffset(m)) }
-  // dzień kalendarzowy, w którym Słońce jest na kącie l w roku orbity Y
-  function dayAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return dateOf(localDay(cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5))) }
-  // aphelium albo peryhelium w danym dniu: { far, km } lub null
+  // doba, w której Słońce jest na kącie l w roku orbity Y
+  function dayAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return dateOf(sunDay(cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5))) }
+  // aphelium albo peryhelium w danej dobie: { far, km } lub null
   function apsisOn(n) {
-    var o = year(dateOf(n).getFullYear() - (n < starts(dateOf(n).getFullYear())[0] ? 1 : 0));
-    if (localDay(o.aph.ms) === n) return { far: true, km: o.aph.km };
-    if (localDay(o.peri.ms) === n) return { far: false, km: o.peri.km };
+    var Y = dateOf(n).getFullYear(); if (n < starts(Y)[0]) Y--;
+    var o = year(Y), d = days(Y);
+    if (d.aph === n) return { far: true, km: o.aph.km };
+    if (d.peri === n) return { far: false, km: o.peri.km };
     return null
   }
+  // doby aphelium i peryhelium roku orbity Y
+  function apsisDays(Y) { var d = days(Y); return { aph: d.aph, peri: d.peri } }
   // strefa: "N" i "S" poza zwrotnikami, "T" między zwrotnikami (tam pod kalendarzem dopisek o porach roku)
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
 
-  return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, lonAt: lonAt, dayAt: dayAt, apsisOn: apsisOn, zone: zone }
+  return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, dayStart: dayStart, lonAt: lonAt, dayAt: dayAt,
+    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone }
 })();

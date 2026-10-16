@@ -2,7 +2,7 @@
    Daty kalendarza orbity liczy js/orbit.js. */
 (function () {
   function $(i) { return document.getElementById(i) }
-  function dayStart() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()) }
+  function dayStart() { return OrbitCal.dateOf(sunDay(Date.now())) }   // dzisiejsza doba (od wschodu Słońca w wybranym miejscu)
   var today = dayStart();
   var sel = today;
   var cvO = "grid";   // widok: "grid" (Kalendarz) albo "ring" (Koło), zapamiętany w przeglądarce
@@ -14,7 +14,7 @@
   var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok i miesiąc orbity
   if (cs && isFinite(cs.oy) && cs.om >= 0 && cs.om < 12) { oy = cs.oy; om = cs.om }
 
-  // Po północy "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień, zaznaczenie idzie razem z nim.
+  // O wschodzie Słońca "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień, zaznaczenie idzie razem z nim.
   setInterval(function () {
     var n = dayStart();
     if (same(n, today)) return;
@@ -113,9 +113,9 @@
         '<text class="ylb" x="' + a[0].toFixed(1) + '" y="' + (a[1] + 3).toFixed(1) + '" text-anchor="middle">' + q * 90 + '°</text>' +
         '<text x="' + b[0].toFixed(1) + '" y="' + (b[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + qColor(q) + '">' + qName(q) + '</text>'
     }
-    var off = tzOffset(o.b[0]), tk = "";                                // granice dób (północ w mieście); co 10 dni miesiąca dłuższa kreska
+    var tk = "";                                                        // granice dób (wschód Słońca w mieście); co 10 dni miesiąca dłuższa kreska
     for (k = 0; k < 12; k++) for (n = s[k]; n < s[k + 1]; n++) {
-      var l = sunLonDeg(n * 864e5 - off), d0 = n - s[k];
+      var l = sunLonDeg(OrbitCal.dayStart(n)), d0 = n - s[k];
       tk += "M" + f(P(l, 132)) + "L" + f(P(l, d0 % 10 ? 135 : 139))
     }
     h += '<path d="' + tk + '" stroke="var(--mut)" stroke-width=".8" fill="none"/>';
@@ -154,9 +154,9 @@
   /* Siatka roku orbity: 12 miesięcy, rzędami po 10 dni (1–10, 11–20, 21–30, 31–32). Na szerokim ekranie
      jeden rząd = jedna pora roku. Kropka = równonoc / przesilenie, ◆ = aphelium / peryhelium. */
   function renderGrid(box) {
-    var s = OrbitCal.starts(oy), o = OrbitCal.year(oy), k, i, h = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
+    var s = OrbitCal.starts(oy), o = OrbitCal.apsisDays(oy), k, i, h = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
       '<div class="ysum">' + t("calOYearSum").replace("{d}", s[12] - s[0]).replace("{a}", short(OrbitCal.dateOf(s[0]))).replace("{b}", short(OrbitCal.dateOf(s[12] - 1))) +
-      ' · ◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(localDay(o.aph.ms))) + ' · ◆ ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(localDay(o.peri.ms))) + '</div><div class="cyear oyear">';
+      ' · ◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(o.aph)) + ' · ◆ ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(o.peri)) + '</div><div class="cyear oyear">';
     for (k = 0; k < 12; k++) {
       var len = s[k + 1] - s[k];
       h += '<div class="ym"><button class="ymh" data-om="' + k + '" style="border-bottom:3px solid ' + qColor(k / 3 | 0) + '">' + mName(k) + '</button>' +

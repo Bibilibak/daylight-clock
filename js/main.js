@@ -132,6 +132,38 @@ function polarCycle(now) {
   return null
 }
 
+// Doba tarczy, w której leży chwila now: od wschodu do następnego wschodu, a w dzień / noc polarną od słonecznej północy.
+// Wschody z pięciu kolejnych dni; szukamy cyklu [wschód, następny wschód), w którym leży "now".
+// (Działa dla każdego miasta, także gdy data u Ciebie i w mieście się różni.) Zwraca { a, b, set, rise, noon, … } albo null.
+function dayCycle(now) {
+  var days = [], noons = [], cyc = null, A, B;
+  for (var o = -2; o <= 2; o++) {
+    var dd0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + o);
+    days.push(times(dd0)); noons.push(solarNoon(dd0))
+  }
+  for (var i = 0; i < 4 && !cyc; i++) {
+    A = days[i]; B = days[i + 1];
+    if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise, noon: A.noon }
+    // Dni przejściowe (sąsiedni dzień bez wschodu, np. ostatni dzień przed nocą polarną): brakujący wschód
+    // szacujemy o jedną dobę słoneczną od znanego, żeby tarcza nie przeskakiwała na tryb polarny za wcześnie.
+    // Gdy brakuje tylko jednego dnia, oba szacunki stykają się w połowie między znanymi wschodami (bez dziury).
+    else if (A && !B) {
+      var bEnd = i + 2 < days.length && days[i + 2] ? (A.rise + days[i + 2].rise) / 2 : A.rise + (noons[i + 1] - noons[i]);
+      if (now >= A.rise && now < bEnd) cyc = { a: A.rise, b: bEnd, set: A.set, rise: A.rise, noon: A.noon }
+    } else if (!A && B) {
+      var a0 = i > 0 && days[i - 1] ? (days[i - 1].rise + B.rise) / 2 : B.rise - (noons[i + 1] - noons[i]);
+      if (now >= a0 && now < B.rise) {
+        var prevUp = sunAlwaysUp(sol(gam(new Date(noons[i]))).dc / R),               // poprzedni dzień był polarnym dniem?
+          set0 = prevUp ? Math.max(a0, Math.min(B.rise, noons[i] + (B.set - B.noon))) : a0;   // wtedy wieczorny zachód symetrycznie do górowania
+        cyc = { a: a0, b: B.rise, set: set0, rise: a0, noon: noons[i], noDay: !prevUp }   // noDay: koniec nocy polarnej, bez zachodu
+      }
+    }
+  }
+  return cyc || polarCycle(now)
+}
+// numer doby tarczy (od wschodu do wschodu), w której leży chwila ms: dzień kalendarzowy jej górowania w strefie miasta
+function sunDay(ms) { var c = dayCycle(new Date(ms)); return localDay(c ? c.noon : ms) }
+
 /* ===== TRZY RÓŻNE WARTOŚCI KSIĘŻYCA (nie mylić) =====
    1. kąt fazy ph (0-360°): miejsce w cyklu synodycznym od nowiu do nowiu. Pokazuje go pasek miesiąca.
    2. oświetlenie illum (0-1): jaka część widocznej tarczy jest jasna (tekst "5% oświetlenia").
@@ -263,32 +295,7 @@ function tick() {
   var alt = Math.asin(Math.sin(lat * R) * Math.sin(S.dc) + Math.cos(lat * R) * Math.cos(S.dc) * Math.cos(H)) / R;
   $("alt").textContent = signedTxt(alt, 1) + "°";   // + nad horyzontem, − pod
 
-  // Wschody z pięciu kolejnych dni; szukamy cyklu [wschód, następny wschód), w którym leży "teraz".
-  // (Działa dla każdego miasta, także gdy data u Ciebie i w mieście się różni.)
-  var days = [], noons = [], cyc = null, A, B;
-  for (var o = -2; o <= 2; o++) {
-    var dd0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + o);
-    days.push(times(dd0)); noons.push(solarNoon(dd0))
-  }
-  for (var i = 0; i < 4 && !cyc; i++) {
-    A = days[i]; B = days[i + 1];
-    if (A && B && now >= A.rise && now < B.rise) cyc = { a: A.rise, b: B.rise, set: A.set, rise: A.rise, noon: A.noon }
-    // Dni przejściowe (sąsiedni dzień bez wschodu, np. ostatni dzień przed nocą polarną): brakujący wschód
-    // szacujemy o jedną dobę słoneczną od znanego, żeby tarcza nie przeskakiwała na tryb polarny za wcześnie.
-    // Gdy brakuje tylko jednego dnia, oba szacunki stykają się w połowie między znanymi wschodami (bez dziury).
-    else if (A && !B) {
-      var bEnd = i + 2 < days.length && days[i + 2] ? (A.rise + days[i + 2].rise) / 2 : A.rise + (noons[i + 1] - noons[i]);
-      if (now >= A.rise && now < bEnd) cyc = { a: A.rise, b: bEnd, set: A.set, rise: A.rise, noon: A.noon }
-    } else if (!A && B) {
-      var a0 = i > 0 && days[i - 1] ? (days[i - 1].rise + B.rise) / 2 : B.rise - (noons[i + 1] - noons[i]);
-      if (now >= a0 && now < B.rise) {
-        var prevUp = sunAlwaysUp(sol(gam(new Date(noons[i]))).dc / R),               // poprzedni dzień był polarnym dniem?
-          set0 = prevUp ? Math.max(a0, Math.min(B.rise, noons[i] + (B.set - B.noon))) : a0;   // wtedy wieczorny zachód symetrycznie do górowania
-        cyc = { a: a0, b: B.rise, set: set0, rise: a0, noon: noons[i], noDay: !prevUp }   // noDay: koniec nocy polarnej, bez zachodu
-      }
-    }
-  }
-  if (!cyc) cyc = polarCycle(now);
+  var cyc = dayCycle(now);
   if (!cyc) {
     live = null;
     $("deg").textContent = "--°";

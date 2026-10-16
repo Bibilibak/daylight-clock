@@ -38,9 +38,9 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 ---
 
-## ❓ Kalendarz orbity: od kiedy liczyć dni miesiąca (północ czy chwila przejścia przez 30°)?
+## ✅ Kalendarz orbity: od kiedy liczyć dni miesiąca (północ, wschód czy chwila przejścia przez 30°)?
 
-**Stan obecny (tymczasowy):** od północy w strefie miasta, dni miesiąca numerowane od 1. Wybrane 16 października 2026, do przemyślenia.
+**Decyzja (17 października 2026): całe doby od wschodu Słońca.** W tym systemie doba zaczyna się o wschodzie, tak jak na tarczy (w dzień i noc polarną od słonecznej północy). Dzień 1 miesiąca lub pory roku to doba, w której Słońce przechodzi przez granicę 30°·k. Wszystkie dni są pełne, a granica zależy od miejsca (od godziny wschodu). Przykład: równonoc wrześniowa 2026 wypada 23 września około 2:05 czasu polskiego, czyli przed wschodem, więc w Warszawie jesień zaczyna się dobą 22 września. (Od 16 do 17 października 2026 dni liczono od północy.)
 
 ### Możliwość A: od północy
 - Dzień 1 miesiąca to dzień kalendarzowy, w którym Słońce przechodzi przez granicę 30°·k (równonoc, przesilenie albo granicę miesiąca).
@@ -61,5 +61,6 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 - ✅ **Tropiki:** granica |szerokość| < 23,44° (zwrotniki). Kalendarz jest wspólny dla całej Ziemi, więc między zwrotnikami nazwy i kolory pór roku są takie jak na danej półkuli (pory deszczowa i sucha to sprawa pogody, nie orbity). Pod kalendarzem jest dopisek, że klimatycznie pory roku prawie się tam nie różnią.
 
 ### Gdzie to jest w kodzie
-- `js/orbit.js`, funkcje `starts()` i `date()`: tu zaczynają się miesiące i liczone są dni.
+- `js/orbit.js`, funkcje `days()`, `starts()` i `date()`: tu zaczynają się miesiące i liczone są dni.
+- `js/main.js`, funkcje `dayCycle()` i `sunDay()`: doba od wschodu do wschodu (wspólna z tarczą).
 - `js/calendar.js`: widoki Kalendarz i Koło oraz nazwy i kolory pór roku i miesięcy (`qName`, `qColor`, `mName`).

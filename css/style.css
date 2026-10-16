@@ -147,7 +147,6 @@ svg {
 /* arabski (od prawej do lewej): tarcza, widok 3D i pasek Księżyca zostają w układzie astronomicznym */
 [dir="rtl"] svg, [dir="rtl"] .month { direction: ltr; }
 [dir="rtl"] .box b, [dir="rtl"] #where, [dir="rtl"] .ev b { direction: ltr; unicode-bidi: isolate; }
-[dir="rtl"] .mpill { direction: rtl; unicode-bidi: isolate; }   /* "اليوم 5 · 120°": arabski porządek, stopień przy liczbie */
 
 /* ===== Odczyt stopni pod tarczą ===== */
 .reading {
@@ -513,23 +512,21 @@ button {
 .mico { flex: none; }
 .mname { font-size: 20px; font-weight: 700; }
 .mdeg2 { font-size: 14px; font-weight: 600; }
-.mday { margin-top: 2px; font-size: 13px; color: var(--mut); }
 
-.month { max-width: 340px; margin: 14px auto 22px; }   /* odstęp od pola wydarzeń pod paskiem */
-.mphases { position: relative; height: 32px; margin-bottom: 3px; }
-.mph { display: flex; flex-direction: column; align-items: center; }
-.mph small { font-size: 10px; line-height: 12px; color: var(--mut); white-space: nowrap; }
-.mbar { position: relative; height: 18px; margin: 2px 0 0; border-radius: 999px; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(142, 163, 194, .5); }
-.mtrack, .mfill { position: absolute; inset: 0; background: linear-gradient(90deg, #4a5068 0%, #dfe5f1 50%, #4a5068 100%); }
-.mtrack { opacity: .28; }
-.mfill { clip-path: inset(0 100% 0 0); transition: clip-path .6s ease; }   /* płynny przyrost postępu */
-.mticks { position: absolute; inset: 0; background-image: linear-gradient(90deg, rgba(128, 128, 128, .55) 0, rgba(128, 128, 128, .55) 1px, transparent 1px); background-size: calc(100% / 29.5306) 100%; background-repeat: repeat-x; }
-.mday { position: absolute; top: 0; bottom: 0; box-shadow: inset 0 0 0 2px var(--sun); border-radius: 3px; }      /* bieżący dzień cyklu */
+.month { max-width: 420px; margin: 14px auto 22px; }   /* odstęp od pola wydarzeń pod siatką */
+.mrow { margin-top: 6px; text-align: left; }
+.mrl { display: block; margin: 0 0 3px 2px; font-size: 11px; color: var(--mut); }
+.mcells { display: grid; gap: 3px; }
+.md { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; aspect-ratio: 3 / 4; padding-top: 3px; background: var(--card); border: 1.5px solid transparent; border-radius: 6px; }
+.md b { font-size: 11px; font-weight: 600; line-height: 1; }
+.md svg { width: 70%; max-width: 16px; height: auto; margin-top: auto; margin-bottom: 3px; }
+.md.past { opacity: .5; }
+.md.today { border-color: var(--sun); background: var(--sun); color: var(--on-sun); opacity: 1; }
+.mval { margin-top: 8px; font-size: 13px; font-weight: 700; }
 .mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
 /* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */
 .moonbox .mico { width: 46px; height: 46px; max-width: none; margin: 0; flex: none; }
-.mphases svg { width: 18px; height: 18px; max-width: none; margin: 0; }
 
 /* etykieta kąta fazy nad paskiem: zostaje w kontenerze, strzałka wskazuje dokładne miejsce */
 .mcap { margin-bottom: 6px; font-size: 11px; color: var(--mut); text-align: left; }
@@ -589,10 +586,6 @@ button {
 @media (min-width: 520px) { .cyear { grid-template-columns: repeat(3, 1fr); } }
 
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */
-.mcur { position: relative; height: 22px; margin-top: 2px; }   /* etykieta dnia POD paskiem: fazy zostają tuż nad paskiem */
-.mpill { position: absolute; top: 5px; height: 16px; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 16px; white-space: nowrap; color: #fff; background: rgba(43, 33, 24, .88); }
-.mcaret { position: absolute; top: 1px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-bottom-color: rgba(43, 33, 24, .88); border-top: 0; }
-.mbar { margin-top: 0; }
 .yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }
 
 /* Szersze ekrany (komputer, tablet): tarcza, widok 3D i zegar roku rosną do szerokości okna,

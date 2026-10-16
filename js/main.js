@@ -344,18 +344,16 @@ function tick() {
     if ($("mname")) {                         // sekcja Księżyca
       var lc = lunarCycle(now), ig = phaseGlyph(mp.ph, 0, 0, 18);
       if (lc.last !== monthLast) buildMonthScale(lc);   // nowy cykl: inne położenie kwadr i inna liczba dni
-      var pct = lc.elapsed / lc.length * 100;
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
-      // pasek = CZAS od nowiu do nowiu (dni), nie kąt fazy: kreska co dobę, obrysowany bieżący dzień cyklu
-      $("mfill").style.clipPath = "inset(0 " + (100 - pct) + "% 0 0)";
-      $("mday").style.left = (lc.day - 1) / lc.length * 100 + "%";
-      $("mday").style.width = Math.min(1, lc.length - lc.day + 1) / lc.length * 100 + "%";
-      $("mval").textContent = t("moonPill").replace("{d}", lc.day).replace("{a}", Math.round(mp.ph));   // dzień cyklu + kąt fazy nad paskiem
-      var pW = $("mval").parentNode.clientWidth, vW = $("mval").offsetWidth;   // etykieta wyśrodkowana nad znacznikiem, przy krawędziach dosunięta do środka
-      if (pW) { $("mval").style.left = Math.max(0, Math.min(pW - vW, pW * pct / 100 - vW / 2)) + "px"; $("mval").style.transform = "" }
-      else { $("mval").style.left = pct + "%"; $("mval").style.transform = "translateX(-50%)" }   // widok ukryty: brak wymiarów do pomiaru
-      $("mcaret").style.left = pct + "%";                 // znacznik dokładnie na pozycji w czasie
+      if (lc.day !== monthDay) {                          // dzisiejszy dzień cyklu w siatce, minione dni przygaszone
+        monthDay = lc.day;
+        [].forEach.call($("mgrid").querySelectorAll(".md"), function (el) {
+          var d = +el.getAttribute("data-d");
+          el.classList.toggle("today", d === lc.day); el.classList.toggle("past", d < lc.day)
+        })
+      }
+      $("mval").textContent = t("moonPill").replace("{d}", lc.day).replace("{a}", Math.round(mp.ph));   // dzień cyklu + kąt fazy pod siatką
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
@@ -377,7 +375,7 @@ function apply() {
   try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
   if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
   setMsg("sinceRise");
-  if ($("mphases")) buildMonthScale();   // ikony faz zależą od półkuli
+  if ($("mgrid")) buildMonthScale();   // ikony faz zależą od półkuli
   tick();
   refreshViews()
 }
@@ -458,7 +456,7 @@ function pickLang(l) {
   setMsg(msgKey);   // przetłumacz komunikat pod odczytem
   lastL = "";       // wymuś odrysowanie listy wydarzeń
   if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
-  if ($("mphases")) buildMonthScale();            // nazwy faz pod paskiem
+  if ($("mgrid")) buildMonthScale();            // nazwy rzędów i faz w siatce
   if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
   tick();
   refreshViews()
@@ -514,24 +512,27 @@ function setMode(m) {
 }
 document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
 
-/* ===== Skala paska miesiąca księżycowego =====
-   Oś = czas od nowiu do następnego nowiu (rzeczywista długość tego cyklu, 29,3–29,8 doby).
-   Ikony faz stoją w chwilach, gdy faza naprawdę wypada; pod każdą dzień cyklu tej fazy. */
-var monthLast = null;
+/* ===== Miesiąc księżycowy jako siatka dni =====
+   Dzień 1 zaczyna się w chwili nowiu; ostatni dzień zawiera następny nów (rzeczywista długość cyklu, 29,3–29,8 doby).
+   Ikona fazy stoi w dniu, w którym faza naprawdę wypada. Przerwa między rzędami przy pełni:
+   górny rząd = Księżyca przybywa (nów -> dzień przed pełnią), dolny = ubywa (pełnia -> nów). */
+var monthLast = null, monthDay = null;
 function buildMonthScale(cyc) {
   cyc = cyc || lunarCycle(new Date());
-  monthLast = cyc.last;
-  var L = cyc.length, ph = "",
-    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, L, k) }), [cyc.next]);
-  T.forEach(function (ms, k) {
-    var p = (ms - cyc.last) / (cyc.next - cyc.last) * 100,
-      pos = "position:absolute;left:" + p + "%;transform:translateX(-" + (k === 0 ? 0 : k === 4 ? 100 : 50) + "%)";
-    // ikona fazy + dzień cyklu, w którym faza wypada (ćwiartki mają różną długość: orbita Księżyca jest eliptyczna)
-    ph += '<span class="mph" style="' + pos + '" title="' + t("ph" + [0, 2, 4, 6, 0][k]) + '"><svg viewBox="-9 -9 18 18" width="18" height="18">' +
-      phaseGlyph(90 * k % 360, 0, 0, 8) + '</svg><small>' + t("moonDayS").replace("{d}", Math.floor((ms - cyc.last) / 864e5) + 1) + '</small></span>'
-  });
-  $("mphases").innerHTML = ph;
-  $("mticks").style.backgroundSize = (100 / L) + "% 100%"   // kreska dokładnie co jedną dobę tego cyklu
+  monthLast = cyc.last; monthDay = null;
+  var N = Math.ceil(cyc.length), ph = {}, h = "", d,
+    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }), [cyc.next]);
+  T.forEach(function (ms, k) { ph[Math.floor((ms - cyc.last) / 864e5) + 1] = k % 4 });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
+  var full = Math.floor((T[2] - cyc.last) / 864e5) + 1,
+    cols = Math.max(full - 1, N - full + 1);
+  function row(from, to, key) {
+    var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',1fr)">';
+    for (d = from; d <= to; d++)
+      r += '<div class="md" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : '') + '><b>' + d + '</b>' +
+        (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : '') + '</div>';
+    return r + '</div></div>'
+  }
+  $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane")
 }
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */
@@ -554,7 +555,7 @@ if ($("calBtn")) $("calBtn").onclick = function () { showView(curView === "cal" 
 
 /* ===== Start ===== */
 setLang(detectLang());
-if ($("mphases")) buildMonthScale();
+if ($("mgrid")) buildMonthScale();
 setMode(mode);
 apply();
 setInterval(tick, 1000);

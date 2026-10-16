@@ -532,7 +532,7 @@ function buildMonthScale(cyc) {
   var full = localDay(T[2]) - d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
-    var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',1fr)">';
+    var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">';
     for (d = from; d <= to; d++)
       r += '<div class="md" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : '') + '><b>' + d + '</b>' +
         (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : '') + '</div>';

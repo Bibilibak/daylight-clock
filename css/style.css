@@ -212,8 +212,9 @@ button {
   padding: 8px 14px;
 }
 
-#en { width: 130px; }
-#et { width: 110px; }
+#en { width: 130px; flex: 0 1 130px; min-width: 0; }   /* na wąskim telefonie pola się zwężają, przycisk "Dodaj" zostaje na ekranie */
+#et { width: 110px; flex: 0 1 110px; min-width: 0; }
+#add { flex: none; }
 
 /* ===== Lista wydarzeń ===== */
 .ev {
@@ -516,9 +517,10 @@ button {
 .month { max-width: 420px; margin: 14px auto 22px; }   /* odstęp od pola wydarzeń pod siatką */
 .mrow { margin-top: 6px; text-align: left; }
 .mrl { display: block; margin: 0 0 3px 2px; font-size: 11px; color: var(--mut); }
-.mcells { display: grid; gap: 3px; }
-.md { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; aspect-ratio: 3 / 4; padding-top: 3px; background: var(--card); border: 1.5px solid transparent; border-radius: 6px; }
+.mcells { display: grid; gap: 3px; }   /* kolumny mogą się zwężać poniżej treści: 16 dni mieści się na wąskim telefonie */
+.md { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-width: 0; min-height: 34px; padding-top: 3px; background: var(--card); border: 1.5px solid transparent; border-radius: 6px; }
 .md b { font-size: 11px; font-weight: 600; line-height: 1; }
+@media (max-width: 380px) { .mcells { gap: 2px; } .md { border-radius: 4px; } .md b { font-size: 10px; letter-spacing: -.3px; } }
 .md svg { width: 70%; max-width: 16px; height: auto; margin-top: auto; margin-bottom: 3px; }
 .md.past { opacity: .5; }
 .md.today { border-color: var(--sun); background: var(--sun); color: var(--on-sun); opacity: 1; }

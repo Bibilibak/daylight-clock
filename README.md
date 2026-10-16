@@ -32,7 +32,7 @@ Długość dnia w ciągu całego roku jako **wykres** lub **pętla**. Pokazuje, 
 Kalendarz orbity: rok zaczyna się w dniu równonocy marcowej (kąt roku 0°), tym samym dla całej Ziemi. Każda pora roku to 90° drogi Ziemi wokół Słońca, podzielone na 3 miesiące po 30°: **wczesna**, **pełna** i **późna** (np. wczesna wiosna, pełna wiosna, późna wiosna). Na półkuli południowej pory roku są odwrócone. Między zwrotnikami nazwy są takie jak na danej półkuli, bo kalendarz jest wspólny dla całej Ziemi. Miesiące mają od 29 do 32 dni.
 - **Kalendarz** (widok domyślny): cały rok orbity, 12 miesięcy w rzędach po 10 dni. Kliknięcie w rok pozwala wpisać dowolny rok.
 - **Koło**: rok jako koło kąta roku i dni wybranego miesiąca.
-- Kropka oznacza równonoc lub przesilenie, ◆ aphelium lub peryhelium.
+- Kropka oznacza równonoc lub przesilenie, ◆ dzień, w którym Ziemia jest najdalej lub najbliżej Słońca (aphelium, peryhelium).
 - Przy wybranym dniu: data, kąt roku, dzień roku orbity, światło dnia, faza Księżyca i dzień cyklu księżycowego.
 
 ### Miejsce

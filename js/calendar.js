@@ -32,22 +32,22 @@
   function short(d) { return d.toLocaleDateString(loc(), { day: "numeric", month: "short" }) }
 
   /* Nazwy i kolory pór roku. Ćwiartka q = 0…3 to kąt orbity 0–90°, 90–180°… Na półkuli północnej ćwiartka 0
-     to wiosna, na południowej jesień. Między zwrotnikami czterech pór roku nie ma, więc zostaje sam kąt. */
+     to wiosna, na południowej jesień. Kalendarz jest wspólny dla całej Ziemi, więc między zwrotnikami nazwy też są
+     takie jak na danej półkuli (klimatycznie pory roku się tam prawie nie różnią, ale dni liczymy tak samo). */
   var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"];   // wiosna, lato, jesień, zima
-  function sIdx(q) { return OrbitCal.zone() === "S" ? (q + 2) % 4 : q }
-  function qColor(q) { return OrbitCal.zone() === "T" ? "var(--mut)" : SC[sIdx(q)] }
-  function qName(q) { return OrbitCal.zone() === "T" ? t("calQuad").replace("{a}", q * 90 + "–" + (q + 1) * 90 + "°") : t("os" + sIdx(q)) }
+  function sIdx(q) { return lat < 0 ? (q + 2) % 4 : q }
+  function qColor(q) { return SC[sIdx(q)] }
+  function qName(q) { return t("os" + sIdx(q)) }
   /* Nazwa miesiąca: wczesna / pełna / późna pora roku (calMonN: 12 nazw rozdzielonych "|", od wczesnej wiosny do późnej zimy).
-     Między zwrotnikami (i gdy brakuje nazwy w tłumaczeniu): zakres kąta orbity, np. "Miesiąc 0–30°". */
+     Gdy brakuje nazwy w tłumaczeniu: zakres kąta orbity, np. "Miesiąc 0–30°". */
   function mName(k) {
-    var a = t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°");
-    return OrbitCal.zone() === "T" ? a : t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || a
+    return t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°")
   }
   /* Skrót na kole: wczesna / pełna / późna (calMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
-     Między zwrotnikami (i gdy brakuje skrótu): numer miesiąca w ćwiartce, 1–3. */
+     Gdy brakuje skrótu: numer miesiąca w ćwiartce, 1–3. */
   function mShort(k) {
     var s = t("calMonS").split("|");
-    return OrbitCal.zone() === "T" ? k % 3 + 1 : (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
+    return (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
   }
 
   function detail(d) {   // dane wybranego dnia: data orbity, kąt roku i dane astronomiczne (wspólne funkcje z zegarem dobowym)
@@ -73,7 +73,22 @@
   }
   function segs() { return seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) }
   function yearNav(label) {
-    return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><b>' + label + '</b><button data-a="ny" aria-label="+1">»</button></div>'
+    return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
+      '</button><button data-a="ny" aria-label="+1">»</button></div>'
+  }
+  // kliknięcie w rok: pole do wpisania roku orbity (Enter albo wyjście z pola zatwierdza, Esc anuluje)
+  function editYear(b) {
+    var inp = document.createElement("input"), done = false;
+    inp.type = "number"; inp.className = "cyin"; inp.value = oy; inp.min = 1000; inp.max = 3000; inp.setAttribute("aria-label", t("calYearEdit"));
+    function fin(ok) {
+      if (done) return; done = true;
+      var y = Math.round(+inp.value);
+      if (ok && y >= 1000 && y <= 3000) oy = y;
+      render()
+    }
+    inp.onkeydown = function (e) { if (e.key === "Enter") fin(true); else if (e.key === "Escape") fin(false) };
+    inp.onblur = function () { fin(true) };
+    b.parentNode.replaceChild(inp, b); inp.focus(); inp.select()
   }
   function oNote() { return '<p class="cnote">' + t("calONote") + (OrbitCal.zone() === "T" ? " " + t("calTrop") : "") + '</p>' }
 
@@ -188,6 +203,7 @@
     else if (n !== null) pick(OrbitCal.dateOf(+n));
     else if (k !== null) { om = +k; cvO = "ring" }                         // nazwa miesiąca -> koło z tym miesiącem
     else if (a === "t") pick(today);
+    else if (a === "ey") return editYear(b);
     else if (a === "py") oy--; else if (a === "ny") oy++;
     else if (a === "pm") { om--; if (om < 0) { om = 11; oy-- } }
     else if (a === "nm") { om++; if (om > 11) { om = 0; oy++ } }

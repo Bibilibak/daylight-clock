@@ -51,7 +51,7 @@ var OrbitCal = (function () {
     if (localDay(o.peri.ms) === n) return { far: false, km: o.peri.km };
     return null
   }
-  // strefa: "N" i "S" mają cztery pory roku, "T" (między zwrotnikami) tylko ćwiartki kąta orbity
+  // strefa: "N" i "S" poza zwrotnikami, "T" między zwrotnikami (tam pod kalendarzem dopisek o porach roku)
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
 
   return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, lonAt: lonAt, dayAt: dayAt, apsisOn: apsisOn, zone: zone }

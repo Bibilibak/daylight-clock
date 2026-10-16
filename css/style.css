@@ -543,6 +543,8 @@ button {
 .cnav { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .cnav b { flex: 1; text-transform: capitalize; }
 .cnav button, .ctoday { width: auto; padding: 4px 10px; background: transparent; color: var(--fg); border: 1px solid var(--arc); border-radius: 8px; font-weight: 600; cursor: pointer; }
+.cnav .cyl { flex: 1; border: 0; font-size: 16px; font-weight: 700; text-decoration: underline dotted var(--mut); text-underline-offset: 4px; }
+.cyin { width: 6em; margin: 0 auto; padding: 3px 6px; font: inherit; font-weight: 700; text-align: center; color: var(--fg); background: var(--card); border: 1px solid var(--sun); border-radius: 8px; }
 .cgrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 10px 0; }
 .cc { position: relative; width: auto; height: 46px; padding: 2px; background: var(--card); color: var(--fg); border: 1px solid transparent; border-radius: 10px; font-weight: 400; cursor: pointer; }
 .cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }

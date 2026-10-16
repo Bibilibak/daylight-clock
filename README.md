@@ -19,7 +19,7 @@ Strona działa na komputerze i telefonie. Nic nie trzeba instalować.
 ### Słońce i Księżyc w liczbach
 - Kąt Słońca od wschodu (kąt doby), wysokość Słońca nad horyzontem i największa wysokość Słońca dzisiaj (w chwili górowania).
 - Faza Księżyca (nów, kwadry, pełnia…), procent oświetlenia, dzień cyklu i pasek miesiąca księżycowego.
-- **Miesiąc księżycowy** jako siatka dni w dwóch rzędach: *przybywa* (od nowiu do pełni) i *ubywa* (od pełni do nowiu). Dni liczą się od północy w strefie czasowej wybranego miasta: dzień 1 to dzień nowiu, a cykl ma 29 albo 30 dni. Ikony faz stoją w dniach, w których fazy naprawdę wypadają. Dzisiejszy dzień jest wyróżniony.
+- **Miesiąc księżycowy** jako siatka dni w dwóch rzędach: *przybywa* (od nowiu do pełni) i *ubywa* (od pełni do nowiu). Dzień 1 zaczyna się w chwili nowiu, a każdy dzień trwa 24 h od tej chwili, więc numer dnia jest ten sam na całej Ziemi. Cykl ma 30 dni, a ostatni jest niepełny i kończy się następnym nowiem. Ikony faz stoją w dniach, w których fazy naprawdę wypadają. Dzisiejszy dzień jest wyróżniony.
 - Obsługa **dnia polarnego** i **nocy polarnej**.
 
 ### Wizualizacja 3D
@@ -66,4 +66,4 @@ Po zmianie plików CSS lub JS podnieś numer `?v=` w `index.html`, żeby przegl�
 - [ ] Równanie czasu
 - [ ] Reguły i nazwy okresów w kalendarzu „kąta roku”
 - [ ] Nowa grafika tarczy
-- [ ] Od kiedy liczyć dni miesiąca księżycowego: od północy czy od nowiu? (zob. [OTWARTE-PYTANIA.md](OTWARTE-PYTANIA.md))
+- [x] Dni miesiąca księżycowego liczone od chwili nowiu (zob. [OTWARTE-PYTANIA.md](OTWARTE-PYTANIA.md))

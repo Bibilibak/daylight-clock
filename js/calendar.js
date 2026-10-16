@@ -53,10 +53,12 @@
   }
 
   function detail(d) {   // dane wybranego dnia: data orbity, kąt roku i dane astronomiczne (wspólne funkcje z zegarem dobowym)
-    var y = d.getFullYear(), m = d.getMonth(), dd = d.getDate(), T = times(new Date(y, m, dd)), T2 = times(new Date(y, m, dd + 1)),
-      noon = new Date(y, m, dd, 12), ph = elong(noon.getTime()), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(noon),
-      light = T && T2 ? Math.round(360 * (T.set - T.rise) / (T2.rise - T.rise)) : null,
-      o = OrbitCal.date(d), n = OrbitCal.dayN(d), ap = OrbitCal.apsisOn(n), ring = cvO === "ring",
+    // Wszystko z doby n w wybranym miejscu (od wschodu do wschodu), nie z zegara urządzenia: Księżyc w chwili górowania Słońca,
+    // światło = łuk od wschodu do zachodu w tej dobie (w dzień / noc polarną: komunikat calPolar).
+    var n = OrbitCal.dayN(d), noon = sunNoon(n), c = dayCycle(new Date(noon)),
+      ph = elong(noon), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(new Date(noon)),
+      light = c && !c.polar && !c.noDay ? Math.round(360 * (c.set - c.a) / (c.b - c.a)) : null,
+      o = OrbitCal.date(d), ap = OrbitCal.apsisOn(n), ring = cvO === "ring",
       ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1)), k = o.month,
       // dzień 1 miesiąca: chwila przejścia przez granicę (równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica 30°·k)
       cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
@@ -92,6 +94,7 @@
     inp.type = "number"; inp.className = "cyin"; inp.value = oy; inp.min = Y0; inp.max = Y1; inp.setAttribute("aria-label", t("calYearEdit"));
     inp.onkeydown = function (e) {
       if (e.key !== "Enter" && e.key !== "Escape") return;
+      e.preventDefault();   // inaczej ten sam Enter "naciska" napis roku, na który zaraz wraca fokus, i pole otwiera się znowu
       closeYear(e.key === "Enter"); render();
       var c = $("calView").querySelector(".cyl"); if (c) c.focus()   // fokus wraca na napis roku
     };
@@ -189,6 +192,7 @@
 
   function render() {
     var box = $("calView"); if (!box) return;
+    closeYear(false);   // np. odświeżenie o wschodzie przy otwartym polu roku: pole znika, więc zamykamy je bez zapisu
     syncToday();
     try {
       localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om }));
@@ -224,9 +228,9 @@
     else if (a === "t") pick(today);
     else if (a === "ey") return editYear(b);
     else if (a === "py") oy--; else if (a === "ny") oy++;
-    else if (a === "pm") { om--; if (om < 0) { om = 11; oy-- } }
-    else if (a === "nm") { om++; if (om > 11) { om = 0; oy++ } }
-    oy = Math.max(Y0, Math.min(Y1, oy));   // strzałki też nie wychodzą poza lata 1000–3000
+    else if (a === "pm") { if (om > 0) om--; else if (oy > Y0) { om = 11; oy-- } }   // na granicy lat 1000–3000 strzałka miesiąca stoi
+    else if (a === "nm") { if (om < 11) om++; else if (oy < Y1) { om = 0; oy++ } }
+    oy = Math.max(Y0, Math.min(Y1, oy));   // strzałki roku też nie wychodzą poza lata 1000–3000
     render()
   };
   window.Cal = { render: render, selected: function () { return sel },

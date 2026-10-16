@@ -249,6 +249,8 @@ var lastGlyph = "", lastIcon = "";
 /* ===== Wydarzenia użytkownika ===== */
 var evs = [];
 try { evs = JSON.parse(localStorage.getItem("swe") || "[]") } catch (e) {}
+// uszkodzony zapis (nie lista albo puste wpisy) nie może wywrócić odświeżania tarczy
+evs = Array.isArray(evs) ? evs.filter(function (v) { return v && typeof v === "object" }) : [];
 
 function saveEv() {
   try { localStorage.setItem("swe", JSON.stringify(evs)) } catch (e) {}
@@ -399,6 +401,7 @@ function apply() {
   try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
   if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
   setMsg("sinceRise");
+  monthSel = null;                       // nowe miejsce: cykl może mieć inną liczbę dni, zaznaczenie wraca na dziś
   if ($("mgrid")) buildMonthScale();   // ikony faz zależą od półkuli
   tick();
   refreshViews()

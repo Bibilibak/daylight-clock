@@ -4,9 +4,9 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 ---
 
-## ✅ Od kiedy liczyć dni miesiąca księżycowego: od północy czy od chwili nowiu?
+## ✅ Od kiedy liczyć dni miesiąca księżycowego: od północy, od wschodu czy od chwili nowiu?
 
-**Decyzja (17 października 2026): od chwili nowiu (możliwość B).** Miesiąc księżycowy zaczyna się w chwili nowiu, więc tak samo zaczyna się jego dzień 1. Ostatni dzień jest krótszy, bo cykl Księżyca nie jest zgrany z obrotem Ziemi. (Od 16 do 17 października 2026 dni liczono od północy.)
+**Decyzja (17 października 2026): od wschodu Słońca.** Tak samo jak tarcza i kalendarz orbity: dzień 1 to doba (od wschodu do wschodu), w której wypada nów, a cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Dzięki temu każdy dzień księżycowy to jedna doba kalendarza orbity, a chwile faz podajemy w stopniach od wschodu tej doby. Wynik zależy od miejsca (od godziny wschodu). Historia: 16 października od północy, potem krótko od chwili nowiu (możliwość B, commit `17a86c6`).
 
 ### Możliwość A: od północy
 - Dzień 1 to dzień kalendarzowy, w którym wypada nów. Północ liczy się w strefie czasowej wybranego miasta.
@@ -16,7 +16,7 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 - ⚠️ Wynik zależy od strefy czasowej. Ten sam nów może wypaść w różnych miejscach na Ziemi w różne dni, więc numer dnia może się różnić o 1 między miastami.
 - ⚠️ Faza na krawędzi doby, np. o 0:09, trafia do innego dnia niż kilka minut wcześniej.
 
-### Możliwość B: od chwili nowiu (wybrana)
+### Możliwość B: od chwili nowiu
 - Dzień 1 zaczyna się dokładnie w chwili nowiu, a każdy dzień trwa 24 h od tej chwili.
 - Cykl ma zawsze **30 dni**, ale ostatni jest niepełny: trwa od ok. 6 do ok. 20 h, zależnie od długości cyklu (29,27–29,83 doby).
 - ✅ Wynik jest jeden dla całej Ziemi i nie zależy od strefy czasowej.
@@ -32,7 +32,7 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 ### Gdzie to jest w kodzie
 - `js/main.js`, funkcja `lunarCycle()`: zwraca `day` (dzień cyklu) i `days` (liczbę dni w cyklu). Tutaj zmienia się zasadę liczenia.
-- `js/main.js`, funkcja `localDay()`: numer doby kalendarzowej w strefie miasta. Miesiąc księżycowy już jej nie używa (używa jej kalendarz orbity).
+- `js/main.js`, funkcje `dayCycle()`, `sunDay()` i `sunDayStart()`: doba od wschodu do wschodu (wspólna z tarczą i kalendarzem orbity).
 - `js/main.js`, funkcja `buildMonthScale()`: buduje siatkę dni i przypisuje fazy do dni.
 - Wersja liczona od północy jest w historii gita w commicie `ba33f75`.
 

@@ -523,6 +523,7 @@ button {
 .mdet > div { margin-top: 4px; }
 .mdet .mdt { margin: 0; font-size: 18px; font-weight: 700; }
 .mdet .mdt small { font-size: 12px; font-weight: 600; color: var(--sun); }
+.mdet .mdsub { margin: 0 0 6px; font-size: 13px; color: var(--mut); }
 .mdet:empty { display: none; }
 .mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 

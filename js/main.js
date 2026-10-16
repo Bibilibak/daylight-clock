@@ -163,6 +163,12 @@ function dayCycle(now) {
 }
 // numer doby tarczy (od wschodu do wschodu), w której leży chwila ms: dzień kalendarzowy jej górowania w strefie miasta
 function sunDay(ms) { var c = dayCycle(new Date(ms)); return localDay(c ? c.noon : ms) }
+// chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ); zaokrąglona w górę do ms,
+// żeby sunDay(sunDayStart(n)) === n (new Date() obcina ułamki ms)
+function sunDayStart(n) {
+  var u = new Date(n * 864e5), c = dayCycle(new Date(solarNoon(new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()))));
+  return c ? Math.ceil(c.a) : n * 864e5
+}
 
 /* ===== TRZY RÓŻNE WARTOŚCI KSIĘŻYCA (nie mylić) =====
    1. kąt fazy ph (0-360°): miejsce w cyklu synodycznym od nowiu do nowiu. Pokazuje go pasek miesiąca.
@@ -199,15 +205,18 @@ function elong(ms) {
 function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
 // numer dnia kalendarzowego (od północy do północy) w strefie czasowej wybranego miasta
 function localDay(ms) { var o = tzParts(ms); return Math.round(Date.UTC(o.year, o.month - 1, o.day) / 864e5) }
-/* Dni cyklu liczone OD CHWILI NOWIU: dzień 1 zaczyna się w chwili nowiu, każdy dzień trwa 24 h od tej chwili.
-   Wynik jest ten sam dla całej Ziemi. Cykl trwa 29,27–29,83 doby, więc ma 30 dni, a ostatni, 30. dzień jest niepełny
-   (kończy się w chwili następnego nowiu). elapsed/length: czas od nowiu i długość cyklu (doby). */
+/* Dni cyklu to doby tarczy, OD WSCHODU do wschodu (jak w kalendarzu orbity): dzień 1 = doba, w której wypada nów;
+   cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Wynik zależy od miejsca (wschód).
+   d0: numer doby dnia 1 (sunDay); elapsed/length: dokładny czas od chwili nowiu i długość cyklu (doby). */
 function lunarCycle(now) {
   var t = now.getTime(), last = newMoonNear(t - elong(t) / 12.19 * 864e5);
   if (last > t) last = newMoonNear(last - 29.53 * 864e5);
   var next = newMoonNear(last + 29.53 * 864e5);
   if (next <= t) { last = next; next = newMoonNear(last + 29.53 * 864e5) }
-  return { day: Math.floor((t - last) / 864e5) + 1, days: Math.ceil((next - last) / 864e5),
+  var n = sunDay(t);
+  if (sunDay(next) <= n) { last = next; next = newMoonNear(last + 29.53 * 864e5) }   // dziś jest doba nowiu: od wschodu nowy cykl
+  var d0 = sunDay(last);
+  return { day: n - d0 + 1, days: sunDay(next) - d0, d0: d0,
     elapsed: (t - last) / 864e5, length: (next - last) / 864e5, last: last, next: next }
 }
 // moment fazy k (1 = I kwadra, 2 = pełnia, 3 = III kwadra) w cyklu zaczętym nowiem "last"
@@ -508,8 +517,8 @@ if ($("viewBtn")) $("viewBtn").addEventListener("click", function () {
 });
 
 /* ===== Miesiąc księżycowy jako siatka dni =====
-   Dzień 1 zaczyna się w chwili nowiu; ostatni (30.) dzień jest niepełny i kończy się następnym nowiem.
-   Ikona fazy stoi w dniu cyklu, w którym faza naprawdę wypada. Przerwa między rzędami przy pełni:
+   Dni od wschodu: dzień 1 = doba nowiu, ostatni = doba przed następnym nowiem (29 albo 30 dni).
+   Ikona fazy stoi w dobie, w której faza naprawdę wypada. Przerwa między rzędami przy pełni:
    górny rząd = Księżyca przybywa (nów -> dzień przed pełnią), dolny = ubywa (pełnia -> nów). */
 var monthLast = null, monthDay = null, monthSel = null, monthCyc = null;   // monthSel: kliknięty dzień (null = dziś)
 // inny cykl niż w siatce? Chwila nowiu liczona za każdym razem od innego punktu startowego różni się o ułamki ms,
@@ -520,9 +529,9 @@ function buildMonthScale(cyc) {
   if (newCycle(cyc)) monthSel = null;   // nowy cykl: zaznaczenie wraca na dziś
   monthLast = cyc.last; monthDay = null; monthCyc = cyc;
   var N = cyc.days, ph = {}, h = "", d,
-    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }), [cyc.next]);
-  T.forEach(function (ms, k) { ph[Math.floor((ms - cyc.last) / 864e5) + 1] = k % 4 });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
-  var full = Math.floor((T[2] - cyc.last) / 864e5) + 1,
+    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }));
+  T.forEach(function (ms, k) { ph[sunDay(ms) - cyc.d0 + 1] = k });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
+  var full = sunDay(T[2]) - cyc.d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
     var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">';
@@ -541,40 +550,34 @@ function degTxt(x) {   // 137.4 -> "137° 24′" (izolacja LTR jak w nearParts)
   var am = Math.round(x * 60), d = Math.floor(am / 60), m = am % 60;
   return "⁦" + d + "°" + (m ? " " + m + "′" : "") + "⁩"
 }
-// "137° 24′ od wschodu"; withDate: z przodu dzień tygodnia i data doby, np. "sob., 24 paź · …"
-function whenTxt(ms, withDate) {
+// "137° 24′ od wschodu": kąt Słońca w dobie, w której wypada chwila ms
+function whenTxt(ms) {
   var c = dayCycle(new Date(ms));
-  if (!c) return "";
-  var s = t(c.polar ? "degPolar" : "degRise").replace("{a}", degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a))));
-  return withDate ? new Date(localDay(c.noon) * 864e5).toLocaleDateString(loc(), { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }) + " · " + s : s
+  return c ? t(c.polar ? "degPolar" : "degRise").replace("{a}", degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a)))) : ""
 }
-// główne fazy Księżyca (0 nów, 1 I kwadra, 2 pełnia, 3 III kwadra) w przedziale [a, b] (z dokładnością do minuty): [{ k, ms }]
+// główne fazy Księżyca (0 nów, 1 I kwadra, 2 pełnia, 3 III kwadra) w przedziale [a, b): [{ k, ms }]
 // c: cykl, z którego brać fazy (domyślnie ten, w którym leży a)
 function moonPhasesIn(a, b, c) {
   c = c || lunarCycle(new Date(a));
   var out = [], T = [c.last].concat([1, 2, 3].map(function (k) { return quarterAt(c.last, c.length, k) }), [c.next]);
-  T.forEach(function (ms, k) { if (ms >= a - 6e4 && ms <= b + 6e4) out.push({ k: k % 4, ms: ms }) });
+  T.forEach(function (ms, k) { if (ms >= a && ms < b) out.push({ k: k % 4, ms: ms }) });
   return out
 }
 
-/* Kafelek wybranego dnia miesiąca księżycowego (pod siatką). Dzień d trwa 24 h od chwili nowiu + (d − 1) dób;
-   ostatni kończy się następnym nowiem. Bez powtórzeń z kartą Księżyca: tu zakresy w ciągu dnia i chwile zdarzeń. */
+/* Kafelek wybranego dnia miesiąca księżycowego (pod siatką). Dzień d to doba d0 + d − 1 (od wschodu do wschodu),
+   podpisana datą kalendarza orbity. Bez powtórzeń z kartą Księżyca: tu zakresy w ciągu doby i chwile faz w stopniach. */
 function renderMoonDet() {
   var c = monthCyc, d = monthSel || monthDay;
   if (!c || !d || !$("mdet")) return;
-  var a = c.last + (d - 1) * 864e5, b = Math.min(a + 864e5, c.next),
+  var n = c.d0 + d - 1, a = sunDayStart(n), b = sunDayStart(n + 1),
     pa = elong(a), pb = elong(b), ev = moonPhasesIn(a, b, c), h;
-  if (pb < pa) pb += 360;                                                // ostatni dzień kończy się nowiem: 360°, nie 0°
   function ill(p) { return Math.round((1 - Math.cos(p * R)) / 2 * 100) }
+  function ang(p) { return Math.round(p) % 360 + "°" }                   // doba z nowiem: "355° → 7°", nie "360°"
   h = '<div class="mdt">' + t("moonDayT").replace("{d}", d) + (d === monthDay ? ' <small>' + t("moonToday") + '</small>' : '') + '</div>' +
-    '<div>' + t("moonAngleL") + ': ' + Math.round(pa) + '° → ' + Math.round(pb) + '°</div>' +
+    (window.Cal ? '<div class="mdsub">' + Cal.orbitName(n) + '</div>' : '') +   // data w kalendarzu orbity, np. "Pełna jesień · dzień 4"
+    '<div>' + t("moonAngleL") + ': ' + ang(pa) + ' → ' + ang(pb) + '</div>' +
     '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>';
-  // po kolei w czasie: początek dnia, fazy, koniec dnia (początek / koniec pomijamy, gdy to sam nów z listy)
-  var L = ev.map(function (e) { return [e.ms, '<b>' + t("ph" + e.k * 2) + '</b>'] });
-  function at(x) { return ev.some(function (e) { return Math.abs(e.ms - x) <= 6e4 }) }
-  if (!at(a)) L.push([a, t("moonStartL")]);
-  if (!at(b)) L.push([b, t("moonEndL")]);
-  L.sort(function (x, y) { return x[0] - y[0] }).forEach(function (x) { h += '<div>' + x[1] + ': ' + whenTxt(x[0], true) + '</div>' });
+  ev.forEach(function (e) { h += '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' });
   $("mdet").innerHTML = h
 }
 function markMoonSel() {   // dziś: pomarańczowe obramowanie; wybrany dzień: pomarańczowe tło
@@ -616,6 +619,7 @@ apply();
 setInterval(tick, 1000);
 // Przywróć ostatni widok po odświeżeniu - dopiero po załadowaniu wszystkich skryptów (zegar roku, 3D, kalendarz)
 window.addEventListener("load", function () {
+  renderMoonDet();   // data kalendarza orbity w kafelku Księżyca (calendar.js ładuje się po main.js)
   var sv = null;
   try { sv = localStorage.getItem("view") } catch (e) {}
   if (sv === "year" || sv === "cal") showView(sv)

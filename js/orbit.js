@@ -48,7 +48,7 @@ var OrbitCal = (function () {
     return { year: Y, month: k, season: k / 3 | 0, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], yday: n - s[0] + 1, ylen: s[12] - s[0] }
   }
   // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ)
-  function dayStart(n) { var c = dayCycle(new Date(solarNoon(dateOf(n)))); return c ? c.a : n * 864e5 }
+  function dayStart(n) { return sunDayStart(n) }
   // kąt roku w południe danego dnia (w strefie miasta)
   function lonAt(n) { var m = n * 864e5 + 432e5; return sunLonDeg(m - tzOffset(m)) }
   // doba, w której Słońce jest na kącie l w roku orbity Y

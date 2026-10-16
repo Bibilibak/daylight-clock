@@ -55,7 +55,7 @@
       noon = new Date(y, m, dd, 12), ph = elong(noon.getTime()), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(noon),
       light = T && T2 ? Math.round(360 * (T.set - T.rise) / (T2.rise - T.rise)) : null,
       o = OrbitCal.date(d), n = OrbitCal.dayN(d), ap = OrbitCal.apsisOn(n), ring = cvO === "ring",
-      ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1) - 1), k = o.month,
+      ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1)), k = o.month,
       // dzień 1 miesiąca: chwila przejścia przez granicę (równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica 30°·k)
       cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
     return '<div class="cdet"><div class="cg1">' + d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
@@ -214,5 +214,7 @@
     else if (a === "nm") { om++; if (om > 11) { om = 0; oy++ } }
     render()
   };
-  window.Cal = { render: render, selected: function () { return sel } };
+  window.Cal = { render: render, selected: function () { return sel },
+    // data doby n w kalendarzu orbity, np. "Pełna jesień · dzień 4" (kafelek miesiąca księżycowego)
+    orbitName: function (n) { var o = OrbitCal.date(OrbitCal.dateOf(n)); return mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) } };
 })();

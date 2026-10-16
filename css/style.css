@@ -543,7 +543,7 @@ button {
 .cnav { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .cnav b { flex: 1; text-transform: capitalize; }
 .cnav button, .ctoday { width: auto; padding: 4px 10px; background: transparent; color: var(--fg); border: 1px solid var(--arc); border-radius: 8px; font-weight: 600; cursor: pointer; }
-.cgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; }
+.cgrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 10px 0; }
 .cc { position: relative; width: auto; height: 46px; padding: 2px; background: var(--card); color: var(--fg); border: 1px solid transparent; border-radius: 10px; font-weight: 400; cursor: pointer; }
 .cc small { position: absolute; top: 3px; left: 5px; font-size: 10px; color: var(--mut); }
 .cc b { display: block; margin-top: 11px; font-size: 13px; }
@@ -566,7 +566,7 @@ button {
 .ym { text-align: center; }
 .ymh { width: auto; margin: 0 0 4px; padding: 2px 8px; background: transparent; color: var(--fg); border: 0; border-radius: 8px; font-size: 14px; font-weight: 700; text-transform: capitalize; cursor: pointer; }
 .ymh:hover { background: var(--card); }
-.ymg { display: grid; grid-template-columns: 1.3fr repeat(7, 1fr); gap: 1px; font-size: 11px; }
+.ymg { display: grid; grid-template-columns: repeat(10, 1fr); gap: 1px; font-size: 11px; }
 .yd { position: relative; width: auto; height: 20px; padding: 0; background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 400; line-height: 18px; cursor: pointer; }
 .yd:hover { background: var(--card); }
 .yd.today { border-color: var(--sun); font-weight: 700; }
@@ -579,7 +579,6 @@ button {
 .oring { display: block; width: 100%; max-width: 360px; margin: 4px auto 6px; cursor: pointer; }
 .onav b { text-transform: none; font-size: 15px; }
 .onav b small { display: block; font-size: 11px; font-weight: 400; color: var(--mut); }
-.ogrid { grid-template-columns: repeat(10, 1fr); gap: 3px; }
 .ogrid .cc { height: 40px; }
 .ogrid .cc small { left: 3px; font-size: 9px; white-space: nowrap; }
 .ogrid .cc b { margin-top: 12px; }
@@ -588,7 +587,6 @@ button {
 .cc.sel.ap::after, .yd.sel.ap::after { color: var(--on-sun); }
 .oyear .ymh { text-transform: none; font-size: 13px; border-radius: 0; }
 .ymsub { margin-bottom: 3px; font-size: 10px; color: var(--mut); }
-.oymg { grid-template-columns: repeat(10, 1fr); }
 .cdet .cap { font-weight: 600; }
 
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */

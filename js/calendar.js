@@ -6,7 +6,7 @@
   var today = dayStart();
   var sel = today;
   var cvO = "grid";   // widok: "grid" (Kalendarz) albo "ring" (Koło), zapamiętany w przeglądarce
-  try { if (localStorage.getItem("cview") === "ring") cvO = "ring" } catch (e) {}
+  try { if (localStorage.getItem("cview") === "ring") cvO = "ring"; localStorage.removeItem("cviews") } catch (e) {}   // cviews: zapis starszej wersji (z kalendarzem gregoriańskim)
   try {   // ostatnio oglądany miesiąc i wybrany dzień (po przeładowaniu strony widok zostaje)
     var cs = JSON.parse(localStorage.getItem("calsel") || "null");
     if (cs && isFinite(cs.sy) && isFinite(cs.sm) && isFinite(cs.d)) sel = new Date(cs.sy, cs.sm, cs.d)
@@ -38,9 +38,10 @@
   function qColor(q) { return OrbitCal.zone() === "T" ? "var(--mut)" : SC[sIdx(q)] }
   function qName(q) { return OrbitCal.zone() === "T" ? t("calQuad").replace("{a}", q * 90 + "–" + (q + 1) * 90 + "°") : t("os" + sIdx(q)) }
   /* Nazwa miesiąca: wczesna / pełna / późna pora roku (calMonN: 12 nazw rozdzielonych "|", od wczesnej wiosny do późnej zimy).
-     Między zwrotnikami: zakres kąta orbity, np. "Miesiąc 0–30°". */
+     Między zwrotnikami (i gdy brakuje nazwy w tłumaczeniu): zakres kąta orbity, np. "Miesiąc 0–30°". */
   function mName(k) {
-    return OrbitCal.zone() === "T" ? t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°") : t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3]
+    var a = t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°");
+    return OrbitCal.zone() === "T" ? a : t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || a
   }
 
   function detail(d) {   // dane wybranego dnia: data orbity, kąt roku i dane astronomiczne (wspólne funkcje z zegarem dobowym)
@@ -138,7 +139,7 @@
     for (k = 0; k < 12; k++) {
       var len = s[k + 1] - s[k];
       h += '<div class="ym"><button class="ymh" data-om="' + k + '" style="border-bottom:3px solid ' + qColor(k / 3 | 0) + '">' + mName(k) + '</button>' +
-        '<div class="ymsub">' + short(OrbitCal.dateOf(s[k])) + ' · ' + len + ' ' + t(dayKey(len)) + '</div><div class="ymg oymg">';
+        '<div class="ymsub">' + short(OrbitCal.dateOf(s[k])) + ' · ' + len + ' ' + t(dayKey(len)) + '</div><div class="ymg">';
       for (i = 0; i < len; i++) {
         var n = s[k] + i, dt = OrbitCal.dateOf(n);
         h += '<button class="yd' + dayCls(dt, n) + (i === 0 && k % 3 === 0 ? " sn" : "") + '" data-n="' + n + '" title="' +

@@ -38,7 +38,7 @@ var OrbitCal = (function () {
     var n = dayN(d), Y = d.getFullYear(), s = starts(Y), k = 11;
     if (n < s[0]) { Y--; s = starts(Y) }
     while (s[k] > n) k--;
-    return { year: Y, month: k, season: k / 3 | 0, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], yday: n - s[0], ylen: s[12] - s[0] }
+    return { year: Y, month: k, season: k / 3 | 0, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], yday: n - s[0] + 1, ylen: s[12] - s[0] }
   }
   // kąt roku w południe danego dnia (w strefie miasta)
   function lonAt(n) { var m = n * 864e5 + 432e5; return sunLonDeg(m - tzOffset(m)) }

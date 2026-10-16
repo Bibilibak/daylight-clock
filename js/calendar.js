@@ -43,6 +43,12 @@
     var a = t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°");
     return OrbitCal.zone() === "T" ? a : t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || a
   }
+  /* Skrót na kole: wczesna / pełna / późna (calMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
+     Między zwrotnikami (i gdy brakuje skrótu): numer miesiąca w ćwiartce, 1–3. */
+  function mShort(k) {
+    var s = t("calMonS").split("|");
+    return OrbitCal.zone() === "T" ? k % 3 + 1 : (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
+  }
 
   function detail(d) {   // dane wybranego dnia: data orbity, kąt roku i dane astronomiczne (wspólne funkcje z zegarem dobowym)
     var y = d.getFullYear(), m = d.getMonth(), dd = d.getDate(), T = times(new Date(y, m, dd)), T2 = times(new Date(y, m, dd + 1)),
@@ -84,7 +90,7 @@
     for (k = 0; k < 12; k++) {
       var q = k / 3 | 0, c = P(k * 30 + 15, 118);
       h += '<path d="' + arc(k * 30 + 0.7, k * 30 + 29.3, 118) + '" fill="none" stroke="' + qColor(q) + '" stroke-width="24" stroke-opacity="' + (k === om ? 1 : 0.35) + '"/>' +
-        '<text class="ylb" x="' + c[0].toFixed(1) + '" y="' + (c[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + (k === om ? "#fff" : "var(--fg)") + '">' + (k % 3 + 1) + '</text>'
+        '<text class="ylb" x="' + c[0].toFixed(1) + '" y="' + (c[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + (k === om ? "#fff" : "var(--fg)") + '">' + mShort(k) + '</text>'
     }
     for (q = 0; q < 4; q++) {
       var a = P(q * 90, 92), b = P(q * 90 + 45, 66);

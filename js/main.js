@@ -169,13 +169,19 @@ function elong(ms) {
 }
 // moment nowiu: poprawiamy przybliżenie kilkoma krokami (Księżyc oddala się od Słońca o ok. 12,19° na dobę)
 function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
-// dzień cyklu liczony z CZASU od ostatniego nowiu (nów = początek dnia 1), nie z położenia na tarczy dobowej
+// numer dnia kalendarzowego (od północy do północy) w strefie czasowej wybranego miasta
+function localDay(ms) { var o = tzParts(ms); return Math.round(Date.UTC(o.year, o.month - 1, o.day) / 864e5) }
+/* Dni cyklu liczone OD PÓŁNOCY: dzień 1 = dzień kalendarzowy, w którym wypada nów (w strefie miasta).
+   Cykl kończy się dniem przed dniem następnego nowiu, więc ma 29 albo 30 pełnych dni.
+   elapsed/length to nadal dokładny czas od chwili nowiu (doby). */
 function lunarCycle(now) {
   var t = now.getTime(), last = newMoonNear(t - elong(t) / 12.19 * 864e5);
   if (last > t) last = newMoonNear(last - 29.53 * 864e5);
   var next = newMoonNear(last + 29.53 * 864e5);
   if (next <= t) { last = next; next = newMoonNear(last + 29.53 * 864e5) }
-  return { day: Math.floor((t - last) / 864e5) + 1, elapsed: (t - last) / 864e5, length: (next - last) / 864e5, last: last, next: next }
+  if (localDay(next) <= localDay(t)) { last = next; next = newMoonNear(last + 29.53 * 864e5) }   // dziś jest dzień nowiu: od północy nowy cykl
+  return { day: localDay(t) - localDay(last) + 1, days: localDay(next) - localDay(last),
+    elapsed: (t - last) / 864e5, length: (next - last) / 864e5, last: last, next: next }
 }
 // moment fazy k (1 = I kwadra, 2 = pełnia, 3 = III kwadra) w cyklu zaczętym nowiem "last"
 function quarterAt(last, len, k) {
@@ -513,17 +519,17 @@ function setMode(m) {
 document.querySelectorAll(".seg button").forEach(function (b) { b.onclick = function () { setMode(b.getAttribute("data-mode")) } });
 
 /* ===== Miesiąc księżycowy jako siatka dni =====
-   Dzień 1 zaczyna się w chwili nowiu; ostatni dzień zawiera następny nów (rzeczywista długość cyklu, 29,3–29,8 doby).
-   Ikona fazy stoi w dniu, w którym faza naprawdę wypada. Przerwa między rzędami przy pełni:
+   Dni od północy: dzień 1 = dzień nowiu, ostatni = dzień przed następnym nowiem (29 albo 30 dni).
+   Ikona fazy stoi w dniu kalendarzowym, w którym faza naprawdę wypada (strefa czasowa miasta). Przerwa między rzędami przy pełni:
    górny rząd = Księżyca przybywa (nów -> dzień przed pełnią), dolny = ubywa (pełnia -> nów). */
 var monthLast = null, monthDay = null;
 function buildMonthScale(cyc) {
   cyc = cyc || lunarCycle(new Date());
   monthLast = cyc.last; monthDay = null;
-  var N = Math.ceil(cyc.length), ph = {}, h = "", d,
-    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }), [cyc.next]);
-  T.forEach(function (ms, k) { ph[Math.floor((ms - cyc.last) / 864e5) + 1] = k % 4 });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
-  var full = Math.floor((T[2] - cyc.last) / 864e5) + 1,
+  var N = cyc.days, ph = {}, h = "", d, d0 = localDay(cyc.last),
+    T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }));
+  T.forEach(function (ms, k) { ph[localDay(ms) - d0 + 1] = k });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
+  var full = localDay(T[2]) - d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
     var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',1fr)">';

@@ -19,7 +19,7 @@ Strona działa na komputerze i telefonie. Nic nie trzeba instalować.
 ### Słońce i Księżyc w liczbach
 - Kąt Słońca, wysokość Słońca nad horyzontem, kąt górowania i zachodu na tarczy.
 - Faza Księżyca (nów, kwadry, pełnia…), procent oświetlenia, dzień cyklu i pasek miesiąca księżycowego.
-- Pasek miesiąca księżycowego jest osią **dni** od nowiu do nowiu, z rzeczywistą długością tego cyklu. Ma kreskę co dobę i obrysowany dzisiejszy dzień. Ikony faz stoją tam, gdzie fazy naprawdę wypadają.
+- **Miesiąc księżycowy** jako siatka dni w dwóch rzędach: *przybywa* (od nowiu do pełni) i *ubywa* (od pełni do nowiu). Dni liczą się od północy w strefie czasowej wybranego miasta: dzień 1 to dzień nowiu, a cykl ma 29 albo 30 dni. Ikony faz stoją w dniach, w których fazy naprawdę wypadają. Dzisiejszy dzień jest wyróżniony.
 - Obsługa **dnia polarnego** i **nocy polarnej**.
 
 ### Wizualizacja 3D

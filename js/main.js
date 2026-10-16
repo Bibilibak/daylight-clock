@@ -539,7 +539,7 @@ function buildMonthScale(cyc) {
 var curView = "dial";
 function showView(v) {
   curView = v;
-  try { sessionStorage.setItem("view", v) } catch (e) {}   // po odświeżeniu (np. podgląd na żywo) wracamy do tego widoku
+  try { localStorage.setItem("view", v) } catch (e) {}   // po odświeżeniu albo ponownym otwarciu strony wracamy do tego widoku
   $("dialView").hidden = v !== "dial"; $("v3").hidden = v !== "3d";
   if ($("yearView")) $("yearView").hidden = v !== "year";
   if ($("calView")) $("calView").hidden = v !== "cal";
@@ -562,7 +562,7 @@ setInterval(tick, 1000);
 // Przywróć ostatni widok po odświeżeniu - dopiero po załadowaniu wszystkich skryptów (zegar roku, 3D, kalendarz)
 window.addEventListener("load", function () {
   var sv = null;
-  try { sv = sessionStorage.getItem("view") } catch (e) {}
+  try { sv = localStorage.getItem("view") } catch (e) {}
   if (sv === "year" || sv === "cal") showView(sv)
-  else if (sv === "3d" && window.Sun3D && $("viewBtn")) $("viewBtn").click()
+  else if (sv === "3d" && window.Sun3D) Sun3D.restore()
 });

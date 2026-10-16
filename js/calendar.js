@@ -9,6 +9,10 @@
   var sel = today, vy = today.getFullYear(), vm = today.getMonth();
   var cv = "month";   // widok kalendarza: "month" (jeden miesiąc) albo "year" (cały rok), zapamiętany w przeglądarce
   try { if (localStorage.getItem("cview") === "year") cv = "year" } catch (e) {}
+  try {   // ostatnio oglądany miesiąc i wybrany dzień (po przeładowaniu strony widok zostaje)
+    var cs = JSON.parse(localStorage.getItem("calsel") || "null");
+    if (cs && isFinite(cs.y) && isFinite(cs.sy) && isFinite(cs.sm) && cs.m >= 0 && cs.m < 12 && isFinite(cs.d)) { vy = cs.y; vm = cs.m; sel = new Date(cs.sy, cs.sm, cs.d) }
+  } catch (e) {}
 
   // Po północy "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień, zaznaczenie idzie razem z nim.
   setInterval(function () {
@@ -91,6 +95,7 @@
 
   function render() {
     var box = $("calView"); if (!box) return;
+    try { localStorage.setItem("calsel", JSON.stringify({ y: vy, m: vm, sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate() })) } catch (e) {}
     box.classList.toggle("yearMode", cv === "year");
     if (cv === "year") return renderYear(box);
     var first = new Date(vy, vm, 1), lead = (first.getDay() + 6) % 7, days = new Date(vy, vm + 1, 0).getDate(), i, h =

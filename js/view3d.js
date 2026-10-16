@@ -64,7 +64,19 @@
     return o
   }
 
+  /* Wybrany przycisk na pomarańczowo: "Teraz", gdy rysunek podąża za Słońcem, albo przycisk deklinacji
+     (21 cze / równonoc / 21 gru), którego wartość jest ustawiona na suwaku. Stan widoku zostaje w przeglądarce. */
+  function mark() {
+    var dec = +$("v3dec").value;
+    $("v3now").classList.toggle("main", follow);
+    document.querySelectorAll("[data-v3d]").forEach(function (b) {
+      b.classList.toggle("main", !follow && Math.abs(dec - +b.getAttribute("data-v3d")) < 0.05)
+    });
+    try { localStorage.setItem("v3", JSON.stringify({ follow: follow, g: +$("v3g").value, lat: +$("v3lat").value, dec: dec, az: az, el: el })) } catch (e) {}
+  }
+
   function draw() {
+    mark();
     var lat = +$("v3lat").value * D, dec = +$("v3dec").value * D, g = +$("v3g").value;
     var H0 = Math.acos(Math.max(-1, Math.min(1, -Math.tan(lat) * Math.tan(dec)))),   // połowa łuku dnia
       arc = 2 * H0 / D, H = -H0 + g * D, S = sv(H, dec, lat),
@@ -228,7 +240,20 @@
   setInterval(function () { if (!$("v3").hidden && follow) { sync(); draw() } }, 1000);
 
   // wywoływane z main.js po zmianie języka
-  window.Sun3D = { refresh: function () { setBtn(); if (!$("v3").hidden) draw() } };
+  // restore(): po przeładowaniu strony otwiera 3D z zapamiętanymi suwakami i obrotem (zamiast "Teraz" od nowa)
+  window.Sun3D = {
+    refresh: function () { setBtn(); if (!$("v3").hidden) draw() },
+    restore: function () {
+      var st = null;
+      try { st = JSON.parse(localStorage.getItem("v3") || "null") } catch (e) {}
+      if (st && isFinite(st.g) && isFinite(st.lat) && isFinite(st.dec) && isFinite(st.az) && isFinite(st.el)) {
+        follow = !!st.follow; $("v3lat").value = st.lat; $("v3dec").value = st.dec; $("v3g").value = st.g; az = st.az; el = st.el;
+        if (follow) sync()
+      } else { follow = true; sync(); resetView() }
+      if (window.showView) showView("3d");
+      draw(); setBtn()
+    }
+  };
 
   setBtn();
 })();

@@ -119,14 +119,15 @@
   }
   function oNote() { return '<p class="cnote">' + t("calONote") + (OrbitCal.zone() === "T" ? " " + t("calTrop") : "") + '</p>' }
 
-  /* Koło roku orbity: kąt na kole = kąt roku (jak w pętli zegara roku: przesilenie letnie u góry, zgodnie z ruchem wskazówek).
-     Pierścień = 12 miesięcy po 30° w kolorach pór roku; kreski = granice dób; ◆ = aphelium i peryhelium.
-     Kliknięcie w pierścień wybiera dzień. W środku kąt roku wybranego dnia. */
-  var top0 = 90;
-  function ringSvg() {
+  /* Koło roku orbity: kąt na kole = kąt roku, zgodnie z ruchem wskazówek. Koło się obraca: wybrany dzień jest zawsze
+     u góry, pod strzałką ▼. Pierścień = 12 miesięcy po 30° w kolorach pór roku; kreski = granice dób; ◆ = aphelium i peryhelium.
+     Koło obraca się palcem albo myszą (dzień pod strzałką zmienia się na bieżąco, puszczone w ruchu kręci się jeszcze chwilę),
+     strzałkami klawiatury o dobę; kliknięcie w pierścień obraca koło do tego dnia. W środku kąt roku pod strzałką. */
+  var rTop = null;   // kąt roku pod strzałką na narysowanym kole (null: koło nienarysowane)
+  function inOy(d) { var s = OrbitCal.starts(oy), n = OrbitCal.dayN(d); return n >= s[0] && n < s[12] }
+  function ringInner(top) {
     var o = OrbitCal.year(oy), s = OrbitCal.starts(oy), C = 180, h = "", k, n;
-    top0 = lat >= 0 ? 90 : 270;
-    var P = function (l, r) { var th = (l - top0) * R; return [C + r * Math.sin(th), C - r * Math.cos(th)] },
+    var P = function (l, r) { var th = (l - top) * R; return [C + r * Math.sin(th), C - r * Math.cos(th)] },
       f = function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) },
       arc = function (l0, l1, r) { return "M" + f(P(l0, r)) + " A" + r + " " + r + " 0 0 1 " + f(P(l1, r)) };
     for (k = 0; k < 12; k++) {
@@ -147,35 +148,65 @@
     }
     h += '<path d="' + tk + '" stroke="var(--mut)" stroke-width=".8" fill="none"/>';
     [[o.aph, "calAphS"], [o.peri, "calPeriS"]].forEach(function (e) {
-      var l = sunLonDeg(e[0].ms), p = P(l, 146), q2 = P(l, 160);
+      // obrócone koło: z boku napis w dwóch wierszach nad / pod ◆ (na zewnątrz) i przesunięty do środka, żeby nie wychodził poza rysunek
+      var l = sunLonDeg(e[0].ms), p = P(l, 146), q2 = P(l, 160), side = Math.abs(q2[0] - C) > 100,
+        ln = side ? t(e[1]).replace(" ", "\n").split("\n") : [t(e[1])],
+        hw = Math.max.apply(0, ln.map(function (x) { return x.length })) * 2.7,
+        x = Math.min(358 - hw, Math.max(2 + hw, q2[0])).toFixed(1), y = side ? (p[1] < C ? p[1] - 19 : p[1] + 16) : q2[1] + 4;
       h += '<path d="M' + p[0].toFixed(1) + ',' + (p[1] - 5).toFixed(1) + 'l4,5l-4,5l-4,-5z" fill="var(--fg)"/>' +
-        '<text class="ylb" x="' + q2[0].toFixed(1) + '" y="' + (q2[1] + 4).toFixed(1) + '" text-anchor="middle">' + t(e[1]) + '</text>'
+        '<text class="ylb" y="' + y.toFixed(1) + '" text-anchor="middle">' +
+        ln.map(function (s, i) { return '<tspan x="' + x + '" dy="' + (i ? 11 : 0) + '">' + s + '</tspan>' }).join("") + '</text>'
     });
-    var tn = OrbitCal.dayN(today), sn = OrbitCal.dayN(sel), ls = OrbitCal.lonAt(sn);
-    if (tn >= s[0] && tn < s[12]) { var pt0 = P(sunLonDeg(Date.now()), 118); h += '<circle cx="' + pt0[0].toFixed(1) + '" cy="' + pt0[1].toFixed(1) + '" r="6.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2.5"/>' }
-    if (sn >= s[0] && sn < s[12]) {
-      var ps = P(ls, 118);
-      h += '<circle cx="' + ps[0].toFixed(1) + '" cy="' + ps[1].toFixed(1) + '" r="10" fill="none" stroke="var(--fg)" stroke-width="2.5"/>' +
-        '<text x="180" y="186" text-anchor="middle" font-size="28" font-weight="700" fill="var(--fg)">' + deg(ls) + '</text>' +
-        '<text class="ylb" x="180" y="202" text-anchor="middle">' + t("yAxX") + '</text>'
-    }
-    return '<svg class="oring" viewBox="0 0 360 360" role="img" aria-label="' + t("calRing") + '">' + h + '</svg>'
+    if (inOy(today)) { var pt0 = P(sunLonDeg(Date.now()), 118); h += '<circle cx="' + pt0[0].toFixed(1) + '" cy="' + pt0[1].toFixed(1) + '" r="6.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2.5"/>' }
+    return h + '<path d="M180,37l-7,-12h14z" fill="var(--fg)"/>' +   // strzałka ▼ i kółko wybranego dnia: zawsze u góry
+      '<circle cx="180" cy="62" r="10" fill="none" stroke="var(--fg)" stroke-width="2.5"/>' +
+      '<text x="180" y="186" text-anchor="middle" font-size="28" font-weight="700" fill="var(--fg)">' + deg(top) + '</text>' +
+      '<text class="ylb" x="180" y="202" text-anchor="middle">' + t("yAxX") + '</text>'
+  }
+  function drawRing(top) { top = (top % 360 + 360) % 360; var g = $("calView").querySelector(".oring"); if (g) g.innerHTML = ringInner(top); rTop = top }
+
+  var anim = 0;   // trwający obrót (animacja albo rozpęd po puszczeniu)
+  function still() { try { return matchMedia("(prefers-reduced-motion: reduce)").matches } catch (e) { return false } }
+  function spinTo(a, b) {   // obrót koła od kąta a do b najkrótszą drogą
+    cancelAnimationFrame(anim);
+    var d = ((b - a) % 360 + 540) % 360 - 180, t0 = performance.now();
+    if (Math.abs(d) < 0.5 || still()) return drawRing(b);
+    (function step(now) {
+      var x = Math.min(1, (now - t0) / 400);
+      drawRing(a + d * (1 - Math.pow(1 - x, 3)));
+      anim = x < 1 ? requestAnimationFrame(step) : 0
+    })(t0)
+  }
+  // koło obrócone ręcznie: dzień pod strzałką staje się wybranym; dolna część (miesiąc, dane dnia) najwyżej raz na klatkę
+  var restDue = false;
+  function turn(top) {
+    top = (top % 360 + 360) % 360;
+    drawRing(top);
+    var d = OrbitCal.dayAt(oy, top);
+    if (same(d, sel)) return;
+    var y = oy; pick(d); oy = y;
+    if (!restDue) { restDue = true; requestAnimationFrame(function () { restDue = false; var r = $("calView").querySelector(".orest"); if (r) r.innerHTML = ringRest() }) }
   }
 
   function dayCls(dt, n) {
     var ap = OrbitCal.apsisOn(n);
     return (same(dt, today) ? " today" : "") + (same(dt, sel) ? " sel" : "") + (ap ? " ap" : "")
   }
-  function renderRing(box) {
+  function renderRing(box, spin) {
+    var top = OrbitCal.lonAt(OrbitCal.dayN(sel)), from = rTop;
+    box.innerHTML = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
+      '<svg class="oring" viewBox="0 0 360 360" tabindex="0" role="img" aria-label="' + t("calRing") + '"></svg><div class="orest">' + ringRest() + '</div>';
+    if (spin && from !== null) spinTo(from, top); else { cancelAnimationFrame(anim); drawRing(top) }
+  }
+  function ringRest() {   // pod kołem: miesiąc wybranego dnia, jego dni i dane dnia
     var s = OrbitCal.starts(oy), a = OrbitCal.dateOf(s[om]), z = OrbitCal.dateOf(s[om + 1] - 1), len = s[om + 1] - s[om], i, h =
-      segs() + yearNav(t("calOYear").replace("{y}", oy)) + ringSvg() +
       '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + qColor(om / 3 | 0) + '">' + mName(om) +
       '<small>' + short(a) + ' – ' + short(z) + ' · ' + len + ' ' + t(dayKey(len)) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
     for (i = 0; i < len; i++) {
       var n = s[om] + i, dt = OrbitCal.dateOf(n);
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
-    box.innerHTML = h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + oNote()
+    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + oNote()
   }
 
   /* Siatka roku orbity: 12 miesięcy, rzędami po 10 dni (1–10, 11–20, 21–30, 31–32). Na szerokim ekranie
@@ -199,16 +230,20 @@
       detail(sel) + oNote()
   }
 
+  var lastView = null;
   function render() {
     var box = $("calView"); if (!box) return;
     closeYear(false);   // np. odświeżenie o wschodzie przy otwartym polu roku: pole znika, więc zamykamy je bez zapisu
     syncToday();
+    // na kole wybrany dzień jest zawsze w oglądanym roku: po zmianie roku ten sam kąt roku (oglądany miesiąc zostaje)
+    if (cvO === "ring" && !inOy(sel)) { var m = om; pick(OrbitCal.dayAt(oy, OrbitCal.lonAt(OrbitCal.dayN(sel)))); om = m }
+    var spin = cvO === "ring" && lastView === "ring" && !drag; lastView = cvO;
     try {
       localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om }));
       localStorage.setItem("cview", cvO)
     } catch (e) {}
     box.classList.toggle("yearMode", cvO === "grid");
-    return cvO === "ring" ? renderRing(box) : renderGrid(box)
+    return cvO === "ring" ? renderRing(box, spin) : renderGrid(box)
   }
 
   // wybór dnia: oglądany rok i miesiąc orbity idą za wybranym dniem
@@ -218,14 +253,63 @@
   }
 
   if ($("calView")) $("calView").onmousedown = function (e) { if (yearInp && e.target !== yearInp) e.preventDefault() };
+  // miejsce wskaźnika na kole: kąt od góry zgodnie z ruchem wskazówek (°) i odległość od środka (w jednostkach rysunku 360×360)
+  function ptr(g, e) {
+    var rc = g.getBoundingClientRect(), dx = (e.clientX - rc.left) / rc.width * 360 - 180, dy = (e.clientY - rc.top) / rc.height * 360 - 180;
+    return { a: Math.atan2(dx, -dy) / R, r: Math.sqrt(dx * dx + dy * dy) }
+  }
+  /* Obracanie koła: koło idzie za palcem / myszą. Puszczone w ruchu kręci się jeszcze chwilę i zwalnia,
+     potem zatrzymuje się na dniu pod strzałką. Po przeciągnięciu kliknięcie, które przeglądarka wysyła na końcu, jest pomijane. */
+  var drag = null, noClick = false;
+  if ($("calView")) $("calView").onpointerdown = function (e) {
+    var g = e.target.closest(".oring"); if (!g || e.button > 0 || rTop === null) return;
+    var spinning = anim !== 0; cancelAnimationFrame(anim); anim = 0;
+    var p = ptr(g, e);
+    drag = { last: p.a, sum: 0, v: 0, ms: e.timeStamp, cut: spinning };
+    noClick = false;
+    g.setPointerCapture(e.pointerId); g.classList.add("drag")
+  };
+  if ($("calView")) $("calView").onpointermove = function (e) {
+    if (!drag) return;
+    var g = e.target.closest(".oring") || $("calView").querySelector(".oring"), p = ptr(g, e);
+    if (p.r < 20) return;   // przy samym środku kąt skacze
+    var da = ((p.a - drag.last) % 360 + 540) % 360 - 180, dt = Math.max(1, e.timeStamp - drag.ms);
+    drag.last = p.a; drag.ms = e.timeStamp; drag.sum += Math.abs(da);
+    drag.v = drag.v * 0.5 - da / dt * 0.5;   // prędkość obrotu (° kąta roku na ms), wygładzona
+    if (drag.sum > 3) { noClick = true; turn(rTop - da) }
+  };
+  function letGo(e) {
+    if (!drag) return;
+    var d = drag; drag = null;
+    var g = $("calView").querySelector(".oring"); if (g) g.classList.remove("drag");
+    if (!noClick) { if (d.cut) render(); return }                                // bez przeciągania: kliknięcie obsłuży onclick
+    var v = e.timeStamp - d.ms > 80 || still() ? 0 : d.v, t0 = performance.now();   // dłuższa pauza przed puszczeniem: bez rozpędu
+    if (Math.abs(v) < 0.02) return render();
+    (function step(now) {
+      var dt = now - t0; t0 = now;
+      turn(rTop + v * dt); v *= Math.pow(0.995, dt);
+      if (Math.abs(v) > 0.005) anim = requestAnimationFrame(step); else { anim = 0; render() }
+    })(t0)
+  }
+  if ($("calView")) { $("calView").onpointerup = letGo; $("calView").onpointercancel = letGo }
+  if ($("calView")) $("calView").onkeydown = function (e) {   // strzałki na kole: doba wstecz / naprzód
+    var g = e.target.closest(".oring"), k = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key];
+    if (!g || !k) return;
+    e.preventDefault();
+    var d = OrbitCal.dateOf(OrbitCal.dayN(sel) + k), y = OrbitCal.date(d).year;
+    if (y < Y0 || y > Y1) return;
+    pick(d); render();
+    $("calView").querySelector(".oring").focus()
+  };
+
   if ($("calView")) $("calView").onclick = function (e) {
     if (e.target === yearInp) return;
     var closed = closeYear(true);   // otwarte pole roku: przyjmij rok, potem obsłuż kliknięcie
     var ring = e.target.closest(".oring");
-    if (ring) {   // kliknięcie w pierścień: dzień o tym kącie roku
-      var rc = ring.getBoundingClientRect(), dx = (e.clientX - rc.left) / rc.width * 360 - 180, dy = (e.clientY - rc.top) / rc.height * 360 - 180,
-        rr = Math.sqrt(dx * dx + dy * dy);
-      if (rr >= 100 && rr <= 150) pick(OrbitCal.dayAt(oy, Math.atan2(dx, -dy) / R + top0));
+    if (ring) {   // kliknięcie w pierścień: koło obraca się do dnia o tym kącie roku
+      if (noClick) { noClick = false; return }
+      var p = ptr(ring, e), rr = p.r;
+      if (rr >= 100 && rr <= 150) pick(OrbitCal.dayAt(oy, p.a + rTop));
       else if (!closed) return;
       return render()
     }

@@ -284,14 +284,49 @@ function drawEv(cyc, k, now, nd, sd, noSet) {
     if (deg === null && hh) return;
     var near = "--";                                          // zostaje na liście, żeby dało się je usunąć
     if (deg !== null) {
-      var p = pt(deg, r + 32), np = noSet ? null : nearParts(deg, nd, sd);   // jak pod tarczą: odstęp od najbliższego znacznika doby
-      near = np ? '<b>' + np[0] + '</b> <i>' + np[1] + '</i>' : '<b>' + deg.toFixed(1) + '°</b>';
+      var p = pt(deg, r + 32);   // kąt Słońca od wschodu (w dzień / noc polarną od słonecznej północy), jak na tarczy
+      near = t(cyc.polar ? "degPolar" : "degRise").replace("{a}", '<b>' + degTxt(deg) + '</b>');
       g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="var(--fg)"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" fill="var(--bg)" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>'
     }
     l += '<div><span>' + (i + 1) + '. ' + esc(v.n || t("event")) + ' <i>(' + esc(v.t) + ')</i></span><span>' + near + '<a data-i="' + i + '">×</a></span></div>'
   });
   $("evs").innerHTML = g;
   if (l !== lastL) { $("evl").innerHTML = l; lastL = l }
+}
+
+/* ===== Pierścień tarczy: kolor według wysokości Słońca =====
+   Każdy kawałek pierścienia (1,5°) ma kolor wysokości Słońca w tej chwili doby: noc, zmierzch astronomiczny
+   i żeglarski, niebieska godzina, świt / zmierzch (różowo-pomarańczowy), złota godzina, pełny dzień.
+   Pierścień zmienia się tylko z nową dobą (albo motywem), więc rysujemy go raz na dobę. */
+function sunAlt(ms) {   // wysokość Słońca (stopnie) w chwili ms w wybranym miejscu
+  var d = new Date(ms), S = sol(gam(d)),
+    H = ((d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60 + S.eq + 4 * lon) / 4 - 180) * R;
+  return Math.asin(Math.sin(lat * R) * Math.sin(S.dc) + Math.cos(lat * R) * Math.cos(S.dc) * Math.cos(H)) / R
+}
+function hexRgb(h) { h = h.trim().replace("#", ""); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16) }) }
+function skyColor(h, night, day) {   // wysokość Słońca -> kolor; noc i dzień z motywu (--night, --day)
+  var st = [[-18, night], [-12, [62, 63, 126]], [-6, [90, 98, 168]], [-3, [154, 111, 166]], [-0.833, [224, 122, 95]],
+    [3, [245, 154, 62]], [8, [255, 191, 79]], [14, day]];
+  if (h <= st[0][0]) return st[0][1];
+  for (var i = 1; i < st.length; i++) if (h < st[i][0]) {
+    var a = st[i - 1], b = st[i], x = (h - a[0]) / (b[0] - a[0]);
+    return a[1].map(function (v, j) { return Math.round(v + (b[1][j] - v) * x) })
+  }
+  return day
+}
+var lastRing = "";
+function drawSky(cyc) {
+  var cs = getComputedStyle(document.documentElement), nv = cs.getPropertyValue("--night"), dv = cs.getPropertyValue("--day"),
+    key = cyc.a + "|" + cyc.b + "|" + lat + "|" + lon + "|" + nv + dv;
+  if (key === lastRing) return;
+  lastRing = key;
+  var night = hexRgb(nv || "#2f2a5a"), day = hexRgb(dv || "#ffd36a"), g = "", step = 1.5;
+  for (var a = 0; a < 360; a += step) {
+    var c = skyColor(sunAlt(cyc.a + (a + step / 2) / 360 * (cyc.b - cyc.a)), night, day);
+    // kawałki lekko na siebie zachodzą, żeby między nimi nie było widać szwów
+    g += '<path d="' + arcSeg(a, Math.min(360, a + step + 0.4)) + '" stroke="rgb(' + c.join(",") + ')"/>'
+  }
+  $("ring").innerHTML = g
 }
 
 /* ===== Odczyt względem najbliższego znacznika =====
@@ -359,8 +394,7 @@ function tick() {
   if ($("light")) $("light").textContent = !polar && deg < sd ? t("lightDay").replace("{b}", Math.round(sd - deg)) : "";
   // wskazówka centralna: obrót o kąt Słońca na tarczy
   $("hand").setAttribute("transform", "rotate(" + (deg) + " " + cx + " " + cy + ")");
-  $("day").setAttribute("d", sd > 0 ? arcSeg(0, sd) : "");   // noc polarna: brak łuku dnia
-  $("prog").setAttribute("d", deg > 0.1 ? arcSeg(0, deg) : "");
+  drawSky(cyc);
   if ($("moonhand")) {                        // Księżyc na TEJ SAMEJ tarczy co Słońce: ten sam środek i skala
     var mp = moonPos(now), c = nd,      // c = miejsce lokalnego górowania Słońca na tarczy (tam Księżyc ma H = 0)
       dialAng = c + mp.H,                     // kąt Księżyca na tarczy dobowej (nie to samo co faza ani oświetlenie)

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar słoneczny</title>
-  <link rel="stylesheet" href="css/style.css?v=51">
+  <link rel="stylesheet" href="css/style.css?v=52">
 </head>
 <body>
   <div class="top">
@@ -37,10 +37,10 @@
 
   <div id="dialView">
   <svg viewBox="-14 -14 368 368" data-i18n-aria="dial" aria-label="Tarcza">
-    <!-- pierścień: noc = ciemny, dzień = jasny; cienka linia = postęp od wschodu -->
-    <circle cx="170" cy="170" r="140" fill="none" stroke="var(--night)" stroke-width="14"/>
-    <path id="day" fill="none" stroke="var(--day)" stroke-width="14"/>
-    <path id="prog" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/>
+    <!-- pierścień: kolor według wysokości Słońca (noc, zmierzch, złota godzina, dzień); rysowany w js/main.js -->
+    <g id="ring" fill="none" stroke-width="14"></g>
+    <circle cx="170" cy="170" r="147.5" fill="none" stroke="var(--mut)" stroke-opacity=".35" stroke-width=".8"/>
+    <circle cx="170" cy="170" r="132.5" fill="none" stroke="var(--mut)" stroke-opacity=".35" stroke-width=".8"/>
 
     <!-- Księżyc na wspólnej tarczy: srebrny łuk "Księżyc nad horyzontem" przy zewnętrznej krawędzi pierścienia -->
     <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="4"/>
@@ -172,12 +172,12 @@
     </div>
   </details>
 
-  <script src="js/I18n.js?v=51"></script>
-  <script src="js/I18n-more.js?v=51"></script>
-  <script src="js/main.js?v=51"></script>
-  <script src="js/view3d.js?v=51"></script>
-  <script src="js/year.js?v=51"></script>
-  <script src="js/orbit.js?v=51"></script>
-  <script src="js/calendar.js?v=51"></script>
+  <script src="js/I18n.js?v=52"></script>
+  <script src="js/I18n-more.js?v=52"></script>
+  <script src="js/main.js?v=52"></script>
+  <script src="js/view3d.js?v=52"></script>
+  <script src="js/year.js?v=52"></script>
+  <script src="js/orbit.js?v=52"></script>
+  <script src="js/calendar.js?v=52"></script>
 </body>
 </html>

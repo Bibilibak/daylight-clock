@@ -201,7 +201,7 @@
   function ringRest() {   // pod kołem: miesiąc wybranego dnia, jego dni i dane dnia
     var s = OrbitCal.starts(oy), a = OrbitCal.dateOf(s[om]), z = OrbitCal.dateOf(s[om + 1] - 1), len = s[om + 1] - s[om], i, h =
       '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + qColor(om / 3 | 0) + '">' + mName(om) +
-      '<small>' + short(a) + ' – ' + short(z) + ' · ' + len + ' ' + t(dayKey(len)) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
+      '<small>' + short(a) + ' – ' + short(z) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
     for (i = 0; i < len; i++) {
       var n = s[om] + i, dt = OrbitCal.dateOf(n);
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
@@ -218,7 +218,7 @@
     for (k = 0; k < 12; k++) {
       var len = s[k + 1] - s[k];
       h += '<div class="ym"><button class="ymh" data-om="' + k + '" style="border-bottom:3px solid ' + qColor(k / 3 | 0) + '">' + mName(k) + '</button>' +
-        '<div class="ymsub">' + short(OrbitCal.dateOf(s[k])) + ' · ' + len + ' ' + t(dayKey(len)) + '</div><div class="ymg">';
+        '<div class="ymsub">' + short(OrbitCal.dateOf(s[k])) + ' – ' + short(OrbitCal.dateOf(s[k + 1] - 1)) + '</div><div class="ymg">';
       for (i = 0; i < len; i++) {
         var n = s[k] + i, dt = OrbitCal.dateOf(n);
         h += '<button class="yd' + dayCls(dt, n) + (i === 0 && k % 3 === 0 ? " sn" : "") + '" data-n="' + n + '" title="' +

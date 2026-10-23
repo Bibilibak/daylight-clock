@@ -610,6 +610,21 @@ button {
 .ttab .tdv { position: relative; width: 22%; }
 .ttab .tdv i { position: absolute; top: 35%; height: 30%; border-radius: 2px; }
 .ttab .tdv::before { content: ""; position: absolute; left: 50%; top: 20%; bottom: 20%; width: 1px; background: var(--mut); }
+/* Urodziny na orbicie: rozwijana sekcja pod kafelkiem dnia; wyszarzone lata = urodziny w innym dniu orbity */
+.bday { margin-top: 12px; padding: 10px 14px; text-align: left; background: var(--card); border-radius: 14px; }
+.bday summary { font-weight: 700; cursor: pointer; }
+.bdin { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; font-size: 14px; }
+.bdin input { font: inherit; margin-left: 4px; padding: 3px 6px; border: 1px solid var(--mut); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.bdres { margin-top: 10px; font-size: 14px; }
+.bdres > div { margin-top: 4px; }
+.bdres .cp { font-size: 22px; font-weight: 700; }
+.bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
+.btab { margin-top: 0; }
+.btab td:nth-child(2) { white-space: nowrap; }
+.btab td:nth-child(3) { white-space: normal; }
+.btab td:nth-child(5) { text-align: right; }
+.btab thead td { font-weight: 700; color: var(--mut); }
+.btab tr.off { color: var(--mut); }
 /* kafelek dnia: postęp pory roku (pasek po kącie, kreski = granice miesięcy) */
 .cdet .sbar { margin: 8px 0 6px; }
 .sbr { position: relative; height: 10px; margin-top: 4px; border-radius: 5px; background: color-mix(in srgb, var(--mut) 25%, transparent); overflow: hidden; }

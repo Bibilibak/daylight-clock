@@ -237,7 +237,7 @@
       var n = s[om] + i, dt = OrbitCal.dateOf(n);
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
-    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + oNote()
+    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + oNote()
   }
 
   function termRest() {   // termin słoneczny: nazwa, zakres dat, długość w dobach i chwilach, siatka dób
@@ -250,7 +250,7 @@
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
     return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + termTable() +
-      '<p class="cnote">' + t("calTermNote") + '</p>' + oNote()
+      '<p class="cnote">' + t("calTermNote") + '</p>' + birthBox() + oNote()
   }
   /* Tabela 24 terminów w roku oy: kąt, data początku i długość w dobach (dokładna, z chwil przejścia).
      Pasek = odchylenie od średniej (365,24 / 24 ≈ 15,22 doby): dłuższe w prawo, krótsze w lewo. */
@@ -262,6 +262,40 @@
         short(OrbitCal.dateOf(s[k])) + '</td><td>' + num(L, 2) + '</td><td class="tdv"><i style="' + (dv < 0 ? 'right:50%' : 'left:50%') + ';width:' + w.toFixed(1) + '%;background:' + qColor(k / 6 | 0) + '"></i></td></tr>'
     }
     return h + '</tbody></table><p class="cnote">' + t("calTermAvg").replace("{a}", num(avg, 2)) + '</p>'
+  }
+
+  /* Urodziny na orbicie: chwila urodzenia (data i godzina według zegara wybranego miasta) -> kąt roku.
+     Ziemia wraca na ten kąt co rok orbity, ale rok ma ok. 365,2422 doby, więc powrót wypada co rok ok. 5 h 49 min
+     później (o ok. 87° dalej na tarczy), a po roku przestępnym się cofa. Czasem przechodzi przez wschód Słońca
+     i wtedy urodziny wypadają w kalendarzu orbity o dzień dalej (albo bliżej). Kąt zostaje zawsze ten sam. */
+  var bday = null, bdOpen = false;   // { d: "2000-10-24", t: "12:00" }
+  try {
+    var bs = JSON.parse(localStorage.getItem("bday") || "null");
+    if (bs && /^\d{4}-\d\d-\d\d$/.test(bs.d) && /^\d\d:\d\d$/.test(bs.t)) bday = bs;
+    bdOpen = localStorage.getItem("bdOpen") === "1"
+  } catch (e) {}
+  function riseDeg(ms) { var c = dayCycle(new Date(ms)); return c ? degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a))) : "" }   // sam kąt z whenTxt (do tabeli)
+  function bdOName(n) { var o = OrbitCal.date(OrbitCal.dateOf(n)); return { k: o.month, d: o.day, txt: mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) } }
+  function birthBox() {
+    var h = '<details class="bday"' + (bdOpen ? " open" : "") + '><summary>' + t("bdTitle") + '</summary>' +
+      '<div class="bdin"><label>' + t("bdDate") + ' <input type="date" data-bd="d" min="1000-01-01" max="3000-12-31" value="' + (bday ? bday.d : "") + '"></label>' +
+      '<label>' + t("bdTime") + ' <input type="time" data-bd="t" value="' + (bday ? bday.t : "12:00") + '"></label></div>';
+    if (!bday) return h + '<p class="cnote">' + t("bdHint") + '</p></details>';
+    var p = bday.d.split("-").map(Number), q = bday.t.split(":").map(Number), ms = zoned(p[0], p[1] - 1, p[2], q[0], q[1]);
+    if (!(p[0] >= Y0 && p[0] <= Y1) || isNaN(ms)) return h + '</details>';
+    var a = sunLonDeg(ms), n0 = sunDay(ms), b = bdOName(n0), Yb = OrbitCal.date(OrbitCal.dateOf(n0)).year,
+      Yn = Math.min(Y1, OrbitCal.date(today).year + 1), rows = "", shift = 0;
+    for (var Y = Yb + 1; Y <= Yn; Y++) {
+      var m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === b.k && o.d === b.d;
+      if (!same0) shift++;
+      rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + Y + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
+        short(OrbitCal.dateOf(n)) + '</td><td>' + riseDeg(m) + '</td></tr>'
+    }
+    return h + '<div class="bdres"><div class="cp">' + num(a, 2) + '°</div><div>' + t("bdBorn").replace("{o}", b.txt).replace("{w}", whenTxt(ms)) + '</div>' +
+      (rows ? '<div>' + t("bdShift").replace("{s}", shift).replace("{n}", Yn - Yb) + '</div>' +
+        '<div class="bdscr"><table class="ttab btab"><thead><tr><td>' + t("bdY") + '</td><td>' + t("bdAge") + '</td><td>' + t("bdODay") + '</td><td></td><td>' + t("bdWhen") +
+        '</td></tr></thead><tbody>' + rows + '</tbody></table></div>' : '') +
+      '</div><p class="cnote">' + t("bdNote") + '</p></details>'
   }
 
   /* Siatka roku orbity: 12 miesięcy, rzędami po 10 dni (1–10, 11–20, 21–30, 31–32). Na szerokim ekranie
@@ -282,7 +316,7 @@
       h += '</div></div>'
     }
     box.innerHTML = h + '</div><p class="cnote">' + t("calOMarks") + '</p><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' +
-      detail(sel) + oNote()
+      detail(sel) + birthBox() + oNote()
   }
 
   var lastView = null;
@@ -307,6 +341,20 @@
     var o = OrbitCal.date(d); oy = o.year; om = o.month; ot = OrbitCal.term(d).term
   }
 
+  // urodziny: zmiana daty / godziny zapisuje się i przelicza tabelę; otwarcie sekcji zapamiętane
+  if ($("calView")) $("calView").onchange = function (e) {
+    var k = e.target.getAttribute("data-bd"); if (!k) return;
+    var box = $("calView").querySelectorAll("[data-bd]"), d = box[0].value, tt = box[1].value || "12:00";
+    bday = d ? { d: d, t: tt } : null;
+    try { if (bday) localStorage.setItem("bday", JSON.stringify(bday)); else localStorage.removeItem("bday") } catch (e2) {}
+    var y = window.scrollY; render(); window.scrollTo(0, y);
+    var f = $("calView").querySelector('[data-bd="' + k + '"]'); if (f) f.focus()
+  };
+  if ($("calView")) $("calView").addEventListener("toggle", function (e) {
+    if (!e.target.classList.contains("bday")) return;
+    bdOpen = e.target.open;
+    try { localStorage.setItem("bdOpen", bdOpen ? "1" : "0") } catch (e2) {}
+  }, true);
   if ($("calView")) $("calView").onmousedown = function (e) { if (yearInp && e.target !== yearInp) e.preventDefault() };
   // miejsce wskaźnika na kole: kąt od góry zgodnie z ruchem wskazówek (°) i odległość od środka (w jednostkach rysunku 360×360)
   function ptr(g, e) {
@@ -368,6 +416,8 @@
       else if (!closed) return;
       return render()
     }
+    var br = e.target.closest("tr[data-bn]");
+    if (br) { pick(OrbitCal.dateOf(+br.getAttribute("data-bn"))); return render() }
     var tr = e.target.closest("tr[data-tk]");
     if (tr) { pick(OrbitCal.dateOf(OrbitCal.termStarts(oy)[+tr.getAttribute("data-tk")])); return render() }
     var b = e.target.closest("button"); if (!b) { if (closed) render(); return }

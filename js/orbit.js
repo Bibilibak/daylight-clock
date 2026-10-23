@@ -53,6 +53,8 @@ var OrbitCal = (function () {
   function lonAt(n) { return sunLonDeg(sunNoon(n)) }
   // doba, w której Słońce jest na kącie l w roku orbity Y
   function dayAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return dateOf(sunDay(cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5))) }
+  // chwila, w której Słońce jest na kącie l w roku orbity Y
+  function momentAt(Y, l) { var b = year(Y).b; l = (l % 360 + 360) % 360; return cross(l, b[Math.floor(l / 30)] + (l % 30) / 0.9856 * 864e5) }
   // aphelium albo peryhelium w danej dobie: { far, km, ms } lub null
   function apsisOn(n) {
     var Y = dateOf(n).getFullYear(); if (n < starts(Y)[0]) Y--;
@@ -87,5 +89,5 @@ var OrbitCal = (function () {
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
 
   return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, dayStart: dayStart, lonAt: lonAt, dayAt: dayAt,
-    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, termMs: termMs, termStarts: termStarts, term: term }
+    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, termMs: termMs, termStarts: termStarts, term: term, momentAt: momentAt }
 })();

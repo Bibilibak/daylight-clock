@@ -237,7 +237,7 @@
       var n = s[om] + i, dt = OrbitCal.dateOf(n);
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
-    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + oNote()
+    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + whyBox() + oNote()
   }
 
   function termRest() {   // termin słoneczny: nazwa, zakres dat, długość w dobach i chwilach, siatka dób
@@ -250,7 +250,7 @@
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
     return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + termTable() +
-      '<p class="cnote">' + t("calTermNote") + '</p>' + birthBox() + oNote()
+      '<p class="cnote">' + t("calTermNote") + '</p>' + birthBox() + whyBox() + oNote()
   }
   /* Tabela 24 terminów w roku oy: kąt, data początku i długość w dobach (dokładna, z chwil przejścia).
      Pasek = odchylenie od średniej (365,24 / 24 ≈ 15,22 doby): dłuższe w prawo, krótsze w lewo. */
@@ -298,6 +298,19 @@
       '</div><p class="cnote">' + t("bdNote") + '</p></details>'
   }
 
+  /* Dlaczego żaden kalendarz nie jest idealny: rok, miesiąc i doba to trzy niezależne ruchy.
+     Tabela kompromisów (calWhyRows: wiersze rozdzielone "|", komórki ";"), ostatni wiersz = ten kalendarz. */
+  var whyOpen = false;
+  try { whyOpen = localStorage.getItem("whyOpen") === "1" } catch (e) {}
+  function whyBox() {
+    var rows = t("calWhyRows").split("|").map(function (r, i, a) {
+      return '<tr' + (i === a.length - 1 ? ' class="on"' : '') + '>' + r.split(";").map(function (c) { return '<td>' + c + '</td>' }).join("") + '</tr>'
+    }).join("");
+    return '<details class="bday why"' + (whyOpen ? " open" : "") + '><summary>' + t("calWhyT") + '</summary><p>' + t("calWhyP") + '</p>' +
+      '<table class="ttab wtab"><thead><tr>' + t("calWhyH").split(";").map(function (c) { return '<td>' + c + '</td>' }).join("") + '</tr></thead><tbody>' + rows +
+      '</tbody></table></details>'
+  }
+
   /* Siatka roku orbity: 12 miesięcy, rzędami po 10 dni (1–10, 11–20, 21–30, 31–32). Na szerokim ekranie
      jeden rząd = jedna pora roku. Kropka = równonoc / przesilenie, ◆ = aphelium / peryhelium. */
   function renderGrid(box) {
@@ -316,7 +329,7 @@
       h += '</div></div>'
     }
     box.innerHTML = h + '</div><p class="cnote">' + t("calOMarks") + '</p><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' +
-      detail(sel) + birthBox() + oNote()
+      detail(sel) + birthBox() + whyBox() + oNote()
   }
 
   var lastView = null;
@@ -352,8 +365,9 @@
   };
   if ($("calView")) $("calView").addEventListener("toggle", function (e) {
     if (!e.target.classList.contains("bday")) return;
-    bdOpen = e.target.open;
-    try { localStorage.setItem("bdOpen", bdOpen ? "1" : "0") } catch (e2) {}
+    var why = e.target.classList.contains("why");
+    if (why) whyOpen = e.target.open; else bdOpen = e.target.open;
+    try { localStorage.setItem(why ? "whyOpen" : "bdOpen", e.target.open ? "1" : "0") } catch (e2) {}
   }, true);
   if ($("calView")) $("calView").onmousedown = function (e) { if (yearInp && e.target !== yearInp) e.preventDefault() };
   // miejsce wskaźnika na kole: kąt od góry zgodnie z ruchem wskazówek (°) i odległość od środka (w jednostkach rysunku 360×360)

@@ -627,6 +627,10 @@ button {
 .bdres .cp { font-size: 22px; font-weight: 700; }
 .bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
 .btab { margin-top: 0; }
+.why p { margin: 8px 0 0; font-size: 14px; line-height: 1.45; }
+.wtab td { white-space: normal !important; vertical-align: top; }
+.wtab thead td { font-weight: 700; color: var(--mut); }
+.wtab td:first-child { font-weight: 600; }
 .btab td:nth-child(2) { white-space: nowrap; }
 .btab td:nth-child(3) { white-space: normal; }
 .btab td:nth-child(5) { text-align: right; }

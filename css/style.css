@@ -525,6 +525,13 @@ button {
 .mdet .mdt small { font-size: 12px; font-weight: 600; color: var(--sun); }
 .mdet .mdsub { margin: 0 0 6px; font-size: 13px; color: var(--mut); }
 .mdet:empty { display: none; }
+/* miesiąc syderyczny: rysunek orbity Księżyca obok opisu */
+.msid { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; align-items: center; margin: 10px 0 14px; padding: 12px 14px; text-align: left; background: var(--card); border-radius: 14px; font-size: 14px; }
+.msid .mname { font-size: 15px; }
+.msid > div > div { margin-top: 3px; }
+.msid .cnote { grid-column: 1 / -1; }
+.msvg { width: 120px; height: 120px; }
+.msid:empty { display: none; }
 .mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
 /* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */

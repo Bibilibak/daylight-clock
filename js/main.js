@@ -408,7 +408,8 @@ function tick() {
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 152) : arcSeg(c - h0, c + h0, 152));
     if ($("mname")) {                         // sekcja Księżyca
       var lc = lunarCycle(now), ig = phaseGlyph(mp.ph, 0, 0, 18);
-      if (newCycle(lc)) buildMonthScale(lc);   // nowy cykl: inne położenie kwadr i inna liczba dni
+      if (newCycle(lc)) buildMonthScale(lc);
+      drawSidereal(now);   // nowy cykl: inne położenie kwadr i inna liczba dni
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
       if (lc.day !== monthDay) {                          // dzisiejszy dzień cyklu w siatce, minione dni przygaszone
@@ -424,8 +425,7 @@ function tick() {
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
   showNear(noSet ? null : nearParts(deg, nd, sd));
 
-  live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null,
-    sLon: sunLonDeg(now.getTime()), mLon: mp ? mp.lon : null, node: mp ? mp.node : null };   // dla js/view3d.js
+  live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), sLon: sunLonDeg(now.getTime()) };   // dla js/view3d.js
 }
 
 /* ===== Lokalizacja ===== */
@@ -640,6 +640,47 @@ if ($("mgrid")) $("mgrid").onclick = function (e) {
   monthSel = d === monthDay ? null : d;   // klik w dziś = powrót do śledzenia bieżącego dnia
   markMoonSel(); renderMoonDet()
 };
+
+/* ===== Miesiąc syderyczny: Księżyc wraca w to samo miejsce orbity (względem gwiazd) co ok. 27,32 doby =====
+   Kąt Księżyca na orbicie liczymy od kierunku równonocy, tak jak kąt roku Słońca (0° = równonoc marcowa).
+   Ściśle to miesiąc zwrotnikowy, krótszy od syderycznego o ok. 7 s, czego tu nie widać.
+   Faza (kąt Słońce–Księżyc) = kąt Księżyca − kąt Słońca. Słońce przesuwa się przez miesiąc o ok. 27°,
+   więc od nowiu do nowiu Księżyc musi zrobić pełne okrążenie i jeszcze dogonić Słońce: 29,53 zamiast 27,32 doby.
+   Dni cyklu jak w miesiącu synodycznym: doby od wschodu Słońca, dzień 1 = doba, w której Księżyc przechodzi przez 0°. */
+function moonLonDeg(ms) { return (sunLonDeg(ms) + elong(ms)) % 360 }
+function moonAt0(ms) { for (var i = 0; i < 5; i++) ms -= normDeg(moonLonDeg(ms)) / 13.176 * 864e5; return ms }
+function siderealCycle(now) {
+  var t = now.getTime(), last = moonAt0(t - moonLonDeg(t) / 13.176 * 864e5);
+  if (last > t) last = moonAt0(last - 27.32 * 864e5);
+  var next = moonAt0(last + 27.32 * 864e5), n = sunDay(t);
+  if (sunDay(next) <= n) { last = next; next = moonAt0(last + 27.32 * 864e5) }   // dziś jest doba przejścia przez 0°: od wschodu nowy cykl
+  var d0 = sunDay(last);
+  return { day: n - d0 + 1, days: sunDay(next) - d0, length: (next - last) / 864e5, next: next }
+}
+var lastSid = "";
+function drawSidereal(now) {
+  if (!$("msid")) return;
+  var ms = now.getTime(), ml = moonLonDeg(ms), sl = sunLonDeg(ms), ph = elong(ms), c = siderealCycle(now), C = 60, k;
+  function P(a, r) { return [C + r * Math.sin(a * R), C - r * Math.cos(a * R)] }   // 0° u góry, zgodnie z ruchem wskazówek (jak koło roku)
+  function f(p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) }
+  var s = P(sl, 50), m = P(ml, 36), a0 = P(sl, 22), a1 = P(ml, 22), big = ph > 180 ? 1 : 0, tk = "";
+  for (k = 0; k < 360; k += 30) tk += "M" + f(P(k, 44)) + "L" + f(P(k, k % 90 ? 47 : 52));
+  var svg = '<svg class="msvg" viewBox="0 0 120 120" aria-hidden="true">' +
+    '<circle cx="60" cy="60" r="36" fill="none" stroke="var(--mut)" stroke-opacity=".5" stroke-dasharray="2 3"/>' +
+    '<path d="' + tk + '" stroke="var(--mut)" stroke-width="1"/>' +
+    '<text x="60" y="6" text-anchor="middle" font-size="8" fill="var(--mut)">0°</text>' +
+    '<path d="M' + f(a0) + 'A22 22 0 ' + big + ' 1 ' + f(a1) + '" fill="none" stroke="#8ea3c2" stroke-width="3"/>' +   // faza: od kierunku Słońca do Księżyca
+    '<line x1="60" y1="60" x2="' + s[0].toFixed(1) + '" y2="' + s[1].toFixed(1) + '" stroke="var(--sun)" stroke-width="1.5"/>' +
+    '<circle cx="' + s[0].toFixed(1) + '" cy="' + s[1].toFixed(1) + '" r="6" fill="var(--sun)"/>' +
+    '<circle cx="60" cy="60" r="6" fill="#4f7fc4"/>' + phaseGlyph(ph, +m[0].toFixed(1), +m[1].toFixed(1), 6) + '</svg>';
+  var h = svg + '<div><div class="mname">' + t("sidT") + '</div>' +
+    '<div>' + t("sidPos").replace("{a}", degTxt(ml)).replace("{d}", c.day).replace("{l}", c.days) + '</div>' +
+    '<div class="sbr"><i style="width:' + (ml / 3.6).toFixed(1) + '%;background:#8ea3c2"></i></div>' +
+    '<div>' + t("sidEq").replace("{p}", degTxt(ph)).replace("{m}", degTxt(ml)).replace("{s}", degTxt(sl)) + '</div>' +
+    '<div>' + t("sidNext").replace("{w}", new Date(sunDay(c.next) * 864e5).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) + ", " + whenTxt(c.next)).replace("{l}", c.length.toFixed(2).replace(".", lang === "en" ? "." : ",")) + '</div></div>' +
+    '<p class="cnote">' + t("sidNote") + '</p>';
+  if (h !== lastSid) { $("msid").innerHTML = h; lastSid = h }
+}
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */
 var curView = "dial";

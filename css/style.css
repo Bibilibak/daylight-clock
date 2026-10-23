@@ -548,7 +548,9 @@ button {
 .ysvg { margin: 0 auto; }
 .ylb { font-size: 10px; fill: var(--mut); }
 .ystate { margin-top: 10px; font-size: 22px; font-weight: 700; }
-.ydot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; }
+.ydot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; box-shadow: 0 0 0 1px var(--mut); }
+.ypol { font-size: 13px; color: var(--mut); }
+.ypol .ydot { margin-left: 4px; margin-right: 5px; vertical-align: -1px; }
 .yrow { margin-top: 4px; font-size: 14px; color: var(--mut); }
 
 /* ===== Kalendarz ===== */

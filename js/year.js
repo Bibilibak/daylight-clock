@@ -19,6 +19,14 @@
     return k
   }
   function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
+  /* Kolor odcinka: złoty = światła przybywa, fioletowy = ubywa, szary = prawie bez zmian,
+     biały = dzień polarny (360° światła), granatowy = noc polarna (0°). Biały i granatowy mają szary obrys, żeby było je widać w obu motywach. */
+  var KC = { r: "#e8a000", f: "#6a66b0", z: "var(--mut)", d: "#ffffff", n: "#1d2040" };
+  function kind(h, h1) { return h >= 24 && h1 >= 24 ? "d" : h <= 0 && h1 <= 0 ? "n" : (h1 - h) * 15 > 0.05 ? "r" : (h1 - h) * 15 < -0.05 ? "f" : "z" }
+  function line(pts, k, w) {
+    return (k === "d" || k === "n" ? '<polyline fill="none" stroke="var(--mut)" stroke-width="' + (w + 2) + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>' : '') +
+      '<polyline fill="none" stroke="' + KC[k] + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
+  }
   function nd(n) { return n === 0 ? t("todayLbl") : n + " " + t(dayKey(n)) }   // forma liczby mnogiej wg języka
   function dshort(y, i) { return new Date(Date.UTC(y, 0, 1 + i)).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) }
 
@@ -45,7 +53,7 @@
     var dMax = until(iMax, 1), dMin = until(iMin, 0),
       st = h0 >= 24 ? "yPolarDay" : h0 <= 0 ? "yPolarNight" : flat ? "yFlat"
         : Math.abs(rate) < 0.05 ? (h0 >= (a[iMax] + a[iMin]) / 2 ? "yLong" : "yShort") : rate > 0 ? "yRise" : "yFall",
-      col = st === "yRise" || st === "yLong" ? "#e8a000" : st === "yFall" || st === "yShort" ? "#6a66b0" : "var(--mut)";
+      col = st === "yRise" || st === "yLong" ? KC.r : st === "yFall" || st === "yShort" ? KC.f : st === "yPolarDay" ? KC.d : st === "yPolarNight" ? KC.n : KC.z;
     last = { year: y, today: today, iMax: iMax, iMin: iMin, dMax: dMax, dMin: dMin, rate: rate, state: st, flat: flat, hours: h0, lightDeg: h0 * 15, amp: a[iMax] - a[iMin], n: n };
 
     // następny dzień po danym (31 grudnia -> 1 stycznia NASTĘPNEGO roku; w roku przestępnym 1 stycznia tego roku jest za blisko)
@@ -61,13 +69,11 @@
     o += '<circle cx="180" cy="160" r="80" fill="none" stroke="var(--mut)" stroke-opacity=".4" stroke-dasharray="3 4"/>';
     var runs = [], cur = null;
     for (i = 0; i < n; i++) {                                         // cała pętla, łącznie z domknięciem ostatniego dnia z pierwszym
-      var dd = (nxt(i) - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z";
+      var k = kind(a[i], nxt(i));
       if (!cur || cur.k !== k) { cur = { k: k, p: [Pc(i)] }; runs.push(cur) }
       cur.p.push(Pc(i + 1))
     }
-    runs.forEach(function (r) {
-      o += '<polyline fill="none" stroke="' + (r.k === "r" ? "#e8a000" : r.k === "f" ? "#6a66b0" : "var(--mut)") + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="' + r.p.map(fmt).join(" ") + '"/>'
-    });
+    runs.forEach(function (r) { o += line(r.p.map(fmt).join(" "), r.k, 3) });
     if (!flat) [[iMax, "yLongS", "#e8a000", 14], [iMin, "yShortS", "#6a66b0", 16]].forEach(function (e) {
       if (a[e[0]] === 24 || a[e[0]] === 0) return;                    // plateau polarne nie ma jednego punktu
       var p = Pc(e[0]), q = Pt(e[0], rr(a[e[0]]) + e[3]);
@@ -90,6 +96,9 @@
         '<button data-yv="loop" aria-pressed="' + (viz === "loop") + '">' + t("yVizLoop") + '</button></div>' +
         '<svg class="ysvg" viewBox="0 0 360 ' + (viz === "line" ? 206 : 320) + '" role="img" aria-label="' + t("yearBtn") + '">' + o + '</svg>' +
         '<div class="ystate"><span class="ydot" style="background:' + col + '"></span>' + t(st) + '</div>';
+    var pD = a.some(function (x) { return x >= 24 }), pN = a.some(function (x) { return x <= 0 });   // legenda kolorów polarnych, gdy występują w tym roku
+    if (pD || pN) h += '<div class="yrow ypol">' + (pD ? '<span class="ydot" style="background:' + KC.d + '"></span>' + t("yPolD") + ' ' : '') +
+      (pN ? '<span class="ydot" style="background:' + KC.n + '"></span>' + t("yPolN") : '') + '</div>';
     if (!polar) h += '<div class="yrow">' + t("lightHead").replace("{a}", Math.round(h0 * 15)) + (flat ? "" : " · " + t("yRate").replace("{r}", rt)) + '</div>';
     if (!flat) h += '<div class="yrow">' + t("yToLong").replace("{n}", nd(dMax)) + '</div><div class="yrow">' + t("yToShort").replace("{n}", nd(dMin)) + '</div>' +
       '<div class="yrow yexp">' + t(viz === "line" ? "yExpLine" : "yExp") + '</div>';
@@ -119,13 +128,13 @@
     idx.sort(function (p, q) { return lam[p] - lam[q] });
     var runs = [], cur = null;
     for (j = 0; j < n; j++) {
-      var i = idx[j], dd = (nxt(i) - a[i]) * 15, k = dd > 0.05 ? "r" : dd < -0.05 ? "f" : "z",
+      var i = idx[j], k = kind(a[i], nxt(i)),
         p = [X(lam[i]), Y(a[i])];
       if (!cur || cur.k !== k) { cur = { k: k, p: cur ? [cur.p[cur.p.length - 1]] : [] }; runs.push(cur) }
       cur.p.push(p)
     }
     runs.forEach(function (r) {
-      if (r.p.length > 1) o += '<polyline fill="none" stroke="' + (r.k === "r" ? "#e8a000" : r.k === "f" ? "#6a66b0" : "var(--mut)") + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + r.p.map(fmt).join(" ") + '"/>'
+      if (r.p.length > 1) o += line(r.p.map(fmt).join(" "), r.k, 2.5)
     });
     if (!flat) [[iMax, "yLongS", "#e8a000", -10], [iMin, "yShortS", "#6a66b0", 17]].forEach(function (e) {
       if (a[e[0]] === 24 || a[e[0]] === 0) return;                    // plateau polarne nie ma jednego punktu

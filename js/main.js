@@ -424,8 +424,7 @@ function tick() {
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
   showNear(noSet ? null : nearParts(deg, nd, sd));
 
-  live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), mH: mp ? mp.H : null, mDec: mp ? mp.dec : null,
-    sLon: sunLonDeg(now.getTime()), mLon: mp ? mp.lon : null, node: mp ? mp.node : null };   // dla js/view3d.js
+  live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), sLon: sunLonDeg(now.getTime()) };   // dla js/view3d.js
 }
 
 /* ===== Lokalizacja ===== */

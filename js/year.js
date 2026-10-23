@@ -20,12 +20,11 @@
   }
   function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
   /* Kolor odcinka: złoty = światła przybywa, fioletowy = ubywa, szary = prawie bez zmian,
-     biały = dzień polarny (360° światła), granatowy = noc polarna (0°). Biały i granatowy mają szary obrys, żeby było je widać w obu motywach. */
-  var KC = { r: "#e8a000", f: "#6a66b0", z: "var(--mut)", d: "#ffffff", n: "#1d2040" };
+     jasnozłoty = dzień polarny (360° światła), ciemnofioletowy = noc polarna (0°); odcienie z motywu (--pday, --pnight). */
+  var KC = { r: "#e8a000", f: "#6a66b0", z: "var(--mut)", d: "var(--pday)", n: "var(--pnight)" };
   function kind(h, h1) { return h >= 24 && h1 >= 24 ? "d" : h <= 0 && h1 <= 0 ? "n" : (h1 - h) * 15 > 0.05 ? "r" : (h1 - h) * 15 < -0.05 ? "f" : "z" }
   function line(pts, k, w) {
-    return (k === "d" || k === "n" ? '<polyline fill="none" stroke="var(--mut)" stroke-width="' + (w + 2) + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>' : '') +
-      '<polyline fill="none" stroke="' + KC[k] + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
+    return '<polyline fill="none" stroke="' + KC[k] + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
   }
   function nd(n) { return n === 0 ? t("todayLbl") : n + " " + t(dayKey(n)) }   // forma liczby mnogiej wg języka
   function dshort(y, i) { return new Date(Date.UTC(y, 0, 1 + i)).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) }

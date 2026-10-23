@@ -1,6 +1,8 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
+  --pday: #f3d27a;   /* zegar roku: dzień polarny (jasny odcień złotego) */
+  --pnight: #2e2b5c; /* zegar roku: noc polarna (ciemny odcień fioletowego) */
   --lang-fg: #6e5c48;  /* tekst przycisku języka: między --mut a --fg */
   --on-sun: #4f2c00;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,9:1) */
   --fg: #2b2118;
@@ -21,6 +23,8 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14100c;
+    --pday: #fff0c2;   /* zegar roku: dzień polarny (jasny odcień złotego) */
+    --pnight: #48447f; /* zegar roku: noc polarna (ciemny odcień fioletowego) */
     --fg: #f6ead8;
     --mut: #a39278;
     --lang-fg: #cbbca5;
@@ -37,6 +41,8 @@
 /* ===== Motyw ciemny (ręcznie przez data-theme="dark") ===== */
 :root[data-theme="dark"] {
   --bg: #14100c;
+  --pday: #fff0c2;   /* zegar roku: dzień polarny (jasny odcień złotego) */
+  --pnight: #48447f; /* zegar roku: noc polarna (ciemny odcień fioletowego) */
   --fg: #f6ead8;
   --mut: #a39278;
   --lang-fg: #cbbca5;
@@ -618,8 +624,12 @@ button {
 /* Urodziny na orbicie: rozwijana sekcja pod kafelkiem dnia; wyszarzone lata = urodziny w innym dniu orbity */
 .bday { margin-top: 12px; padding: 10px 14px; text-align: left; background: var(--card); border-radius: 14px; }
 .bday summary { font-weight: 700; cursor: pointer; }
-.bdin { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; font-size: 14px; }
-.bdin input { font: inherit; margin-left: 4px; padding: 3px 6px; border: 1px solid var(--mut); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.bdin { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 10px; font-size: 14px; }
+.bdf { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--mut); }
+.bdin input { width: auto; font: inherit; font-size: 16px; padding: 4px 6px; border: 1px solid var(--mut); border-radius: 8px; background: var(--bg); color: var(--fg); text-align: center; font-variant-numeric: tabular-nums; }
+.bdin input[size="2"] { width: 3.2em; }
+.bdin input[size="4"] { width: 4.6em; }
+.bdf:nth-child(4) { margin-left: 10px; }
 .bdres { margin-top: 10px; font-size: 14px; }
 .bdres > div { margin-top: 4px; }
 .bdres .cp { font-size: 22px; font-weight: 700; }

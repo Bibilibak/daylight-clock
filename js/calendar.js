@@ -234,10 +234,27 @@
   } catch (e) {}
   function riseDeg(ms) { var c = dayCycle(new Date(ms)); return c ? degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a))) : "" }   // sam kąt z whenTxt (do tabeli)
   function bdOName(n) { var o = OrbitCal.date(OrbitCal.dateOf(n)); return { k: o.month, d: o.day, txt: mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) } }
+  /* Pola daty i godziny: zwykłe pola tekstowe na cyfry (natywne pole daty w części przeglądarek samo przeskakuje
+     do następnej części po pierwszej cyfrze). Nic nie przeskakuje samo; wynik liczy się, gdy wszystkie pola są poprawne. */
+  function bdField(k, lbl, len, v) {
+    return '<label class="bdf"><span>' + lbl + '</span><input data-bd="' + k + '" inputmode="numeric" autocomplete="off" maxlength="' + len + '" size="' + len +
+      '" placeholder="' + (k === "hh" ? "12" : "0000".slice(0, len)) + '" value="' + (v || "") + '"></label>'
+  }
+  function bdRead() {   // pola -> { d: "RRRR-MM-DD", t: "GG:MM" } albo null, gdy data niepełna lub niemożliwa (np. 31.02)
+    var v = {};
+    [].forEach.call($("calView").querySelectorAll("[data-bd]"), function (e) { v[e.getAttribute("data-bd")] = e.value.trim() });
+    var y = +v.yy, m = +v.mm, d = +v.dd, h = v.hh === "" ? 12 : +v.hh, mi = v.mi === "" ? 0 : +v.mi;
+    if (!/^\d{4}$/.test(v.yy) || !/^\d{1,2}$/.test(v.mm) || !/^\d{1,2}$/.test(v.dd) || !(h >= 0 && h < 24 && h % 1 === 0) || !(mi >= 0 && mi < 60 && mi % 1 === 0)) return null;
+    var dt = new Date(Date.UTC(y, m - 1, d));
+    if (y < Y0 || y > Y1 || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    function p2(x) { return (x < 10 ? "0" : "") + x }
+    return { d: y + "-" + p2(m) + "-" + p2(d), t: p2(h) + ":" + p2(mi) }
+  }
   function birthBox() {
+    var bd = bday ? bday.d.split("-") : [], tm = bday ? bday.t.split(":") : [];
     var h = '<details class="bday"' + (bdOpen ? " open" : "") + '><summary>' + t("bdTitle") + '</summary>' +
-      '<div class="bdin"><label>' + t("bdDate") + ' <input type="date" data-bd="d" min="1000-01-01" max="3000-12-31" value="' + (bday ? bday.d : "") + '"></label>' +
-      '<label>' + t("bdTime") + ' <input type="time" data-bd="t" value="' + (bday ? bday.t : "12:00") + '"></label></div>';
+      '<div class="bdin">' + bdField("dd", t("bdD"), 2, bd[2]) + bdField("mm", t("bdM"), 2, bd[1]) + bdField("yy", t("bdYr"), 4, bd[0]) +
+      bdField("hh", t("bdH"), 2, tm[0]) + bdField("mi", t("bdMi"), 2, tm[1]) + '</div>';
     return h + '<div class="bdout">' + birthOut() + '</div></details>'
   }
   // wynik pod polami (przeliczany osobno: pola daty nie są przerysowywane w trakcie wpisywania)
@@ -317,14 +334,15 @@
     var o = OrbitCal.date(d); oy = o.year; om = o.month
   }
 
-  // urodziny: zmiana daty / godziny zapisuje się i przelicza tabelę; otwarcie sekcji zapamiętane
-  if ($("calView")) $("calView").onchange = function (e) {
-    var k = e.target.getAttribute("data-bd"); if (!k) return;
-    var box = $("calView").querySelectorAll("[data-bd]"), d = box[0].value, tt = box[1].value || "12:00";
-    bday = d ? { d: d, t: tt } : null;
-    try { if (bday) localStorage.setItem("bday", JSON.stringify(bday)); else localStorage.removeItem("bday") } catch (e2) {}
+  // urodziny: po każdej wpisanej cyfrze, gdy data jest pełna i poprawna, zapis i przeliczenie tabeli (same pola zostają nietknięte)
+  if ($("calView")) $("calView").addEventListener("input", function (e) {
+    if (!e.target.getAttribute("data-bd")) return;
+    e.target.value = e.target.value.replace(/\D/g, "");
+    var b = bdRead(); if (!b || (bday && b.d === bday.d && b.t === bday.t)) return;
+    bday = b;
+    try { localStorage.setItem("bday", JSON.stringify(bday)) } catch (e2) {}
     var out = $("calView").querySelector(".bdout"); if (out) out.innerHTML = birthOut()
-  };
+  });
   if ($("calView")) $("calView").addEventListener("toggle", function (e) {
     if (!e.target.classList.contains("bday")) return;
     var why = e.target.classList.contains("why");

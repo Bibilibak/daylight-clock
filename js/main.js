@@ -408,8 +408,7 @@ function tick() {
     $("moonup").setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 152) : arcSeg(c - h0, c + h0, 152));
     if ($("mname")) {                         // sekcja Księżyca
       var lc = lunarCycle(now), ig = phaseGlyph(mp.ph, 0, 0, 18);
-      if (newCycle(lc)) buildMonthScale(lc);
-      drawSidereal(now);   // nowy cykl: inne położenie kwadr i inna liczba dni
+      if (newCycle(lc)) buildMonthScale(lc);   // nowy cykl: inne położenie kwadr i inna liczba dni
       $("mname").textContent = t("ph" + phaseIdx(mp.ph));
       $("mdeg2").textContent = t("moonIll").replace("{i}", Math.round(mp.illum * 100));          // oświetlenie
       if (lc.day !== monthDay) {                          // dzisiejszy dzień cyklu w siatce, minione dni przygaszone
@@ -579,16 +578,19 @@ function buildMonthScale(cyc) {
   var N = cyc.days, ph = {}, h = "", d,
     T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }));
   T.forEach(function (ms, k) { ph[sunDay(ms) - cyc.d0 + 1] = k });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
+  cyc.orbit = orbitDone(cyc.last);
+  var od = sunDay(cyc.orbit) - cyc.d0 + 1;   // doba, w której Księżyc kończy pełną orbitę od nowiu (zwykle 28.)
   var full = sunDay(T[2]) - cyc.d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
     var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">';
     for (d = from; d <= to; d++)
-      r += '<button class="md" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : '') + '><b>' + d + '</b>' +
-        (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : '') + '</button>';
+      r += '<button class="md' + (d === od ? " orb" : d > od ? " chase" : "") + '" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : d === od ? ' title="' + t("orbDone") + '"' : '') + '><b>' + d + '</b>' +
+        (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : d === od ? '<i class="orbi">↻</i>' : '') + '</button>';
     return r + '</div></div>'
   }
-  $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane")
+  $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane") +
+    '<p class="cnote mleg">' + t("orbLeg").replace("{d}", od).replace("{l}", ((cyc.orbit - cyc.last) / 864e5).toFixed(2).replace(".", lang === "en" ? "." : ",")).replace("{n}", N - od) + '</p>'
 }
 
 /* ===== Chwile w stopniach doby =====
@@ -623,8 +625,11 @@ function renderMoonDet() {
   h = '<div class="mdt">' + t("moonDayT").replace("{d}", d) + (d === monthDay ? ' <small>' + t("moonToday") + '</small>' : '') + '</div>' +
     (window.Cal ? '<div class="mdsub">' + Cal.orbitName(n) + '</div>' : '') +   // data w kalendarzu orbity, np. "Pełna jesień · dzień 4"
     '<div>' + t("moonAngleL") + ': ' + ang(pa) + ' → ' + ang(pb) + '</div>' +
-    '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>';
+    '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>' +
+    '<div>' + t("orbL") + ': ' + Math.round(orbitFrom(c, a)) + '° → ' + Math.round(orbitFrom(c, b)) + '°</div>';
   ev.forEach(function (e) { h += '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' });
+  if (c.orbit >= a && c.orbit < b) h += '<div><b>↻ ' + t("orbDone") + '</b>: ' + whenTxt(c.orbit) + '</div>';
+  h = orbitSvg(c, (a + b) / 2) + h;
   $("mdet").innerHTML = h
 }
 function markMoonSel() {   // dziś: pomarańczowe obramowanie; wybrany dzień: pomarańczowe tło
@@ -641,45 +646,35 @@ if ($("mgrid")) $("mgrid").onclick = function (e) {
   markMoonSel(); renderMoonDet()
 };
 
-/* ===== Miesiąc syderyczny: Księżyc wraca w to samo miejsce orbity (względem gwiazd) co ok. 27,32 doby =====
-   Kąt Księżyca na orbicie liczymy od kierunku równonocy, tak jak kąt roku Słońca (0° = równonoc marcowa).
-   Ściśle to miesiąc zwrotnikowy, krótszy od syderycznego o ok. 7 s, czego tu nie widać.
-   Faza (kąt Słońce–Księżyc) = kąt Księżyca − kąt Słońca. Słońce przesuwa się przez miesiąc o ok. 27°,
-   więc od nowiu do nowiu Księżyc musi zrobić pełne okrążenie i jeszcze dogonić Słońce: 29,53 zamiast 27,32 doby.
-   Dni cyklu jak w miesiącu synodycznym: doby od wschodu Słońca, dzień 1 = doba, w której Księżyc przechodzi przez 0°. */
+/* ===== Miesiąc syderyczny w siatce miesiąca księżycowego =====
+   Oba miesiące zaczynamy w chwili nowiu. Po ok. 27,32 doby Księżyc wraca w to samo miejsce orbity (względem gwiazd),
+   ale Słońce przesunęło się w tym czasie o ok. 27°, więc do następnego nowiu Księżyc musi je jeszcze dogonić (ok. 2,2 doby).
+   Kąt Księżyca na orbicie liczymy od kierunku równonocy, jak kąt roku Słońca (ściśle to miesiąc zwrotnikowy, krótszy o ok. 7 s). */
 function moonLonDeg(ms) { return (sunLonDeg(ms) + elong(ms)) % 360 }
-function moonAt0(ms) { for (var i = 0; i < 5; i++) ms -= normDeg(moonLonDeg(ms)) / 13.176 * 864e5; return ms }
-function siderealCycle(now) {
-  var t = now.getTime(), last = moonAt0(t - moonLonDeg(t) / 13.176 * 864e5);
-  if (last > t) last = moonAt0(last - 27.32 * 864e5);
-  var next = moonAt0(last + 27.32 * 864e5), n = sunDay(t);
-  if (sunDay(next) <= n) { last = next; next = moonAt0(last + 27.32 * 864e5) }   // dziś jest doba przejścia przez 0°: od wschodu nowy cykl
-  var d0 = sunDay(last);
-  return { day: n - d0 + 1, days: sunDay(next) - d0, length: (next - last) / 864e5, next: next }
+// chwila, w której Księżyc po nowiu "last" wraca na swój kąt orbity z chwili nowiu
+function orbitDone(last) {
+  var L0 = moonLonDeg(last), ms = last + 27.32 * 864e5;
+  for (var i = 0; i < 5; i++) ms -= normDeg(moonLonDeg(ms) - L0) / 13.176 * 864e5;
+  return ms
 }
-var lastSid = "";
-function drawSidereal(now) {
-  if (!$("msid")) return;
-  var ms = now.getTime(), ml = moonLonDeg(ms), sl = sunLonDeg(ms), ph = elong(ms), c = siderealCycle(now), C = 60, k;
-  function P(a, r) { return [C + r * Math.sin(a * R), C - r * Math.cos(a * R)] }   // 0° u góry, zgodnie z ruchem wskazówek (jak koło roku)
+// droga Księżyca po orbicie od nowiu (stopnie, 0–360+): po pełnej orbicie dalej rośnie
+function orbitFrom(c, ms) { var x = ((moonLonDeg(ms) - moonLonDeg(c.last)) % 360 + 360) % 360; return ms >= c.orbit && x < 180 ? x + 360 : x }
+/* Rysunek do kafelka dnia: Ziemia w środku, przerywana kreska = kierunek nowiu (tu stały Słońce i Księżyc w chwili nowiu).
+   Szary łuk = droga Księżyca po orbicie od nowiu, niebieski = faza (od Słońca do Księżyca); 0° u góry, jak na kole roku. */
+function orbitSvg(c, ms) {
+  var L0 = moonLonDeg(c.last), m = orbitFrom(c, ms), sA = ((sunLonDeg(ms) - L0) % 360 + 360) % 360, ph = elong(ms);
+  function P(a, r) { return [48 + r * Math.sin(a * R), 48 - r * Math.cos(a * R)] }
   function f(p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) }
-  var s = P(sl, 50), m = P(ml, 36), a0 = P(sl, 22), a1 = P(ml, 22), big = ph > 180 ? 1 : 0, tk = "";
-  for (k = 0; k < 360; k += 30) tk += "M" + f(P(k, 44)) + "L" + f(P(k, k % 90 ? 47 : 52));
-  var svg = '<svg class="msvg" viewBox="0 0 120 120" aria-hidden="true">' +
-    '<circle cx="60" cy="60" r="36" fill="none" stroke="var(--mut)" stroke-opacity=".5" stroke-dasharray="2 3"/>' +
-    '<path d="' + tk + '" stroke="var(--mut)" stroke-width="1"/>' +
-    '<text x="60" y="6" text-anchor="middle" font-size="8" fill="var(--mut)">0°</text>' +
-    '<path d="M' + f(a0) + 'A22 22 0 ' + big + ' 1 ' + f(a1) + '" fill="none" stroke="#8ea3c2" stroke-width="3"/>' +   // faza: od kierunku Słońca do Księżyca
-    '<line x1="60" y1="60" x2="' + s[0].toFixed(1) + '" y2="' + s[1].toFixed(1) + '" stroke="var(--sun)" stroke-width="1.5"/>' +
-    '<circle cx="' + s[0].toFixed(1) + '" cy="' + s[1].toFixed(1) + '" r="6" fill="var(--sun)"/>' +
-    '<circle cx="60" cy="60" r="6" fill="#4f7fc4"/>' + phaseGlyph(ph, +m[0].toFixed(1), +m[1].toFixed(1), 6) + '</svg>';
-  var h = svg + '<div><div class="mname">' + t("sidT") + '</div>' +
-    '<div>' + t("sidPos").replace("{a}", degTxt(ml)).replace("{d}", c.day).replace("{l}", c.days) + '</div>' +
-    '<div class="sbr"><i style="width:' + (ml / 3.6).toFixed(1) + '%;background:#8ea3c2"></i></div>' +
-    '<div>' + t("sidEq").replace("{p}", degTxt(ph)).replace("{m}", degTxt(ml)).replace("{s}", degTxt(sl)) + '</div>' +
-    '<div>' + t("sidNext").replace("{w}", new Date(sunDay(c.next) * 864e5).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) + ", " + whenTxt(c.next)).replace("{l}", c.length.toFixed(2).replace(".", lang === "en" ? "." : ",")) + '</div></div>' +
-    '<p class="cnote">' + t("sidNote") + '</p>';
-  if (h !== lastSid) { $("msid").innerHTML = h; lastSid = h }
+  function arc(a0, a1, r) { var d = Math.min(a1 - a0, 359.9); return "M" + f(P(a0, r)) + "A" + r + " " + r + " 0 " + (d > 180 ? 1 : 0) + " 1 " + f(P(a0 + d, r)) }
+  var mp = P(m, 30), sp = P(sA, 43);
+  return '<svg class="osvg" viewBox="0 0 96 96" aria-hidden="true">' +
+    '<line x1="48" y1="48" x2="48" y2="2" stroke="var(--mut)" stroke-dasharray="2 2"/>' +
+    '<circle cx="48" cy="48" r="30" fill="none" stroke="var(--mut)" stroke-opacity=".35"/>' +
+    (m > 0.5 ? '<path d="' + arc(0, m, 30) + '" fill="none" stroke="var(--mut)" stroke-width="3"/>' : '') +
+    (ph > 0.5 ? '<path d="' + arc(sA, sA + ph, 17) + '" fill="none" stroke="#8ea3c2" stroke-width="3"/>' : '') +
+    '<line x1="48" y1="48" x2="' + sp[0].toFixed(1) + '" y2="' + sp[1].toFixed(1) + '" stroke="var(--sun)" stroke-width="1.2"/>' +
+    '<circle cx="' + sp[0].toFixed(1) + '" cy="' + sp[1].toFixed(1) + '" r="5" fill="var(--sun)"/>' +
+    '<circle cx="48" cy="48" r="5" fill="#4f7fc4"/>' + phaseGlyph(ph, +mp[0].toFixed(1), +mp[1].toFixed(1), 6) + '</svg>'
 }
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */

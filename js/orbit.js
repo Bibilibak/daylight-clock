@@ -65,29 +65,9 @@ var OrbitCal = (function () {
   }
   // doby aphelium i peryhelium roku orbity Y
   function apsisDays(Y) { var d = days(Y); return { aph: d.aph, peri: d.peri } }
-  /* 24 terminy słoneczne (chińskie jieqi): podział roku orbity co 15° kąta. Terminy z parzystym numerem zaczynają się
-     na granicach miesięcy, nieparzyste w połowie miesiąca. Długość w dobach jest różna (ok. 14–16), kąt zawsze ten sam.
-     termMs: 25 chwil (0°, 15°, … 345°, następna równonoc); termStarts: doby, w których zaczynają się terminy (w wybranym miejscu). */
-  var tcache = {};
-  function termMs(Y) {
-    if (tcache[Y]) return tcache[Y];
-    var b = year(Y).b, m = [], k;
-    for (k = 0; k <= 24; k++) m.push(k % 2 ? cross(k * 15, b[(k - 1) / 2] + 15.2 * 864e5) : b[k / 2]);
-    return tcache[Y] = m
-  }
-  function termStarts(Y) {
-    var key = "t" + Y + "|" + lat + "|" + lon + "|" + tz;
-    return local[key] || (local[key] = termMs(Y).map(sunDay))
-  }
-  // termin doby d: { year, term (0–23), day, len }
-  function term(d) {
-    var o = date(d), s = termStarts(o.year), n = dayN(d), k = 23;
-    while (s[k] > n) k--;
-    return { year: o.year, term: k, day: n - s[k] + 1, len: s[k + 1] - s[k] }
-  }
   // strefa: "N" i "S" poza zwrotnikami, "T" między zwrotnikami (tam pod kalendarzem dopisek o porach roku)
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
 
   return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, dayStart: dayStart, lonAt: lonAt, dayAt: dayAt,
-    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, termMs: termMs, termStarts: termStarts, term: term, momentAt: momentAt }
+    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, momentAt: momentAt }
 })();

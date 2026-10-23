@@ -14,6 +14,11 @@
   } catch (e) {}
   function inYears(y) { return typeof y === "number" && y % 1 === 0 && y >= 1000 && y <= 3000 }   // lata 1000–3000, jak pole roku
   var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok i miesiąc orbity
+  /* Podział koła: "m" = 12 miesięcy po 30°, "t" = 24 terminy słoneczne po 15° (zapamiętany w przeglądarce).
+     ot = oglądany termin (0–23) w roku oy. */
+  var div = "m";
+  try { if (localStorage.getItem("cdiv") === "t") div = "t" } catch (e) {}
+  var ot = OrbitCal.term(sel).term;
   if (cs && inYears(cs.oy) && cs.om >= 0 && cs.om < 12 && cs.om % 1 === 0) { oy = cs.oy; om = cs.om }
 
   // O wschodzie Słońca (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
@@ -21,7 +26,7 @@
   function syncToday() {
     var n = dayStart();
     if (same(n, today)) return false;
-    if (same(sel, today)) { sel = n; var o = OrbitCal.date(n); oy = o.year; om = o.month }
+    if (same(sel, today)) { sel = n; var o = OrbitCal.date(n); oy = o.year; om = o.month; ot = OrbitCal.term(n).term }
     today = n;
     return true
   }
@@ -49,6 +54,9 @@
   }
   /* Skrót na kole: wczesna / pełna / późna (calMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
      Gdy brakuje skrótu: numer miesiąca w ćwiartce, 1–3. */
+  // 24 terminy od równonocy marcowej (0°): znak chiński i nazwa z tłumaczenia (calTermN, 24 nazwy rozdzielone "|")
+  var TZ = "春分|清明|谷雨|立夏|小满|芒种|夏至|小暑|大暑|立秋|处暑|白露|秋分|寒露|霜降|立冬|小雪|大雪|冬至|小寒|大寒|立春|雨水|惊蛰".split("|");
+  function tName(k) { return t("calTermN").split("|")[k] || k * 15 + "°" }
   function mShort(k) {
     var s = t("calMonS").split("|");
     return (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
@@ -65,11 +73,12 @@
       // dzień 1 miesiąca: chwila przejścia przez granicę (równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica 30°·k)
       cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
     return '<div class="cdet"><div class="cg1">' + d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
-      '<div class="cp">' + mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) + '</div>' +
+      '<div class="cp">' + (ring && div === "t" ? termHead(d) : mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day)) + '</div>' +
       '<div>' + (ring ? "" : t("calAngle").replace("{a}", CalendarSystem.label(d)) + ' · ') +
       t("calODay").replace("{n}", o.yday).replace("{d}", o.ylen).replace("{y}", o.year) + '</div>' +
       (cross ? '<div class="cap">' + cross + '</div>' : '') +
       (ap ? '<div class="cap">' + t(ap.far ? "calAph" : "calPeri").replace("{k}", num(ap.km / 1e6, 1)) + ': ' + whenTxt(ap.ms) + '</div>' : '') +
+      seasonBar(n, o) +
       '<div>' + (light === null ? t("calPolar") : t("lightHead").replace("{a}", light)) + '</div>' +
       '<div>' + t("ph" + phaseIdx(ph)) + ' · ' + t("moonIll").replace("{i}", il) + '</div>' +
       '<div>' + t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ",")) + '</div>' +
@@ -77,12 +86,28 @@
       '<p class="cnote">' + t("moonNote") + '</p></div>'
   }
 
+  function termHead(d) { var x = OrbitCal.term(d); return tName(x.term) + ' · ' + t("calTermDay").replace("{d}", x.day).replace("{l}", x.len) }
+  /* Postęp pory roku w dobie n: kąt roku w chwili górowania liczony od początku pory (0–90° = 0–100%)
+     i numer doby w porze. Pasek z kreskami na granicach miesięcy (co 30°). */
+  function seasonBar(n, o) {
+    var q = o.season, s = OrbitCal.starts(o.year),
+      p = Math.max(0, Math.min(100, Math.round((((OrbitCal.lonAt(n) - q * 90) % 360 + 360) % 360) / 0.9)));
+    if (p === 100 && n === s[q * 3]) p = 0;   // doba przejścia: górowanie wypadło tuż przed granicą
+    return '<div class="sbar"><div class="sbt">' + t("calSeasonBar").replace("{s}", qName(q)).replace("{p}", p)
+      .replace("{n}", n - s[q * 3] + 1).replace("{d}", s[q * 3 + 3] - s[q * 3]) + '</div>' +
+      '<div class="sbr" role="progressbar" aria-valuenow="' + p + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + p + '%;background:' + qColor(q) + '"></i>' +
+      '<b style="left:33.33%"></b><b style="left:66.67%"></b></div></div>'
+  }
+
   function seg(attr, list, cur) {
     return '<div class="seg cseg" role="group">' + list.map(function (v) {
       return '<button ' + attr + '="' + v[0] + '" aria-pressed="' + (cur === v[0]) + '">' + t(v[1]) + '</button>'
     }).join("") + '</div>'
   }
-  function segs() { return seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) }
+  function segs() {
+    return seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) +
+      (cvO === "ring" ? seg("data-dv", [["m", "calDivM"], ["t", "calDivT"]], div) : "")
+  }
   function yearNav(label) {
     return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
       '</button><button data-a="ny" aria-label="+1">»</button></div>'
@@ -103,7 +128,7 @@
     inp.onblur = function (e) {   // wyjście z pola (np. Tab): przyjmij rok; fokus na ten sam przycisk po przerysowaniu
       var to = e.relatedTarget, key = null;
       if (to && $("calView").contains(to))
-        ["data-a", "data-cv", "data-n", "data-om"].some(function (at) { var v = to.getAttribute(at); if (v !== null) key = '[' + at + '="' + v + '"]'; return key });
+        ["data-a", "data-cv", "data-dv", "data-n", "data-om"].some(function (at) { var v = to.getAttribute(at); if (v !== null) key = '[' + at + '="' + v + '"]'; return key });
       if (!closeYear(true)) return;
       render();
       var f = key && $("calView").querySelector(key); if (f) f.focus()
@@ -130,7 +155,12 @@
     var P = function (l, r) { var th = (l - top) * R; return [C + r * Math.sin(th), C - r * Math.cos(th)] },
       f = function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) },
       arc = function (l0, l1, r) { return "M" + f(P(l0, r)) + " A" + r + " " + r + " 0 0 1 " + f(P(l1, r)) };
-    for (k = 0; k < 12; k++) {
+    if (div === "t") for (k = 0; k < 24; k++) {   // 24 terminy po 15°: numer terminu na pierścieniu
+      var cT = P(k * 15 + 7.5, 118);
+      h += '<path d="' + arc(k * 15 + 0.5, k * 15 + 14.5, 118) + '" fill="none" stroke="' + qColor(k / 6 | 0) + '" stroke-width="24" stroke-opacity="' + (k === ot ? 1 : k % 2 ? 0.25 : 0.4) + '"/>' +
+        '<text class="ylb" x="' + cT[0].toFixed(1) + '" y="' + (cT[1] + 3.5).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="700" fill="' + (k === ot ? "#fff" : "var(--fg)") + '">' + (k + 1) + '</text>'
+    }
+    else for (k = 0; k < 12; k++) {
       var q = k / 3 | 0, c = P(k * 30 + 15, 118);
       h += '<path d="' + arc(k * 30 + 0.7, k * 30 + 29.3, 118) + '" fill="none" stroke="' + qColor(q) + '" stroke-width="24" stroke-opacity="' + (k === om ? 1 : 0.35) + '"/>' +
         '<text class="ylb" x="' + c[0].toFixed(1) + '" y="' + (c[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + (k === om ? "#fff" : "var(--fg)") + '">' + mShort(k) + '</text>'
@@ -198,7 +228,8 @@
       '<svg class="oring" viewBox="0 0 360 360" tabindex="0" role="img" aria-label="' + t("calRing") + '"></svg><div class="orest">' + ringRest() + '</div>';
     if (spin && from !== null) spinTo(from, top); else { cancelAnimationFrame(anim); drawRing(top) }
   }
-  function ringRest() {   // pod kołem: miesiąc wybranego dnia, jego dni i dane dnia
+  function ringRest() {   // pod kołem: miesiąc (albo termin) wybranego dnia, jego dni i dane dnia
+    if (div === "t") return termRest();
     var s = OrbitCal.starts(oy), a = OrbitCal.dateOf(s[om]), z = OrbitCal.dateOf(s[om + 1] - 1), len = s[om + 1] - s[om], i, h =
       '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + qColor(om / 3 | 0) + '">' + mName(om) +
       '<small>' + short(a) + ' – ' + short(z) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
@@ -207,6 +238,30 @@
       h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
     return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + oNote()
+  }
+
+  function termRest() {   // termin słoneczny: nazwa, zakres dat, długość w dobach i chwilach, siatka dób
+    var s = OrbitCal.termStarts(oy), m = OrbitCal.termMs(oy), len = s[ot + 1] - s[ot], i, h =
+      '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + qColor(ot / 6 | 0) + '">' + (ot + 1) + '. ' + tName(ot) +
+      ' <span lang="zh">' + TZ[ot] + '</span><small>' + ot * 15 + '–' + (ot + 1) * 15 + '° · ' + short(OrbitCal.dateOf(s[ot])) + ' – ' + short(OrbitCal.dateOf(s[ot + 1] - 1)) +
+      ' · ' + t("calTermLen").replace("{l}", num((m[ot + 1] - m[ot]) / 864e5, 2)) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
+    for (i = 0; i < len; i++) {
+      var n = s[ot] + i, dt = OrbitCal.dateOf(n);
+      h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
+    }
+    return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + termTable() +
+      '<p class="cnote">' + t("calTermNote") + '</p>' + oNote()
+  }
+  /* Tabela 24 terminów w roku oy: kąt, data początku i długość w dobach (dokładna, z chwil przejścia).
+     Pasek = odchylenie od średniej (365,24 / 24 ≈ 15,22 doby): dłuższe w prawo, krótsze w lewo. */
+  function termTable() {
+    var s = OrbitCal.termStarts(oy), m = OrbitCal.termMs(oy), avg = (m[24] - m[0]) / 24 / 864e5, h = '<table class="ttab"><tbody>';
+    for (var k = 0; k < 24; k++) {
+      var L = (m[k + 1] - m[k]) / 864e5, dv = L - avg, w = Math.min(50, Math.abs(dv) / 0.6 * 50);
+      h += '<tr' + (k === ot ? ' class="on"' : '') + ' data-tk="' + k + '"><td>' + (k + 1) + '</td><td><span lang="zh">' + TZ[k] + '</span> ' + tName(k) + '</td><td>' + k * 15 + '°</td><td>' +
+        short(OrbitCal.dateOf(s[k])) + '</td><td>' + num(L, 2) + '</td><td class="tdv"><i style="' + (dv < 0 ? 'right:50%' : 'left:50%') + ';width:' + w.toFixed(1) + '%;background:' + qColor(k / 6 | 0) + '"></i></td></tr>'
+    }
+    return h + '</tbody></table><p class="cnote">' + t("calTermAvg").replace("{a}", num(avg, 2)) + '</p>'
   }
 
   /* Siatka roku orbity: 12 miesięcy, rzędami po 10 dni (1–10, 11–20, 21–30, 31–32). Na szerokim ekranie
@@ -240,7 +295,7 @@
     var spin = cvO === "ring" && lastView === "ring" && !drag; lastView = cvO;
     try {
       localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om }));
-      localStorage.setItem("cview", cvO)
+      localStorage.setItem("cview", cvO); localStorage.setItem("cdiv", div)
     } catch (e) {}
     box.classList.toggle("yearMode", cvO === "grid");
     return cvO === "ring" ? renderRing(box, spin) : renderGrid(box)
@@ -249,7 +304,7 @@
   // wybór dnia: oglądany rok i miesiąc orbity idą za wybranym dniem
   function pick(d) {
     sel = d;
-    var o = OrbitCal.date(d); oy = o.year; om = o.month
+    var o = OrbitCal.date(d); oy = o.year; om = o.month; ot = OrbitCal.term(d).term
   }
 
   if ($("calView")) $("calView").onmousedown = function (e) { if (yearInp && e.target !== yearInp) e.preventDefault() };
@@ -313,9 +368,17 @@
       else if (!closed) return;
       return render()
     }
+    var tr = e.target.closest("tr[data-tk]");
+    if (tr) { pick(OrbitCal.dateOf(OrbitCal.termStarts(oy)[+tr.getAttribute("data-tk")])); return render() }
     var b = e.target.closest("button"); if (!b) { if (closed) render(); return }
-    var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om");
+    var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om"), dv = b.getAttribute("data-dv");
     if (v) cvO = v;
+    else if (dv) div = dv;
+    else if (div === "t" && cvO === "ring" && (a === "pm" || a === "nm")) {   // strzałki terminu: poprzedni / następny termin (przez granicę roku)
+      if (a === "pm") { if (ot > 0) ot--; else if (oy > Y0) { ot = 23; oy-- } }
+      else if (ot < 23) ot++; else if (oy < Y1) { ot = 0; oy++ }
+      pick(OrbitCal.dateOf(OrbitCal.termStarts(oy)[ot]))
+    }
     else if (n !== null) pick(OrbitCal.dateOf(+n));
     else if (k !== null) { om = +k; cvO = "ring" }                         // nazwa miesiąca -> koło z tym miesiącem
     else if (a === "t") pick(today);

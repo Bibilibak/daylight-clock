@@ -78,16 +78,14 @@
       '<p class="cnote">' + t("moonNote") + '</p></div>'
   }
 
-  /* Postęp pory roku w dobie n: kąt roku w chwili górowania liczony od początku pory (0–90° = 0–100%)
-     i numer doby w porze. Pasek z kreskami na granicach miesięcy (co 30°). */
+  /* Postęp pory roku w dobie n: kąt roku w chwili górowania liczony od początku pory (0–90° = 0–100%).
+     Jeden pasek z nazwą pory i procentem w środku. */
   function seasonBar(n, o) {
     var q = o.season, s = OrbitCal.starts(o.year),
       p = Math.max(0, Math.min(100, Math.round((((OrbitCal.lonAt(n) - q * 90) % 360 + 360) % 360) / 0.9)));
     if (p === 100 && n === s[q * 3]) p = 0;   // doba przejścia: górowanie wypadło tuż przed granicą
-    return '<div class="sbar"><div class="sbt">' + t("calSeasonBar").replace("{s}", qName(q)).replace("{p}", p)
-      .replace("{n}", n - s[q * 3] + 1).replace("{d}", s[q * 3 + 3] - s[q * 3]) + '</div>' +
-      '<div class="sbr" role="progressbar" aria-valuenow="' + p + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + p + '%;background:' + qColor(q) + '"></i>' +
-      '<b style="left:33.33%"></b><b style="left:66.67%"></b></div></div>'
+    return '<div class="sbr" role="progressbar" aria-valuenow="' + p + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + qName(q) + '">' +
+      '<i style="width:' + p + '%;background:' + qColor(q) + '"></i><span>' + qName(q) + ' ' + p + '%</span></div>'
   }
 
   function seg(attr, list, cur) {

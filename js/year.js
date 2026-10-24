@@ -122,15 +122,15 @@
     });
     o += '<text class="ylb" x="' + ((X0 + X1) / 2) + '" y="' + (Y1 + 32) + '" text-anchor="middle">' + t("yAxX") + '</text>' +
       '<text class="ylb" x="' + (X0 - 5) + '" y="' + (Y0 - 2) + '" text-anchor="end">' + t("yAxY") + '</text>';
-    // dni posortowane wg kąta roku; kolor odcinka = rzeczywisty kierunek zmiany (jutro minus dziś), jak w pętli
+    // dni posortowane wg kąta roku; odcinek od dnia do następnego (jutra) ma kolor rzeczywistej zmiany między nimi, jak w pętli
+    // (kolor bierze się z dnia, w którym odcinek się ZACZYNA: inaczej zmieniałby się o dobę za wcześnie, np. przed samym szczytem dnia polarnego)
     var idx = []; for (j = 0; j < n; j++) idx.push(j);
     idx.sort(function (p, q) { return lam[p] - lam[q] });
-    var runs = [], cur = null;
-    for (j = 0; j < n; j++) {
-      var i = idx[j], k = kind(a[i], nxt(i)),
-        p = [X(lam[i]), Y(a[i])];
-      if (!cur || cur.k !== k) { cur = { k: k, p: cur ? [cur.p[cur.p.length - 1]] : [] }; runs.push(cur) }
-      cur.p.push(p)
+    var runs = [], cur = null, P = function (i) { return [X(lam[i]), Y(a[i])] };
+    for (j = 0; j < n - 1; j++) {
+      var i = idx[j], k = kind(a[i], nxt(i));
+      if (!cur || cur.k !== k) { cur = { k: k, p: [P(i)] }; runs.push(cur) }
+      cur.p.push(P(idx[j + 1]))
     }
     runs.forEach(function (r) {
       if (r.p.length > 1) o += line(r.p.map(fmt).join(" "), r.k, 2.5)

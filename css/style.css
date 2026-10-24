@@ -1,7 +1,7 @@
 /* ===== Kolory i zmienne (motyw jasny) ===== */
 :root {
   --bg: #fff7ea;
-  --pday: #f3d27a;   /* zegar roku: dzień polarny (jasny odcień złotego) */
+  --pday: #eec04f;   /* zegar roku: dzień polarny (jasny odcień złotego) */
   --pnight: #2e2b5c; /* zegar roku: noc polarna (ciemny odcień fioletowego) */
   --lang-fg: #6e5c48;  /* tekst przycisku języka: między --mut a --fg */
   --on-sun: #4f2c00;   /* tekst na tle --sun: ciepły brąz; łagodniejszy niż czarny, a czytelny (kontrast ok. 4,9:1) */
@@ -647,11 +647,11 @@ button {
 .btab td:nth-child(5) { text-align: right; }
 .btab thead td { font-weight: 700; color: var(--mut); }
 .btab tr.off { color: var(--mut); }
-/* kafelek dnia: postęp pory roku (pasek po kącie, kreski = granice miesięcy) */
-.cdet .sbar { margin: 8px 0 6px; }
-.sbr { position: relative; height: 10px; margin-top: 4px; border-radius: 5px; background: color-mix(in srgb, var(--mut) 25%, transparent); overflow: hidden; }
-.sbr i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
-.sbr b { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--card); }
+/* kafelek dnia: postęp pory roku (jeden pasek, nazwa pory i procent w środku) */
+.cdet .sbr { margin: 8px 0 6px; }
+.sbr { position: relative; height: 20px; border-radius: 10px; background: color-mix(in srgb, var(--mut) 22%, transparent); overflow: hidden; }
+.sbr i { position: absolute; inset: 0 auto 0 0; }
+.sbr span { position: relative; display: block; padding: 0 10px; font-size: 12.5px; font-weight: 700; line-height: 20px; color: var(--fg); }
 
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */
 .yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }

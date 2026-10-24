@@ -571,6 +571,7 @@ var monthLast = null, monthDay = null, monthSel = null, monthCyc = null;   // mo
 // inny cykl niż w siatce? Chwila nowiu liczona za każdym razem od innego punktu startowego różni się o ułamki ms,
 // więc porównujemy z tolerancją (kolejne nowie dzieli ok. 29,5 doby)
 function newCycle(cyc) { return monthLast === null || Math.abs(cyc.last - monthLast) > 36e5 }
+function dnum(x) { return x.toFixed(2).replace(".", lang === "en" ? "." : ",") }
 function buildMonthScale(cyc) {
   cyc = cyc || lunarCycle(new Date());
   if (newCycle(cyc)) monthSel = null;   // nowy cykl: zaznaczenie wraca na dziś
@@ -578,16 +579,24 @@ function buildMonthScale(cyc) {
   var N = cyc.days, ph = {}, h = "", d,
     T = [cyc.last].concat([1, 2, 3].map(function (k) { return quarterAt(cyc.last, cyc.length, k) }));
   T.forEach(function (ms, k) { ph[sunDay(ms) - cyc.d0 + 1] = k });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
+  cyc.orbit = orbitDone(cyc.last);
+  var od = sunDay(cyc.orbit) - cyc.d0 + 1;   // doba, w której Księżyc kończy pełną orbitę od nowiu (zwykle 28.)
+  // ułamki dób: jaka część doby 1 minęła przed nowiem i jaka część doby od przed powrotem na orbitę (0–100%)
+  function frac(ms, d) { var a = sunDayStart(cyc.d0 + d - 1), b = sunDayStart(cyc.d0 + d); return Math.round(Math.max(0, Math.min(1, (ms - a) / (b - a))) * 100) }
+  var f1 = frac(cyc.last, 1), fo = frac(cyc.orbit, od);
   var full = sunDay(T[2]) - cyc.d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
     var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">';
     for (d = from; d <= to; d++)
-      r += '<button class="md" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : '') + '><b>' + d + '</b>' +
-        (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : '') + '</button>';
+      // niebieskie = Księżyc dogania Słońce: od chwili powrotu na orbitę do nowiu; w dobie 1 część przed nowiem (koniec poprzedniego cyklu)
+      r += '<button class="md' + (d === od ? " orb part" : d > od ? " chase" : d === 1 ? " pre" : "") + '"' +
+        (d === od ? ' style="--f:' + fo + '%"' : d === 1 ? ' style="--f:' + f1 + '%"' : '') + ' data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : d === od ? ' title="' + t("orbDone") + '"' : '') + '><b>' + d + '</b>' +
+        (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : d === od ? '<i class="orbi">↻</i>' : '') + '</button>';
     return r + '</div></div>'
   }
-  $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane")
+  $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane") +
+    '<p class="cnote mleg">' + t("orbLeg").split("{d}").join(od).replace("{l}", dnum((cyc.orbit - cyc.last) / 864e5)).replace("{c}", dnum((cyc.next - cyc.orbit) / 864e5)) + '</p>'
 }
 
 /* ===== Chwile w stopniach doby =====
@@ -622,8 +631,11 @@ function renderMoonDet() {
   h = '<div class="mdt">' + t("moonDayT").replace("{d}", d) + (d === monthDay ? ' <small>' + t("moonToday") + '</small>' : '') + '</div>' +
     (window.Cal ? '<div class="mdsub">' + Cal.orbitName(n) + '</div>' : '') +   // data w kalendarzu orbity, np. "Pełna jesień · dzień 4"
     '<div>' + t("moonAngleL") + ': ' + ang(pa) + ' → ' + ang(pb) + '</div>' +
-    '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>';
+    '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>' +
+    '<div>' + t("orbL") + ': ' + Math.round(orbitFrom(c, a)) + '° → ' + Math.round(orbitFrom(c, b)) + '°</div>';
   ev.forEach(function (e) { h += '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' });
+  if (c.orbit >= a && c.orbit < b) h += '<div><b>↻ ' + t("orbDone") + '</b>: ' + whenTxt(c.orbit) + '</div>';
+  h = orbitSvg(c, (a + b) / 2) + h;
   $("mdet").innerHTML = h
 }
 function markMoonSel() {   // dziś: pomarańczowe obramowanie; wybrany dzień: pomarańczowe tło
@@ -639,6 +651,37 @@ if ($("mgrid")) $("mgrid").onclick = function (e) {
   monthSel = d === monthDay ? null : d;   // klik w dziś = powrót do śledzenia bieżącego dnia
   markMoonSel(); renderMoonDet()
 };
+
+/* ===== Miesiąc syderyczny w siatce miesiąca księżycowego =====
+   Oba miesiące zaczynamy w chwili nowiu. Po ok. 27,32 doby Księżyc wraca w to samo miejsce orbity (względem gwiazd),
+   ale Słońce przesunęło się w tym czasie o ok. 27°, więc do następnego nowiu Księżyc musi je jeszcze dogonić (ok. 2,2 doby).
+   Kąt Księżyca na orbicie liczymy od kierunku równonocy, jak kąt roku Słońca (ściśle to miesiąc zwrotnikowy, krótszy o ok. 7 s). */
+function moonLonDeg(ms) { return (sunLonDeg(ms) + elong(ms)) % 360 }
+// chwila, w której Księżyc po nowiu "last" wraca na swój kąt orbity z chwili nowiu
+function orbitDone(last) {
+  var L0 = moonLonDeg(last), ms = last + 27.32 * 864e5;
+  for (var i = 0; i < 5; i++) ms -= normDeg(moonLonDeg(ms) - L0) / 13.176 * 864e5;
+  return ms
+}
+// droga Księżyca po orbicie od nowiu (stopnie, 0–360+): po pełnej orbicie dalej rośnie
+function orbitFrom(c, ms) { var x = ((moonLonDeg(ms) - moonLonDeg(c.last)) % 360 + 360) % 360; return ms >= c.orbit && x < 180 ? x + 360 : x }
+/* Rysunek do kafelka dnia: Ziemia w środku, przerywana kreska = kierunek nowiu (tu stały Słońce i Księżyc w chwili nowiu).
+   Szary łuk = droga Księżyca po orbicie od nowiu, niebieski = faza (od Słońca do Księżyca); 0° u góry, jak na kole roku. */
+function orbitSvg(c, ms) {
+  var L0 = moonLonDeg(c.last), m = orbitFrom(c, ms), sA = ((sunLonDeg(ms) - L0) % 360 + 360) % 360, ph = elong(ms);
+  function P(a, r) { return [48 + r * Math.sin(a * R), 48 - r * Math.cos(a * R)] }
+  function f(p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) }
+  function arc(a0, a1, r) { var d = Math.min(a1 - a0, 359.9); return "M" + f(P(a0, r)) + "A" + r + " " + r + " 0 " + (d > 180 ? 1 : 0) + " 1 " + f(P(a0 + d, r)) }
+  var mp = P(m, 30), sp = P(sA, 43);
+  return '<svg class="osvg" viewBox="0 0 96 96" aria-hidden="true">' +
+    '<line x1="48" y1="48" x2="48" y2="2" stroke="var(--mut)" stroke-dasharray="2 2"/>' +
+    '<circle cx="48" cy="48" r="30" fill="none" stroke="var(--mut)" stroke-opacity=".35"/>' +
+    (m > 0.5 ? '<path d="' + arc(0, m, 30) + '" fill="none" stroke="var(--mut)" stroke-width="3"/>' : '') +
+    (ph > 0.5 ? '<path d="' + arc(sA, sA + ph, 17) + '" fill="none" stroke="#8ea3c2" stroke-width="3"/>' : '') +
+    '<line x1="48" y1="48" x2="' + sp[0].toFixed(1) + '" y2="' + sp[1].toFixed(1) + '" stroke="var(--sun)" stroke-width="1.2"/>' +
+    '<circle cx="' + sp[0].toFixed(1) + '" cy="' + sp[1].toFixed(1) + '" r="5" fill="var(--sun)"/>' +
+    '<circle cx="48" cy="48" r="5" fill="#4f7fc4"/>' + phaseGlyph(ph, +mp[0].toFixed(1), +mp[1].toFixed(1), 6) + '</svg>'
+}
 
 /* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */
 var curView = "dial";

@@ -8,6 +8,8 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 **Decyzja (17 października 2026): od wschodu Słońca.** Tak samo jak tarcza i kalendarz orbity: dzień 1 to doba (od wschodu do wschodu), w której wypada nów, a cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Dzięki temu każdy dzień księżycowy to jedna doba kalendarza orbity, a chwile faz podajemy w stopniach od wschodu tej doby. Wynik zależy od miejsca (od godziny wschodu). Historia: 16 października od północy, potem krótko od chwili nowiu (możliwość B, commit `17a86c6`).
 
+**Uzupełnienie (24 października 2026):** doby nadal liczą się od wschodu, ale siatka pokazuje ułamki. Doba 1 jest podzielona w chwili nowiu. Doba, w której Księżyc kończy pełną orbitę (miesiąc syderyczny, ok. 27,32 doby od nowiu, znak ↻), jest podzielona w chwili powrotu. Niebieskie części to czas, w którym Księżyc dogania Słońce, łącznie ok. 2,2 doby. Kod: `orbitDone()`, `orbitFrom()` i `buildMonthScale()` w `js/main.js`.
+
 ### Możliwość A: od północy
 - Dzień 1 to dzień kalendarzowy, w którym wypada nów. Północ liczy się w strefie czasowej wybranego miasta.
 - Cykl kończy się dniem przed dniem następnego nowiu, więc ma **29 albo 30 pełnych dni**. W 2026 roku jest 6 cykli 30-dniowych i 7 cykli 29-dniowych.
@@ -64,3 +66,48 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 - `js/orbit.js`, funkcje `days()`, `starts()` i `date()`: tu zaczynają się miesiące i liczone są dni.
 - `js/main.js`, funkcje `dayCycle()` i `sunDay()`: doba od wschodu do wschodu (wspólna z tarczą).
 - `js/calendar.js`: widoki Kalendarz i Koło oraz nazwy i kolory pór roku i miesięcy (`qName`, `qColor`, `mName`).
+
+---
+
+## 🧪 Eksperyment na przyszłość: „doba orbitalna”, czyli równe dni w każdym roku
+
+**Stan (24 października 2026): pomysł do zrobienia później, jeszcze nie zaczęty.**
+
+### Problem
+Rok zwrotnikowy ma ok. **365,2422** doby słonecznej. Doby wyznacza obrót Ziemi wokół osi, a rok obieg wokół Słońca. To dwa niezależne ruchy, więc rok nigdy nie dzieli się na całą liczbę dób. Na stronie widać to w dwóch miejscach:
+- **Urodziny na orbicie:** Ziemia co rok wraca dokładnie na kąt urodzin, ale ok. 5 h 49 min później. Co kilka lat urodziny przeskakują więc o dzień w kalendarzu orbity.
+- **Siatka miesiąca księżycowego:** niebieskie części komórek pokazują ułamki dób.
+
+Równych dni nie da się uzyskać, jeśli doba ma zostać obrotem Ziemi (od wschodu do wschodu). Da się je uzyskać, jeśli dobę zdefiniuje się **orbitą**: jako stałą część obiegu wokół Słońca. Wtedy każdy rok ma identyczne dni i urodziny zawsze wypadają w ten sam dzień. Ceną jest to, że doba orbitalna nie zaczyna się o wschodzie, tylko co roku przesuwa się względem dnia i nocy.
+
+### Warianty (liczby: mimośród orbity 0,0167, rok 365,2422 doby)
+
+**A: 365 równych części czasu**
+- Każda doba orbitalna trwa dokładnie 1/365 roku, czyli **24 h 0 min 57 s**.
+- ✅ Wszystkie doby są tak samo długie, a rok ma zawsze 365 dób.
+- ⚠️ Kąty są nierówne: zimą Ziemia przebiega w jednej dobie więcej stopni niż latem.
+- ⚠️ Względem wschodu Słońca doba przesuwa się o 57 s dziennie, czyli o ok. 5 h 49 min w ciągu roku.
+
+**B: 365 równych części kąta (po 0,9863°)**
+- Każda doba orbitalna to ten sam kawałek orbity.
+- ✅ Kąty są równe, a rok ma zawsze 365 dób.
+- ⚠️ Czas trwania jest nierówny: od **23 h 13 min** w peryhelium (początek stycznia) do **24 h 50 min** w aphelium (początek lipca).
+
+**C: 360 równych części kąta (po 1°)**
+- Jedna doba orbitalna to jeden stopień kąta roku. Datą jest pełny stopień, np. „dzień 213” to 213–214°.
+- ✅ To najprostsze połączenie z resztą strony, bo wszystko jest już liczone w stopniach (zob. Możliwość C w pytaniu o kalendarz orbity).
+- ⚠️ Średnio 24 h 21 min, od **23 h 33 min** do **25 h 10 min**. Rok ma 360 dób, więc „dzień” wyraźnie różni się od doby słonecznej.
+
+### Jak to pokazać na stronie (pomysły)
+- Trzeci rodzaj daty obok kąta i doby od wschodu, np. w kafelku dnia w Kalendarzu: „Doba orbitalna 218 z 365”.
+- Przy Urodzinach na orbicie: kolumna z dobą orbitalną, która co roku jest ta sama, obok doby od wschodu, która się chwieje.
+- Rysunek albo pasek pokazujący, jak doba orbitalna przesuwa się względem wschodu Słońca w ciągu roku.
+
+### Do ustalenia
+- Który wariant: A, B czy C?
+- Od jakiego punktu liczyć: od równonocy marcowej (jak kalendarz orbity) czy od innego punktu orbity?
+- Czy doba orbitalna ma być tylko dodatkową informacją, czy osobnym widokiem kalendarza?
+
+### Gdzie to będzie w kodzie
+- `js/orbit.js`: `year()` i `momentAt()` dają chwile przejścia przez dowolny kąt, a `cross()` znajduje chwilę dla kąta. Na tym można zbudować granice dób orbitalnych w wariantach B i C.
+- `js/calendar.js`: kafelek dnia (`detail()`) i Urodziny na orbicie (`birthOut()`).

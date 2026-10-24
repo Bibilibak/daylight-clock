@@ -41,16 +41,24 @@
   var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"];   // wiosna, lato, jesień, zima
   function sIdx(q) { return lat < 0 ? (q + 2) % 4 : q }
   function qColor(q) { return SC[sIdx(q)] }
-  function qName(q) { return t("os" + sIdx(q)) }
-  /* Nazwa miesiąca: wczesna / pełna / późna pora roku (calMonN: 12 nazw rozdzielonych "|", od wczesnej wiosny do późnej zimy).
-     Gdy brakuje nazwy w tłumaczeniu: zakres kąta orbity, np. "Miesiąc 0–30°". */
+  /* Nazwy od światła (przełącznik Klimat / Światło): rok czytany jak jedna doba. Punkty: wschód roku (równonoc, po której
+     dzień jest dłuższy od nocy), południe roku (najdłuższy dzień), zachód roku, północ roku (najkrótszy dzień). Pory roku to
+     pory doby między nimi: przedpołudnie, popołudnie, wieczór i noc roku. Po polsku wschód / południe / zachód / północ to
+     zarazem pory doby i strony świata. Nazwy idą za światłem, więc na półkuli południowej przesuwają się tak jak wiosna i jesień. */
+  var light = false;
+  try { light = localStorage.getItem("snames") === "light" } catch (e) {}
+  function part(key, i) { return t(key).split("|")[i] }
+  function qName(q) { return light ? part("lsN", sIdx(q)) : t("os" + sIdx(q)) }
+  function ptName(q) { return part("lpN", sIdx(q)) }   // punkt na początku ćwiartki q: wschód / południe / zachód / północ roku
+  /* Nazwa miesiąca: wczesna / pełna / późna pora roku (calMonN, w nazwach od światła lsMonN: 12 nazw rozdzielonych "|",
+     od wczesnej wiosny do późnej zimy). Gdy brakuje nazwy w tłumaczeniu: zakres kąta orbity, np. "Miesiąc 0–30°". */
   function mName(k) {
-    return t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°")
+    return t(light ? "lsMonN" : "calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°")
   }
-  /* Skrót na kole: wczesna / pełna / późna (calMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
+  /* Skrót na kole: wczesna / pełna / późna (calMonS albo lsMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
      Gdy brakuje skrótu: numer miesiąca w ćwiartce, 1–3. */
   function mShort(k) {
-    var s = t("calMonS").split("|");
+    var s = t(light ? "lsMonS" : "calMonS").split("|");
     return (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
   }
 
@@ -63,7 +71,8 @@
       o = OrbitCal.date(d), ap = OrbitCal.apsisOn(n), ring = cvO === "ring",
       ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1)), k = o.month,
       // dzień 1 miesiąca: chwila przejścia przez granicę (równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica 30°·k)
-      cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
+      // (w nazwach od światła: "Wschód roku · Równonoc" itd.)
+      cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : (light ? ptName(k / 3) + ' · ' : '') + t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
     return '<div class="cdet"><div class="cg1">' + d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
       '<div class="cp">' + mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) + '</div>' +
       '<div>' + (ring ? "" : t("calAngle").replace("{a}", CalendarSystem.label(d)) + ' · ') +
@@ -93,7 +102,10 @@
       return '<button ' + attr + '="' + v[0] + '" aria-pressed="' + (cur === v[0]) + '">' + t(v[1]) + '</button>'
     }).join("") + '</div>'
   }
-  function segs() { return seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) }
+  function segs() {
+    return '<div class="csegs">' + seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) +
+      seg("data-sn", [["season", "calNmS"], ["light", "calNmL"]], light ? "light" : "season") + '</div>'
+  }
   function yearNav(label) {
     return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
       '</button><button data-a="ny" aria-label="+1">»</button></div>'
@@ -114,7 +126,7 @@
     inp.onblur = function (e) {   // wyjście z pola (np. Tab): przyjmij rok; fokus na ten sam przycisk po przerysowaniu
       var to = e.relatedTarget, key = null;
       if (to && $("calView").contains(to))
-        ["data-a", "data-cv", "data-n", "data-om"].some(function (at) { var v = to.getAttribute(at); if (v !== null) key = '[' + at + '="' + v + '"]'; return key });
+        ["data-a", "data-cv", "data-sn", "data-n", "data-om"].some(function (at) { var v = to.getAttribute(at); if (v !== null) key = '[' + at + '="' + v + '"]'; return key });
       if (!closeYear(true)) return;
       render();
       var f = key && $("calView").querySelector(key); if (f) f.focus()
@@ -128,7 +140,10 @@
     if (ok && y >= Y0 && y <= Y1) oy = y;
     return true
   }
-  function oNote() { return '<p class="cnote">' + t("calONote") + (OrbitCal.zone() === "T" ? " " + t("calTrop") : "") + '</p>' }
+  function oNote() {
+    return '<p class="cnote">' + t("calONote") + " " + t("calMonWhy") + (OrbitCal.zone() === "T" ? " " + t("calTrop") : "") + '</p>' +
+      (light ? '<p class="cnote">' + t("calLNote") + '</p>' : '')
+  }
 
   /* Koło roku orbity: kąt na kole = kąt roku, zgodnie z ruchem wskazówek. Koło się obraca: wybrany dzień jest zawsze
      u góry, pod strzałką ▼. Pierścień = 12 miesięcy po 30° w kolorach pór roku; kreski = granice dób; ◆ = aphelium i peryhelium.
@@ -147,10 +162,14 @@
         '<text class="ylb" x="' + c[0].toFixed(1) + '" y="' + (c[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + (k === om ? "#fff" : "var(--fg)") + '">' + mShort(k) + '</text>'
     }
     for (q = 0; q < 4; q++) {
-      var a = P(q * 90, 92), b = P(q * 90 + 45, 66);
+      // w nazwach od światła: nazwa punktu (wschód, południe…) nad stopniem, w dwóch wierszach (koło się obraca, więc
+      // obok siebie napisy nachodziłyby na siebie), a w ćwiartce krótka nazwa bez "roku"
+      var a = P(q * 90, light ? 84 : 92), b = P(q * 90 + 45, 66), x = a[0].toFixed(1);
       h += '<line x1="' + f(P(q * 90, 100)).replace(",", '" y1="') + '" x2="' + f(P(q * 90, 148)).replace(",", '" y2="') + '" stroke="var(--fg)" stroke-opacity=".5"/>' +
-        '<text class="ylb" x="' + a[0].toFixed(1) + '" y="' + (a[1] + 3).toFixed(1) + '" text-anchor="middle">' + q * 90 + '°</text>' +
-        '<text x="' + b[0].toFixed(1) + '" y="' + (b[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + qColor(q) + '">' + qName(q) + '</text>'
+        '<text class="ylb" x="' + x + '" y="' + (a[1] + (light ? -2 : 3)).toFixed(1) + '" text-anchor="middle">' +
+        (light ? '<tspan font-weight="700">' + part("lpS", sIdx(q)) + '</tspan><tspan x="' + x + '" dy="11">' + q * 90 + '°</tspan>' : q * 90 + '°') + '</text>' +
+        '<text x="' + b[0].toFixed(1) + '" y="' + (b[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + qColor(q) + '">' +
+        (light ? part("lsQ", sIdx(q)) : qName(q)) + '</text>'
     }
     var tk = "";                                                        // granice dób (wschód Słońca w mieście); co 10 dni miesiąca dłuższa kreska
     for (k = 0; k < 12; k++) for (n = s[k]; n < s[k + 1]; n++) {
@@ -411,8 +430,9 @@
     var br = e.target.closest("tr[data-bn]");
     if (br) { pick(OrbitCal.dateOf(+br.getAttribute("data-bn"))); return render() }
     var b = e.target.closest("button"); if (!b) { if (closed) render(); return }
-    var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om");
+    var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), sn = b.getAttribute("data-sn"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om");
     if (v) cvO = v;
+    else if (sn) { light = sn === "light"; try { localStorage.setItem("snames", sn) } catch (e2) {} }   // Klimat / Światło
     else if (n !== null) pick(OrbitCal.dateOf(+n));
     else if (k !== null) { om = +k; cvO = "ring" }                         // nazwa miesiąca -> koło z tym miesiącem
     else if (a === "t") pick(today);

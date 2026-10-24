@@ -571,6 +571,7 @@ var monthLast = null, monthDay = null, monthSel = null, monthCyc = null;   // mo
 // inny cykl niż w siatce? Chwila nowiu liczona za każdym razem od innego punktu startowego różni się o ułamki ms,
 // więc porównujemy z tolerancją (kolejne nowie dzieli ok. 29,5 doby)
 function newCycle(cyc) { return monthLast === null || Math.abs(cyc.last - monthLast) > 36e5 }
+function dnum(x) { return x.toFixed(2).replace(".", lang === "en" ? "." : ",") }
 function buildMonthScale(cyc) {
   cyc = cyc || lunarCycle(new Date());
   if (newCycle(cyc)) monthSel = null;   // nowy cykl: zaznaczenie wraca na dziś
@@ -580,17 +581,22 @@ function buildMonthScale(cyc) {
   T.forEach(function (ms, k) { ph[sunDay(ms) - cyc.d0 + 1] = k });   // dzień cyklu -> faza (0 nów, 1 I kw., 2 pełnia, 3 III kw.)
   cyc.orbit = orbitDone(cyc.last);
   var od = sunDay(cyc.orbit) - cyc.d0 + 1;   // doba, w której Księżyc kończy pełną orbitę od nowiu (zwykle 28.)
+  // ułamki dób: jaka część doby 1 minęła przed nowiem i jaka część doby od przed powrotem na orbitę (0–100%)
+  function frac(ms, d) { var a = sunDayStart(cyc.d0 + d - 1), b = sunDayStart(cyc.d0 + d); return Math.round(Math.max(0, Math.min(1, (ms - a) / (b - a))) * 100) }
+  var f1 = frac(cyc.last, 1), fo = frac(cyc.orbit, od);
   var full = sunDay(T[2]) - cyc.d0 + 1,
     cols = Math.max(full - 1, N - full + 1);
   function row(from, to, key) {
     var r = '<div class="mrow"><span class="mrl">' + t(key) + '</span><div class="mcells" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))">';
     for (d = from; d <= to; d++)
-      r += '<button class="md' + (d === od ? " orb" : d > od ? " chase" : "") + '" data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : d === od ? ' title="' + t("orbDone") + '"' : '') + '><b>' + d + '</b>' +
+      // niebieskie = Księżyc dogania Słońce: od chwili powrotu na orbitę do nowiu; w dobie 1 część przed nowiem (koniec poprzedniego cyklu)
+      r += '<button class="md' + (d === od ? " orb part" : d > od ? " chase" : d === 1 ? " pre" : "") + '"' +
+        (d === od ? ' style="--f:' + fo + '%"' : d === 1 ? ' style="--f:' + f1 + '%"' : '') + ' data-d="' + d + '"' + (d in ph ? ' title="' + t("ph" + ph[d] * 2) + '"' : d === od ? ' title="' + t("orbDone") + '"' : '') + '><b>' + d + '</b>' +
         (d in ph ? '<svg viewBox="-9 -9 18 18" aria-hidden="true">' + phaseGlyph(90 * ph[d], 0, 0, 8) + '</svg>' : d === od ? '<i class="orbi">↻</i>' : '') + '</button>';
     return r + '</div></div>'
   }
   $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane") +
-    '<p class="cnote mleg">' + t("orbLeg").replace("{d}", od).replace("{l}", ((cyc.orbit - cyc.last) / 864e5).toFixed(2).replace(".", lang === "en" ? "." : ",")).replace("{n}", N - od) + '</p>'
+    '<p class="cnote mleg">' + t("orbLeg").split("{d}").join(od).replace("{l}", dnum((cyc.orbit - cyc.last) / 864e5)).replace("{c}", dnum((cyc.next - cyc.orbit) / 864e5)) + '</p>'
 }
 
 /* ===== Chwile w stopniach doby =====

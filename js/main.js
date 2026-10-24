@@ -629,7 +629,7 @@ function renderMoonDet() {
   function ill(p) { return Math.round((1 - Math.cos(p * R)) / 2 * 100) }
   function ang(p) { return Math.round(p) % 360 + "°" }                   // doba z nowiem: "355° → 7°", nie "360°"
   h = '<div class="mdt">' + t("moonDayT").replace("{d}", d) + (d === monthDay ? ' <small>' + t("moonToday") + '</small>' : '') + '</div>' +
-    (window.Cal ? '<div class="mdsub">' + Cal.orbitName(n) + '</div>' : '') +   // data w kalendarzu orbity, np. "Pełna jesień · dzień 4"
+    (window.Cal ? '<div class="mdsub">' + Cal.orbitName(n) + '</div>' : '') +   // data w kalendarzu orbity, np. "Jesień · dzień 33 z 90"
     '<div>' + t("moonAngleL") + ': ' + ang(pa) + ' → ' + ang(pb) + '</div>' +
     '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>' +
     '<div>' + t("orbL") + ': ' + Math.round(orbitFrom(c, a)) + '° → ' + Math.round(orbitFrom(c, b)) + '°</div>';

@@ -1,9 +1,10 @@
 /* ===== Kalendarz orbity: obliczenia =====
    Rok orbity zaczyna się w dniu równonocy marcowej (kąt roku 0°), wspólnym dla całej Ziemi.
-   4 pory roku po 90°, w każdej 3 miesiące po 30° kąta orbity. Ziemia biegnie po orbicie nierówno
-   (najszybciej w peryhelium), więc miesiące mają 29–32 dni. Doba zaczyna się od wschodu Słońca, jak na tarczy
-   (w dzień / noc polarną od słonecznej północy): dzień 1 miesiąca to doba, w której Słońce przechodzi przez
-   granicę 30°·k. Dobę nazywamy datą jej górowania (strefa miasta). Zob. OTWARTE-PYTANIA.md. */
+   4 pory roku po 90° kąta orbity, w każdej kreski co 30° (podział na wzór miesięcy gregoriańskich). Ziemia biegnie
+   po orbicie nierówno (najszybciej w peryhelium), więc pory roku mają 89–94 dni, a części po 30° 29–32 dni.
+   Doba zaczyna się od wschodu Słońca, jak na tarczy (w dzień / noc polarną od słonecznej północy): dzień 1 pory roku
+   to doba równonocy albo przesilenia, a kreska co 30° stoi przy dobie, w której Słońce przechodzi przez granicę 30°·k.
+   Dobę nazywamy datą jej górowania (strefa miasta). Zob. OTWARTE-PYTANIA.md. */
 var OrbitCal = (function () {
   var cache = {}, local = {};
 
@@ -45,7 +46,9 @@ var OrbitCal = (function () {
     var n = dayN(d), Y = d.getFullYear(), s = starts(Y), k = 11;
     if (n < s[0]) { Y--; s = starts(Y) }
     while (s[k] > n) k--;
-    return { year: Y, month: k, season: k / 3 | 0, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], yday: n - s[0] + 1, ylen: s[12] - s[0] }
+    var q = k / 3 | 0;   // pora roku (90°); month / day = część co 30° (kreski w kalendarzu), sday / slen = dzień pory roku i jej długość
+    return { year: Y, month: k, season: q, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], sday: n - s[q * 3] + 1, slen: s[q * 3 + 3] - s[q * 3],
+      yday: n - s[0] + 1, ylen: s[12] - s[0] }
   }
   // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ)
   function dayStart(n) { return sunDayStart(n) }

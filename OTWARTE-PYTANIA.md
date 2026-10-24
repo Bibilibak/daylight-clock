@@ -44,6 +44,8 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 **Decyzja (17 października 2026): całe doby od wschodu Słońca.** W tym systemie doba zaczyna się o wschodzie, tak jak na tarczy (w dzień i noc polarną od słonecznej północy). Dzień 1 miesiąca lub pory roku to doba, w której Słońce przechodzi przez granicę 30°·k. Wszystkie dni są pełne, a granica zależy od miejsca (od godziny wschodu). Przykład: równonoc wrześniowa 2026 wypada 23 września około 2:05 czasu polskiego, czyli przed wschodem, więc w Warszawie jesień zaczyna się dobą 22 września. (Od 16 do 17 października 2026 dni liczono od północy.)
 
+**Zmiana (24 października 2026): pory roku zamiast miesięcy.** Rok orbity to 4 pory roku po 90° (89–94 doby), a data ma postać „Jesień · dzień 33 z 90”. Podział na 3 części po 30° został tylko jako kreski (na wzór miesięcy gregoriańskich, bez nazw). Pomysł wyszedł od rodzica użytkownika: tak jak 10. dzień miesiąca to 1/3 miesiąca, tak 30. dzień pory roku to 1/3 pory. Dodatkowo przełącznik **Klimat / Światło**: wschód, południe, zachód i północ roku (równonoce i przesilenia) oraz przedpołudnie, popołudnie, wieczór i noc roku. Inspiracja: po polsku strony świata to zarazem pory doby. Poniżej opis wariantów z czasów miesięcy.
+
 ### Możliwość A: od północy
 - Dzień 1 miesiąca to dzień kalendarzowy, w którym Słońce przechodzi przez granicę 30°·k (równonoc, przesilenie albo granicę miesiąca).
 - Miesiące mają **29–32 pełnych dni**, a rok orbity ma 365 albo 366 dni.

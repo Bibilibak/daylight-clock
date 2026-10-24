@@ -586,7 +586,7 @@ button {
 .cdet .cp { font-size: 18px; font-weight: 700; }
 .cnote { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
-/* Kalendarz: przełączniki (Kalendarz / Koło, Klimat / Światło) i widok całego roku (4 pory roku) */
+/* Kalendarz: przełączniki (Kalendarz / Koło, Klimatyczny / Świetlny) i widok całego roku */
 .csegs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 0 0 10px; }
 .cseg { margin: 0; }
 #calView.yearMode { max-width: 760px; }
@@ -603,9 +603,8 @@ button {
 .yd.sel { background: var(--sun); color: var(--on-sun); }
 .yd.sn::after { content: ""; position: absolute; top: 1px; right: 1px; width: 4px; height: 4px; border-radius: 50%; background: var(--sun); }
 .yd.sel.sn::after { background: var(--on-sun); }
-/* kreska z lewej: doba, w której Ziemia przechodzi przez 30° / 60° pory roku (podział na wzór miesięcy gregoriańskich) */
-.yd.t3, .cc.t3 { box-shadow: inset 2px 0 0 var(--mut); }
-[dir=rtl] .yd.t3, [dir=rtl] .cc.t3 { box-shadow: inset -2px 0 0 var(--mut); }
+@media (min-width: 520px) { .cyear { grid-template-columns: repeat(3, 1fr); } }
+.cyear.q4 { grid-template-columns: repeat(2, 1fr); }   /* kalendarz świetlny: 4 pory roku, po 2 w rzędzie */
 
 /* Kalendarz orbity: koło roku, miesiąc po 10 dni w rzędzie, siatka roku (na szerokim ekranie rząd = pora roku) */
 .oring { display: block; width: 100%; max-width: 360px; margin: 4px auto 6px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -670,7 +669,8 @@ button {
   #yearView .ysvg { max-width: none; }   /* ogólny limit svg (380 px) nie dotyczy wykresu roku */
   #calView { max-width: 400px; zoom: 1.3; }
   #calView.yearMode { max-width: 760px; zoom: 1; }
-  #calView.yearMode .cyear { gap: 18px 24px; }
+  #calView.yearMode .cyear { grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
+  #calView.yearMode .cyear.q4 { grid-template-columns: repeat(2, 1fr); gap: 18px 24px; }
   #calView.yearMode .ymg { font-size: 12px; }
   #calView.yearMode .yd { height: 24px; line-height: 22px; font-size: 12px; }
   /* reszta informacji rośnie razem z tarczą (cały blok w skali, proporcje bez zmian) */

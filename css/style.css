@@ -537,6 +537,8 @@ button {
 .md.chase:not(.sel) { background: var(--chase); }
 .md.part:not(.sel) { background: linear-gradient(to right, var(--card) var(--f), var(--chase) var(--f)) border-box; }   /* od chwili powrotu na orbitę; border-box: gradient pod przezroczystą ramką się nie powtarza */
 .md.pre:not(.sel) { background: linear-gradient(to right, var(--chase) var(--f), var(--card) var(--f)) border-box; }    /* do chwili nowiu */
+[dir="rtl"] .md.part:not(.sel) { background: linear-gradient(to left, var(--card) var(--f), var(--chase) var(--f)) border-box; }   /* arabski: czas płynie od prawej */
+[dir="rtl"] .md.pre:not(.sel) { background: linear-gradient(to left, var(--chase) var(--f), var(--card) var(--f)) border-box; }
 .mleg { margin-top: 6px; text-align: left; }
 .osvg { float: right; width: 96px; height: 96px; margin: 0 0 4px 8px; }
 .mdet::after { content: ""; display: block; clear: both; }
@@ -650,7 +652,7 @@ button {
 /* kafelek dnia: postęp pory roku (jeden pasek, nazwa pory i procent w środku) */
 .cdet .sbr { margin: 8px 0 6px; }
 .sbr { position: relative; height: 20px; border-radius: 10px; background: color-mix(in srgb, var(--mut) 22%, transparent); overflow: hidden; }
-.sbr i { position: absolute; inset: 0 auto 0 0; }
+.sbr i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; }
 .sbr span { position: relative; display: block; padding: 0 10px; font-size: 12.5px; font-weight: 700; line-height: 20px; color: var(--fg); }
 
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */

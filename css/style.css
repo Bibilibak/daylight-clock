@@ -535,8 +535,8 @@ button {
 .md .orbi { margin-top: auto; margin-bottom: 2px; font-style: normal; font-size: 13px; font-weight: 700; line-height: 1; color: #4f7fc4; }
 .mgrid { --chase: color-mix(in srgb, #5b8fe0 45%, var(--card)); }
 .md.chase:not(.sel) { background: var(--chase); }
-.md.part:not(.sel) { background: linear-gradient(to right, var(--card) var(--f), var(--chase) var(--f)); }   /* od chwili powrotu na orbitę */
-.md.pre:not(.sel) { background: linear-gradient(to right, var(--chase) var(--f), var(--card) var(--f)); }    /* do chwili nowiu */
+.md.part:not(.sel) { background: linear-gradient(to right, var(--card) var(--f), var(--chase) var(--f)) border-box; }   /* od chwili powrotu na orbitę; border-box: gradient pod przezroczystą ramką się nie powtarza */
+.md.pre:not(.sel) { background: linear-gradient(to right, var(--chase) var(--f), var(--card) var(--f)) border-box; }    /* do chwili nowiu */
 .mleg { margin-top: 6px; text-align: left; }
 .osvg { float: right; width: 96px; height: 96px; margin: 0 0 4px 8px; }
 .mdet::after { content: ""; display: block; clear: both; }

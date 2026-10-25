@@ -33,8 +33,14 @@
      kąt na pętli = pozycja Słońca na ekliptyce (kąt roku, bez dat kalendarzowych), przesilenie letnie u góry;
      promień = stopnie światła tego dnia (24 h = 360°). Przerywany okrąg = dzień równy nocy (180°).
      Kolor odcinka = rzeczywisty kierunek zmiany: światła przybywa (złoty), ubywa (fioletowy), prawie stałe (szary). */
+  /* Zakładka Rok: Orbita (koło orbity, js/orbitwheel.js) albo Długość dnia (wykres / pętla poniżej). */
+  function modeSeg() {
+    return '<div class="seg yseg" role="group"><button data-ym="orbit" aria-pressed="' + (ymode === "orbit") + '">' + t("ymOrbit") + '</button>' +
+      '<button data-ym="day" aria-pressed="' + (ymode === "day") + '">' + t("ymDay") + '</button></div>'
+  }
   function render() {
     var box = $("yearView"); if (!box) return;
+    if (ymode === "orbit" && window.OrbitWheel) { box.innerHTML = modeSeg() + '<div id="owBox"></div>'; return OrbitWheel.render($("owBox")) }
     var now = new Date(), y = now.getFullYear(), a = series(y), n = a.length,
       lam = a.map(function (_, i) { return sunLonDeg(Date.UTC(y, 0, 1 + i, 12)) }),
       today = Math.round((Date.UTC(y, now.getMonth(), now.getDate()) - Date.UTC(y, 0, 1)) / 864e5),
@@ -101,7 +107,7 @@
     if (!polar) h += '<div class="yrow">' + t("lightHead").replace("{a}", Math.round(h0 * 15)) + (flat ? "" : " · " + t("yRate").replace("{r}", rt)) + '</div>';
     if (!flat) h += '<div class="yrow">' + t("yToLong").replace("{n}", nd(dMax)) + '</div><div class="yrow">' + t("yToShort").replace("{n}", nd(dMin)) + '</div>' +
       '<div class="yrow yexp">' + t(viz === "line" ? "yExpLine" : "yExp") + '</div>';
-    box.innerHTML = h
+    box.innerHTML = modeSeg() + h
   }
 
   /* Wykres roku (jak dawniej, ale bez miesięcy): oś pozioma = kąt roku (położenie Słońca na ekliptyce,
@@ -155,10 +161,17 @@
     return o + '<circle cx="' + mx.toFixed(1) + '" cy="' + my.toFixed(1) + '" r="5.5" fill="#f08a00" stroke="var(--bg)" stroke-width="2"/>'
   }
 
-  // Wybór wizualizacji (wykres / pętla), zapamiętany w przeglądarce
-  var viz = "line";
-  try { if (localStorage.getItem("yviz") === "loop") viz = "loop" } catch (e) {}
+  // Wybór widoku (orbita / długość dnia) i wizualizacji długości dnia (wykres / pętla), zapamiętany w przeglądarce
+  var viz = "line", ymode = "orbit";
+  try { if (localStorage.getItem("yviz") === "loop") viz = "loop"; if (localStorage.getItem("ymode") === "day") ymode = "day" } catch (e) {}
   if ($("yearView")) $("yearView").addEventListener("click", function (e) {
+    var m = e.target.closest ? e.target.closest("[data-ym]") : null;
+    if (m && m.getAttribute("data-ym") !== ymode) {
+      ymode = m.getAttribute("data-ym");
+      try { localStorage.setItem("ymode", ymode) } catch (e2) {}
+      render(); if (window.updateHead) updateHead();
+      return
+    }
     var b = e.target.closest ? e.target.closest("[data-yv]") : null;
     if (!b || b.getAttribute("data-yv") === viz) return;
     viz = b.getAttribute("data-yv");

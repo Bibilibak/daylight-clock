@@ -44,9 +44,11 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 **Decyzja (17 października 2026): całe doby od wschodu Słońca.** W tym systemie doba zaczyna się o wschodzie, tak jak na tarczy (w dzień i noc polarną od słonecznej północy). Dzień 1 miesiąca lub pory roku to doba, w której Słońce przechodzi przez granicę 30°·k. Wszystkie dni są pełne, a granica zależy od miejsca (od godziny wschodu). Przykład: równonoc wrześniowa 2026 wypada 23 września około 2:05 czasu polskiego, czyli przed wschodem, więc w Warszawie jesień zaczyna się dobą 22 września. (Od 16 do 17 października 2026 dni liczono od północy.)
 
-**Zmiana (24 października 2026): dwa kalendarze.** Przełącznik **Klimatyczny / Świetlny**, a Kalendarz i Koło to dwa sposoby pokazania każdego z nich.
+**Zmiana (24 października 2026): dwa kalendarze.** Przełącznik **Klimatyczny / Świetlny** (od 25 października: Orbitalny), a Kalendarz i Koło to dwa sposoby pokazania każdego z nich.
 - **Klimatyczny:** wiosna, lato, jesień, zima, każda podzielona na 3 miesiące po 30° (wczesna / pełna / późna), na wzór 12 miesięcy gregoriańskich, np. „Pełna jesień · dzień 2”.
 - **Świetlny:** 4 pory roku po 90° (89–94 doby) bez dalszego podziału, np. „Wieczór roku · dzień 33 z 90”. Punkty: wschód, południe, zachód i północ roku (równonoce i przesilenia), a między nimi przedpołudnie, popołudnie, wieczór i noc roku. Pomysł rodzica użytkownika: tak jak 10. dzień miesiąca to 1/3 miesiąca, tak 30. dzień pory to 1/3 pory, więc dalszy podział nie jest potrzebny. Inspiracja nazw: po polsku strony świata to zarazem pory doby.
+
+**Zmiana (25 października 2026): „Świetlny” to teraz „Orbitalny”, a data jest w stopniach, nie w dniach.** Data to kąt przebyty od początku pory roku, z ułamkiem, np. „Wieczór roku · 30,56° z 90°” (to możliwość C niżej, liczona w porze roku). Powód: równonoce i przesilenia nie wypadają o wschodzie, a położenie Ziemi na orbicie da się podać dokładnie i jednakowo dla całej Ziemi. Doba (od wschodu do wschodu) to zakres kąta, np. „31,8°–32,8° z 90°”. W kratce jest pełny stopień na koniec doby, więc latem numery czasem się powtarzają, a zimą jakiś wypada (Ziemia przechodzi 0,95–1,02° na dobę). Nazwy pór zostały. Urodziny: dokładny kąt w porze roku z miejsca urodzenia; tabela powrotów zawsze w dniach kalendarza klimatycznego, bo kąt jest co roku ten sam.
 
 ### Możliwość A: od północy
 - Dzień 1 miesiąca to dzień kalendarzowy, w którym Słońce przechodzi przez granicę 30°·k (równonoc, przesilenie albo granicę miesiąca).

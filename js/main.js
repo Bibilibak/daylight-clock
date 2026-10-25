@@ -419,7 +419,8 @@ function tick() {
     }
   }
   if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t("modeRise") }
-  if ($("lightH")) $("lightH").textContent = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy
+  dayHead = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy (nagłówek zakładki Doba)
+  if (curView === "dial" || curView === "3d") $("lightH").textContent = dayHead;
   $("deg").textContent = deg.toFixed(1) + "°";
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
   showNear(noSet ? null : nearParts(deg, nd, sd));
@@ -428,11 +429,22 @@ function tick() {
 }
 
 /* ===== Lokalizacja ===== */
-function refreshViews() { if (window.YearClock) YearClock.render(); if (window.Cal) Cal.render() }
+function refreshViews() { if (window.YearClock) YearClock.render(); if (window.Cal) Cal.render(); updateHead() }
+// panel miejsca pod linijką ze współrzędnymi (w każdej zakładce): „zmień” otwiera, wybór miejsca zamyka
+function openPlace(open) {
+  $("placeBox").hidden = !open;
+  $("placeBtn").setAttribute("aria-expanded", open ? "true" : "false");
+  $("placeBtn").textContent = t(open ? "placeClose" : "placeChange");
+  if (open) $("city").focus(); else placeMsg("")
+}
+$("placeBtn").onclick = function () { openPlace($("placeBox").hidden) };
+var pmsgKey = "";   // komunikat w panelu miejsca (klucz tłumaczenia, żeby zmiana języka go przetłumaczyła)
+function placeMsg(k) { pmsgKey = k; $("pmsg").textContent = k ? t(k) : "" }
 function apply() {
   $("lat").value = lat; $("lon").value = lon;
   try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
   if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
+  if (!$("placeBox").hidden) openPlace(false);
   setMsg("sinceRise");
   monthSel = null;                       // nowe miejsce: cykl może mieć inną liczbę dni, zaznaczenie wraca na dziś
   if ($("mgrid")) buildMonthScale();   // ikony faz zależą od półkuli
@@ -445,15 +457,15 @@ $("go").onclick = function () {
     okA = isFinite(a) && a >= -90 && a <= 90, okB = isFinite(b) && b >= -180 && b <= 180;
   $("lat").setAttribute("aria-invalid", okA ? "false" : "true");
   $("lon").setAttribute("aria-invalid", okB ? "false" : "true");
-  if (!okA || !okB) { setMsg("badCoord"); return }   // szerokość -90..90, długość -180..180
+  if (!okA || !okB) { placeMsg("badCoord"); return }   // szerokość -90..90, długość -180..180
   lat = a; lon = b; place = ""; tz = ""; apply()
 };
 
 $("loc").onclick = function () {
-  if (!navigator.geolocation) { setMsg("noGeo"); return }
+  if (!navigator.geolocation) { placeMsg("noGeo"); return }
   navigator.geolocation.getCurrentPosition(
     function (p) { lat = +p.coords.latitude.toFixed(3); lon = +p.coords.longitude.toFixed(3); place = ""; tz = ""; apply() },
-    function () { setMsg("geoDenied") }
+    function () { placeMsg("geoDenied") }
   )
 };
 
@@ -471,7 +483,7 @@ function showResults(list) {
   var box = $("cityres"); box.innerHTML = "";
   list.forEach(function (c) {
     var b = document.createElement("button");
-    b.textContent = [c.name, c.admin1 && c.admin1 !== c.name ? c.admin1 : "", c.country || ""].filter(Boolean).join(", ");
+    b.textContent = cityLabel(c);
     b.onclick = function () {
       lat = +(+c.latitude).toFixed(3);
       lon = +(+c.longitude).toFixed(3);
@@ -484,13 +496,20 @@ function showResults(list) {
   })
 }
 
+// lista miast pasujących do q (wspólna z miejscem urodzenia w js/calendar.js)
+function geoSearch(q) {
+  return fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=5&format=json&language=" + lang)
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json() })
+    .then(function (d) { return d.results || [] })
+}
+function cityLabel(c) { return [c.name, c.admin1 && c.admin1 !== c.name ? c.admin1 : "", c.country || ""].filter(Boolean).join(", ") }
+
 function searchCity(q) {
   var id = ++searchId;   // numer zapytania: ignorujemy spóźnione odpowiedzi
-  fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=5&format=json&language=" + lang)
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json() })
-    .then(function (d) {
+  geoSearch(q)
+    .then(function (list) {
       if (id !== searchId) return;
-      if (!d.results || !d.results.length) showHint(t("noResults")); else showResults(d.results)
+      if (!list.length) showHint(t("noResults")); else showResults(list)
     })
     .catch(function (err) {
       if (id !== searchId) return;
@@ -514,6 +533,8 @@ if ($("city")) $("city").onkeydown = function (e) {
 function pickLang(l) {
   setLang(l);
   setMsg(msgKey);   // przetłumacz komunikat pod odczytem
+  placeMsg(pmsgKey);
+  $("placeBtn").textContent = t($("placeBox").hidden ? "placeChange" : "placeClose");
   lastL = "";       // wymuś odrysowanie listy wydarzeń
   if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
   if ($("mgrid")) buildMonthScale();            // nazwy rzędów i faz w siatce
@@ -683,23 +704,39 @@ function orbitSvg(c, ms) {
     '<circle cx="48" cy="48" r="5" fill="#4f7fc4"/>' + phaseGlyph(ph, +mp[0].toFixed(1), +mp[1].toFixed(1), 6) + '</svg>'
 }
 
-/* ===== Widoki: zegar dobowy / 3D / zegar roku / kalendarz ===== */
-var curView = "dial";
+/* ===== Zakładki: Doba (tarcza / 3D), Rok, Kalendarz =====
+   Każda zakładka ma własny nagłówek: tytuł i główny odczyt (Doba: stopnie światła, Rok: miejsce Ziemi na orbicie,
+   Kalendarz: dzisiejsza data w kalendarzu klimatycznym). Miejsce jest wspólne i stoi u góry każdej zakładki. */
+var curView = "dial", dayView = "dial", dayHead = "";   // dayView: ostatni widok zakładki Doba
+try { if (localStorage.getItem("view") === "3d") dayView = "3d" } catch (e) {}
+function isDay(v) { return v === "dial" || v === "3d" }
+function updateHead() {
+  var v = curView;
+  $("hTitle").textContent = v === "year" && window.OrbitWheel ? OrbitWheel.title() : t(v === "cal" ? "calHeadT" : "title");
+  $("lightH").textContent = isDay(v) ? dayHead : v === "year" && window.OrbitWheel ? OrbitWheel.head() : v === "cal" && window.Cal ? Cal.head() : ""
+}
 function showView(v) {
   curView = v;
+  if (isDay(v)) dayView = v;
   try { localStorage.setItem("view", v) } catch (e) {}   // po odświeżeniu albo ponownym otwarciu strony wracamy do tego widoku
   $("dialView").hidden = v !== "dial"; $("v3").hidden = v !== "3d";
   if ($("yearView")) $("yearView").hidden = v !== "year";
   if ($("calView")) $("calView").hidden = v !== "cal";
-  if ($("dialExtras")) $("dialExtras").hidden = v === "year" || v === "cal";   // kafelki i Księżyc tylko przy zegarze i 3D
-  [["dialBtn", "dial"], ["viewBtn", "3d"], ["yearBtn", "year"], ["calBtn", "cal"]].forEach(function (x) { if ($(x[0])) $(x[0]).setAttribute("aria-pressed", v === x[1] ? "true" : "false") });
+  if ($("dialExtras")) $("dialExtras").hidden = !isDay(v);   // kafelki i Księżyc tylko w zakładce Doba
+  $("daySeg").hidden = !isDay(v);
+  [["dayBtn", isDay(v)], ["yearBtn", v === "year"], ["calBtn", v === "cal"], ["dialBtn", v === "dial"], ["viewBtn", v === "3d"]].forEach(function (x) {
+    if ($(x[0])) $(x[0]).setAttribute("aria-pressed", x[1] ? "true" : "false")
+  });
   if (v === "year" && window.YearClock) YearClock.render();
   if (v === "cal" && window.Cal) Cal.render();
-  if (window.Sun3D) Sun3D.refresh()
+  if (window.Sun3D) Sun3D.refresh();
+  updateHead()
 }
 if ($("dialBtn")) $("dialBtn").onclick = function () { showView("dial") };
-if ($("yearBtn")) $("yearBtn").onclick = function () { showView(curView === "year" ? "dial" : "year") };
-if ($("calBtn")) $("calBtn").onclick = function () { showView(curView === "cal" ? "dial" : "cal") };
+// Doba: wraca do ostatniego widoku (tarcza albo 3D; 3D otwiera js/view3d.js przyciskiem viewBtn)
+if ($("dayBtn")) $("dayBtn").onclick = function () { if (dayView === "3d" && window.Sun3D) $("viewBtn").click(); else showView("dial") };
+if ($("yearBtn")) $("yearBtn").onclick = function () { showView("year") };
+if ($("calBtn")) $("calBtn").onclick = function () { showView("cal") };
 
 /* ===== Start ===== */
 setLang(detectLang());
@@ -713,4 +750,5 @@ window.addEventListener("load", function () {
   try { sv = localStorage.getItem("view") } catch (e) {}
   if (sv === "year" || sv === "cal") showView(sv)
   else if (sv === "3d" && window.Sun3D) Sun3D.restore()
+  else showView("dial")
 });

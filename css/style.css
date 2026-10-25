@@ -313,8 +313,30 @@ button {
 .where {
   font-size: 13px;
   color: var(--mut);
-  margin: -6px 0 14px;
+  margin: -4px 0 10px;
 }
+
+/* miejsce u góry każdej zakładki: „zmień” rozwija wyszukiwarkę miast, lokalizację i współrzędne */
+.linkbtn { background: none; border: 0; padding: 0 2px; color: var(--sun); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.placebox { max-width: 380px; margin: 0 auto 14px; padding: 10px; background: var(--card); border-radius: 14px; }
+.placebox .place { margin-bottom: 6px; }
+.placebox .results button { background: var(--bg); }
+.prow { flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
+.prow #loc { flex: 1 1 100%; }   /* lokalizacja w osobnym wierszu, pod nią współrzędne */
+.prow input { width: 6.5em; flex: 1 1 5em; min-width: 0; }
+.pmsg { margin-top: 6px; font-size: 13px; color: var(--mut); }
+.pmsg:empty { display: none; }
+.dseg { margin: 0 0 8px; }   /* zakładka Doba: Tarcza / 3D */
+
+/* zakładka Rok, widok Orbita: koło orbity, przyciski czasu, lupa z dobami (js/orbitwheel.js) */
+.owheel { display: block; width: 100%; max-width: 520px; margin: 0 auto; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.owpt { font-size: 12px; font-weight: 700; fill: var(--fg); }
+.ownav { flex-wrap: wrap; margin: 6px 0 4px; }
+.ozoom { display: block; width: 100%; margin-top: 4px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.ozoom.drag { cursor: grabbing; }
+.cdet h2 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--mut); }
+.oinfo .v { font-size: 16px; font-weight: 700; }
+.oinfo .v::first-letter { text-transform: uppercase; }
 
 .manual {
   max-width: 380px;
@@ -604,7 +626,6 @@ button {
 .yd.sn::after { content: ""; position: absolute; top: 1px; right: 1px; width: 4px; height: 4px; border-radius: 50%; background: var(--sun); }
 .yd.sel.sn::after { background: var(--on-sun); }
 @media (min-width: 520px) { .cyear { grid-template-columns: repeat(3, 1fr); } }
-.cyear.q4 { grid-template-columns: repeat(2, 1fr); }   /* kalendarz świetlny: 4 pory roku, po 2 w rzędzie */
 
 /* Kalendarz orbity: koło roku, miesiąc po 10 dni w rzędzie, siatka roku (na szerokim ekranie rząd = pora roku) */
 .oring { display: block; width: 100%; max-width: 360px; margin: 4px auto 6px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -640,7 +661,24 @@ button {
 .bdf:nth-child(4) { margin-left: 10px; }
 .bdres { margin-top: 10px; font-size: 14px; }
 .bdres > div { margin-top: 4px; }
-.bdres .cp { font-size: 22px; font-weight: 700; }
+/* miejsce urodzenia: wybrane miasto, pole wyszukiwania i przycisk „Tu, gdzie jestem” */
+.bdpl { margin-top: 10px; }
+.bdplv { font-size: 14px; font-weight: 600; }
+.bdplv:empty { display: none; }
+.bdpls { display: flex; gap: 6px; margin-top: 4px; }
+.bdpls input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 5px 8px; border: 1px solid var(--mut); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.bdpls button { flex: none; padding: 5px 10px; font-size: 13px; border-radius: 8px; }
+.bdpr { margin-top: 6px; }
+.bdpr button { background: var(--bg); }
+/* wynik urodzin: data w kalendarzu orbity (rok i pora doby wspólne, okienka obu kalendarzy), pod nią kąt orbity */
+.bdres small { display: block; font-size: 12px; color: var(--mut); }
+.bdres .bdwhen { margin-top: 2px; font-size: 16px; font-weight: 700; }
+.bdorb { font-size: 13px; color: var(--mut); }
+.bdcals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px !important; }
+.bdc { padding: 8px 10px; background: var(--bg); border-radius: 10px; border-inline-start: 4px solid; }
+.bdc b { display: block; font-size: 16px; line-height: 1.25; }
+.bdc span { font-size: 14px; }
+.bdcals + div { margin-top: 12px !important; }
 .bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
 .btab { margin-top: 0; }
 .why p { margin: 8px 0 0; font-size: 14px; line-height: 1.45; }
@@ -670,7 +708,6 @@ button {
   #calView { max-width: 400px; zoom: 1.3; }
   #calView.yearMode { max-width: 760px; zoom: 1; }
   #calView.yearMode .cyear { grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
-  #calView.yearMode .cyear.q4 { grid-template-columns: repeat(2, 1fr); gap: 18px 24px; }
   #calView.yearMode .ymg { font-size: 12px; }
   #calView.yearMode .yd { height: 24px; line-height: 22px; font-size: 12px; }
   /* reszta informacji rośnie razem z tarczą (cały blok w skali, proporcje bez zmian) */

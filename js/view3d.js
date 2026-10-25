@@ -190,17 +190,13 @@
     el = 0.45;
   }
 
-  function setBtn() {
-    var b = $("viewBtn");
-    b.textContent = t("to3d");
-    b.setAttribute("aria-pressed", $("v3").hidden ? "false" : "true");
-  }
+  function setBtn() { $("viewBtn").setAttribute("aria-pressed", $("v3").hidden ? "false" : "true") }
 
-  /* ----- przycisk w lewym górnym rogu: tarcza <-> wizualizacja 3D ----- */
+  /* ----- przełącznik Tarcza / 3D w zakładce Doba: „3D” otwiera widok 3D (powrót: „Tarcza”, obsługa w main.js) ----- */
   $("viewBtn").onclick = function () {
-    var open = $("v3").hidden;   // za chwilę pokażemy 3D
-    if (open) { follow = true; sync(); resetView(); draw() }
-    if (window.showView) showView(open ? "3d" : "dial");   // przełączanie widoków jest w main.js
+    if (!$("v3").hidden) return;
+    follow = true; sync(); resetView(); draw();
+    if (window.showView) showView("3d");   // przełączanie widoków jest w main.js
     setBtn();
   };
 

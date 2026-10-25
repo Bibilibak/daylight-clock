@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar słoneczny</title>
-  <link rel="stylesheet" href="css/style.css?v=58">
+  <link rel="stylesheet" href="css/style.css?v=64">
 </head>
 <body>
   <div class="top">
     <div class="topl">
+      <!-- trzy zakładki: Doba (tarcza i 3D), Rok (koło orbity i długość dnia), Kalendarz (klimatyczny) -->
       <div class="navr">
-        <button id="viewBtn" class="view-btn" aria-pressed="false">Wizualizacja zegara w 3D</button>
-        <button id="dialBtn" class="view-btn" aria-pressed="true" data-i18n="dial">Tarcza</button>
-        <button id="yearBtn" class="view-btn" aria-pressed="false" data-i18n="yearBtn">Zegar roku</button>
+        <button id="dayBtn" class="view-btn" aria-pressed="true" data-i18n="tabDay">Doba</button>
+        <button id="yearBtn" class="view-btn" aria-pressed="false" data-i18n="tabYear">Rok</button>
         <button id="calBtn" class="view-btn" aria-pressed="false" data-i18n="calBtn">Kalendarz</button>
       </div>
     </div>
@@ -32,8 +32,30 @@
     </div>
   </div>
 
-  <h1 data-i18n="title">Zegar słoneczny</h1>
+  <!-- nagłówek zakładki (tytuł i główny odczyt), ustawiany w js/main.js -->
+  <h1 id="hTitle">Zegar słoneczny</h1>
   <div class="lightH" id="lightH"></div>
+  <!-- miejsce: linijka ze współrzędnymi, po kliknięciu „zmień” wyszukiwarka miast, lokalizacja i współrzędne -->
+  <div class="where"><span id="where"></span> <button id="placeBtn" class="linkbtn" aria-expanded="false" aria-controls="placeBox" data-i18n="placeChange">zmień</button></div>
+  <div id="placeBox" class="placebox" hidden>
+    <div class="place">
+      <input id="city" type="search" enterkeyhint="search" autocomplete="off"
+             data-i18n-ph="cityPh" placeholder="Szukaj miasta…">
+    </div>
+    <div class="results" id="cityres"></div>
+    <div class="row prow">
+      <button id="loc" data-i18n="useLoc">Użyj mojej lokalizacji</button>
+      <input id="lat" type="number" step="0.01" min="-90" max="90" data-i18n-ph="latPh" placeholder="Szer.">
+      <input id="lon" type="number" step="0.01" min="-180" max="180" data-i18n-ph="lonPh" placeholder="Dł.">
+      <button id="go" data-i18n="set">Ustaw</button>
+    </div>
+    <div class="pmsg" id="pmsg"></div>
+  </div>
+  <!-- zakładka Doba: tarcza albo ta sama doba w 3D -->
+  <div class="seg dseg" id="daySeg" role="group">
+    <button id="dialBtn" aria-pressed="true" data-i18n="dial">Tarcza</button>
+    <button id="viewBtn" aria-pressed="false" data-i18n="seg3d">3D</button>
+  </div>
 
   <div id="dialView">
   <svg viewBox="-14 -14 368 368" data-i18n-aria="dial" aria-label="Tarcza">
@@ -118,28 +140,6 @@
     <p class="v3hint" data-i18n="v3Hint">Przeciągnij rysunek, aby obrócić widok.</p>
   </div>
 
-  <div class="where"><span id="where"></span></div>
-
-  <!-- wybór miejsca, zaraz pod współrzędnymi: wyszukiwanie miasta po nazwie -->
-  <div class="place">
-    <input id="city" type="search" enterkeyhint="search" autocomplete="off"
-           data-i18n-ph="cityPh" placeholder="Szukaj miasta…">
-  </div>
-  <div class="results" id="cityres"></div>
-
-  <div class="or" data-i18n="or">lub</div>
-
-  <div class="row"><button id="loc" data-i18n="useLoc">Użyj mojej lokalizacji</button></div>
-
-  <!-- współrzędne ręcznie (awaryjnie, gdy wyszukiwanie nie działa) -->
-  <details class="manual">
-    <summary data-i18n="manual">Współrzędne ręcznie</summary>
-    <div class="row">
-      <input id="lat" type="number" step="0.01" min="-90" max="90" data-i18n-ph="latPh" placeholder="Szer.">
-      <input id="lon" type="number" step="0.01" min="-180" max="180" data-i18n-ph="lonPh" placeholder="Dł.">
-      <button id="go" data-i18n="set">Ustaw</button>
-    </div>
-  </details>
 
   <div id="dialExtras">
   <div class="rowh" data-i18n="sunH">Słońce</div>
@@ -173,12 +173,13 @@
   </div>
 
 
-  <script src="js/I18n.js?v=58"></script>
-  <script src="js/I18n-more.js?v=58"></script>
-  <script src="js/main.js?v=58"></script>
-  <script src="js/view3d.js?v=58"></script>
-  <script src="js/year.js?v=58"></script>
-  <script src="js/orbit.js?v=58"></script>
-  <script src="js/calendar.js?v=58"></script>
+  <script src="js/I18n.js?v=64"></script>
+  <script src="js/I18n-more.js?v=64"></script>
+  <script src="js/main.js?v=64"></script>
+  <script src="js/view3d.js?v=64"></script>
+  <script src="js/year.js?v=64"></script>
+  <script src="js/orbit.js?v=64"></script>
+  <script src="js/calendar.js?v=64"></script>
+  <script src="js/orbitwheel.js?v=64"></script>
 </body>
 </html>

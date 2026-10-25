@@ -2,11 +2,11 @@
    Koło stoi w miejscu i czyta się je jak tarczę doby: wschód roku (0°, równonoc marcowa) po lewej, południe roku (90°)
    u góry, zachód roku (180°) po prawej, północ roku (270°) na dole; Ziemia idzie zgodnie z ruchem wskazówek.
    Na półkuli południowej koło jest obrócone o 180°, żeby południe roku (najdłuższy dzień) było zawsze u góry.
-   Datą jest kąt przebyty w porze roku (kalendarz orbitalny), np. „Wieczór roku · 32,46° z 90°”.
+   Datą jest kąt przebyty w porze roku (kalendarz orbitalny), np. „32,46° wieczoru roku”.
    Lupa pokazuje 4° orbity: każda doba (od wschodu do wschodu Słońca) to pas dzień / noc, ok. 1° szerokości. */
 (function () {
   function $(i) { return document.getElementById(i) }
-  var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"];   // kolory pór roku jak w kalendarzu (wiosna, lato, jesień, zima)
+  var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"], BDC = "#d6457a";   // BDC: kąt urodzin, jak w drabinie lat w Kalendarzu   // kolory pór roku jak w kalendarzu (wiosna, lato, jesień, zima)
   function sIdx(q) { return lat < 0 ? (q + 2) % 4 : q }   // nazwy idą za światłem, na południu przesunięte o pół roku
   function part(key, i) { return t(key).split("|")[i] }
   function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
@@ -60,6 +60,9 @@
         ln.map(function (x, i) { return '<tspan x="' + tx[0].toFixed(1) + '" dy="' + (i ? 13 : 0) + '">' + x + '</tspan>' }).join("") + '</text>' +
         '<text class="ylb" x="' + tx[0].toFixed(1) + '" y="' + (ty + 13 * ln.length).toFixed(1) + '" text-anchor="' + anc + '">' + q * 90 + '° · ' + short(sunDay(ms)) + '</text>'
     }
+    // kąt urodzin (z zakładki Kalendarz), co roku ten sam: kreska na podziałce
+    var ba = window.Cal && Cal.birthAngle();
+    if (ba !== null && ba !== undefined) { var q1 = P(ba, 137), q2 = P(ba, 153); h += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="' + BDC + '" stroke-width="2.5"/>' }
     // Ziemia: smukła wskazówka w kolorze pory roku (czubek na kreskach stopni) i Ziemia z poświatą na pasie pór roku
     var sc = SC[sIdx(Q.q)], u = P(L, 1), nx = -(u[1] - 200), ny = u[0] - 200, b0 = P(L, 98), tip = P(L, 151), pe = P(L, 160),
       w = function (p3, k) { return (p3[0] + nx * k).toFixed(1) + "," + (p3[1] + ny * k).toFixed(1) };
@@ -91,6 +94,8 @@
         '<text x="' + x.toFixed(1) + '" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="var(--fg)">' + kk % 90 + '°</text>' +
         '<text class="ylb" x="' + x.toFixed(1) + '" y="112" text-anchor="middle">' + t("owYr").replace("{a}", kk) + '</text>'
     }
+    var ba = window.Cal && Cal.birthAngle(), bx = ba !== null && ba !== undefined ? X(ba) : -1;   // kąt urodzin, gdy jest w lupie
+    if (bx > 0 && bx < 360) z += '<line x1="' + bx.toFixed(1) + '" y1="26" x2="' + bx.toFixed(1) + '" y2="86" stroke="' + BDC + '" stroke-width="2.5"/>';
     return z + '<path d="M180 30 l-6 -8 h12 z" fill="#3b82c4"/><line x1="180" y1="30" x2="180" y2="82" stroke="#3b82c4" stroke-width="2.5"/>'
   }
 
@@ -104,8 +109,8 @@
         whenTxt(crossAt(kk, d.rise + (k - l0) / 0.9856 * 864e5)) + '</div>'
     }
     return '<h2>' + t("owDayT") + '</h2><div class="v">' + OrbitCal.dateOf(d.n).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
-      '<div>' + (r1.q === r0.q ? part("lsN", sIdx(r0.q)) + ' · ' + t("calDegOf").replace("{a}", trunc(r0.a) + '–' + trunc(r1.a))   // doba z granicą pór: od jednej pory do drugiej
-        : part("lsN", sIdx(r0.q)) + ' ' + trunc(r0.a) + ' → ' + part("lsN", sIdx(r1.q)) + ' ' + trunc(r1.a)) + '</div>' +
+      '<div>' + (r1.q === r0.q ? trunc(r0.a) + '–' + trunc(r1.a) + ' ' + part("lsG", sIdx(r0.q))   // doba z granicą pór: od jednej pory do drugiej
+        : trunc(r0.a) + ' ' + part("lsG", sIdx(r0.q)) + ' → ' + trunc(r1.a) + ' ' + part("lsG", sIdx(r1.q))) + '</div>' +
       (h || '<div>' + t("owNoCross") + '</div>') +
       '<div>' + t("owRate").replace("{r}", num(rate, 3)).replace("{h}", Math.floor(hr)).replace("{m}", Math.round(hr % 1 * 60)) + '</div>' +
       '<div>' + t("owNext").replace("{p}", part("lpN", sIdx(nq))).replace("{a}", trunc(left)).replace("{d}", num(left / rate, 1)) + '</div>'
@@ -126,6 +131,8 @@
       '<div class="seg ownav" role="group"><button data-ow="-864e5">' + t("owDm") + '</button><button data-ow="-36e5">' + t("owHm") + '</button>' +
       '<button data-ow="now">' + t("v3Now") + '</button><button data-ow="36e5">' + t("owHp") + '</button><button data-ow="864e5">' + t("owDp") + '</button></div>' +
       '<div class="cdet"><h2 class="owh">' + t("owZoomT") + '</h2><svg class="ozoom" viewBox="0 0 360 120" role="img" aria-label="' + t("owZoomT") + '"></svg>' +
+      '<div class="olg"><span><i class="lgr"></i>' + t("owLgRise") + '</span><span><i class="lgd"></i>' + t("owLgDeg") + '</span><span><i class="lgn"></i>' + t("owLgNow") + '</span>' +
+      (window.Cal && Cal.birthAngle() !== null ? '<span><i class="lgb"></i>' + t("owLgBd") + '</span>' : '') + '</div>' +
       '<p class="cnote">' + t("owZoomN") + '</p></div><div class="cdet oinfo"></div><p class="cnote">' + t("owNote") + '</p>';
     draw()
   }
@@ -167,6 +174,6 @@
   window.OrbitWheel = {
     render: render,
     title: function () { return t("calOYear").replace("{y}", OrbitCal.date(OrbitCal.dateOf(sunDay(shown()))).year) },
-    head: function () { var Q = relQ(sunLonDeg(shown())); return part("lsN", sIdx(Q.q)) + ' · ' + t("calDegOf").replace("{a}", trunc(Q.a)) }
+    head: function () { var Q = relQ(sunLonDeg(shown())); return trunc(Q.a) + ' ' + part("lsG", sIdx(Q.q)) }   // np. „32,47° wieczoru roku”
   };
 })();

@@ -334,6 +334,13 @@ button {
 .ownav { flex-wrap: wrap; margin: 6px 0 4px; }
 .ozoom { display: block; width: 100%; margin-top: 4px; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .ozoom.drag { cursor: grabbing; }
+/* legenda lupy: krótkie kreski w kolorach z rysunku */
+.olg { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 4px; font-size: 12px; color: var(--mut); }
+.olg i { display: inline-block; width: 3px; height: 12px; margin-inline-end: 5px; vertical-align: -2px; }
+.olg .lgr { background: var(--fg); width: 1.5px; }
+.olg .lgd { border-inline-start: 2px dashed var(--sun); width: 0; }
+.olg .lgn { background: #3b82c4; }
+.olg .lgb { background: #d6457a; }
 .cdet h2 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--mut); }
 .oinfo .v { font-size: 16px; font-weight: 700; }
 .oinfo .v::first-letter { text-transform: uppercase; }
@@ -674,10 +681,16 @@ button {
 .bdres small { display: block; font-size: 12px; color: var(--mut); }
 .bdres .bdwhen { margin-top: 2px; font-size: 16px; font-weight: 700; }
 .bdorb { font-size: 13px; color: var(--mut); }
-.bdcals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px !important; }
-.bdc { padding: 8px 10px; background: var(--bg); border-radius: 10px; border-inline-start: 4px solid; }
+.bdcals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px !important; }
+/* urodzenie (miejsce urodzenia) i powroty (tam, gdzie jesteś): osobne części, każda z plakietką miejsca */
+.bdsec { padding: 10px; background: color-mix(in srgb, var(--bg) 55%, transparent); border-radius: 12px; }
+.bdsec2 { margin-top: 10px !important; }
+.bdpin { display: inline-block; margin-inline-start: 6px; padding: 1px 8px; font-size: 12px; font-weight: 600; color: var(--mut); background: var(--card); border-radius: 999px; vertical-align: 2px; }
+.bdsec2 .bdwhen .bdpin { margin-inline-start: 0; }
+.bdlad { display: block; width: 100%; margin-top: 10px; }   /* drabina lat: doby wokół kąta urodzin */
+.bdc { padding: 7px 8px; min-width: 0; overflow-wrap: break-word; background: var(--bg); border-radius: 10px; border-inline-start: 4px solid; }
 .bdc b { display: block; font-size: 16px; line-height: 1.25; }
-.bdc span { font-size: 14px; }
+.bdc span { font-size: 13px; }
 .bdcals + div { margin-top: 12px !important; }
 .bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
 .btab { margin-top: 0; }
@@ -690,11 +703,6 @@ button {
 .btab td:nth-child(5) { text-align: right; }
 .btab thead td { font-weight: 700; color: var(--mut); }
 .btab tr.off { color: var(--mut); }
-/* kafelek dnia: postęp pory roku (jeden pasek, nazwa pory i procent w środku) */
-.cdet .sbr { margin: 8px 0 6px; }
-.sbr { position: relative; height: 20px; border-radius: 10px; background: color-mix(in srgb, var(--mut) 22%, transparent); overflow: hidden; }
-.sbr i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; }
-.sbr span { position: relative; display: block; padding: 0 10px; font-size: 12.5px; font-weight: 700; line-height: 20px; color: var(--fg); }
 
 /* pasek faz: etykieta kąta nad paskiem, połączona ze znacznikiem; nazwy głównych faz pod podziałką */
 .yexp { margin-top: 10px; font-size: 12px; line-height: 1.4; }

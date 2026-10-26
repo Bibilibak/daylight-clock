@@ -455,10 +455,14 @@ function openPlace(open) {
 $("placeBtn").onclick = function () { openPlace($("placeBox").hidden) };
 var pmsgKey = "";   // komunikat w panelu miejsca (klucz tłumaczenia, żeby zmiana języka go przetłumaczyła)
 function placeMsg(k) { pmsgKey = k; $("pmsg").textContent = k ? t(k) : "" }
-function apply() {
+// look = true: tylko podgląd zapisanego miejsca (nie zapisuje się jako Twoje miejsce, po odświeżeniu strona wraca do domu);
+// bez look: zwykła zmiana miejsca, która staje się Twoim miejscem
+function apply(look) {
+  peek = !!look;
+  if (!peek) home = { lat: lat, lon: lon, name: place, tz: tz };
   $("lat").value = lat; $("lon").value = lon;
-  try { localStorage.setItem("sw", JSON.stringify({ lat: lat, lon: lon, name: place, tz: tz })) } catch (e) {}
-  if ($("where")) $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
+  if (!peek) try { localStorage.setItem("sw", JSON.stringify(home)) } catch (e) {}
+  showWhere();
   if (!$("placeBox").hidden) openPlace(false);
   setMsg("sinceRise");
   monthSel = null;                       // nowe miejsce: cykl może mieć inną liczbę dni, zaznaczenie wraca na dziś
@@ -466,6 +470,108 @@ function apply() {
   tick();
   refreshViews()
 }
+
+/* ===== Zapisane miejsca: szybki przeskok do rzadko oglądanych miejsc =====
+   Lista w localStorage "swp" ([{ lat, lon, name, tz }]), dodawana i usuwana gwiazdką przy bieżącym miejscu.
+   Twoje miejsce (home) stoi zawsze na górze listy; inne miejsce jest tylko podglądem (powrót przez wybór ⌂ z listy). */
+var home = null, peek = false, saved = [];
+try {
+  var sp = JSON.parse(localStorage.getItem("swp") || "[]");
+  if (Array.isArray(sp)) sp.forEach(function (p) {
+    if (p && validCoords(p.lat, p.lon)) saved.push({ lat: p.lat, lon: p.lon, name: String(p.name || ""), tz: String(p.tz || "") })
+  })
+} catch (e) {}
+function samePlace(a, b) { return !!a && !!b && Math.abs(a.lat - b.lat) < 1e-3 && Math.abs(a.lon - b.lon) < 1e-3 }
+function placeLabel(p) { return p.name || p.lat + "°, " + p.lon + "°" }
+function hereP() { return { lat: lat, lon: lon, name: place, tz: tz } }
+function savedIdx() { for (var i = 0; i < saved.length; i++) if (samePlace(saved[i], hereP())) return i; return -1 }
+function storeSaved() { try { localStorage.setItem("swp", JSON.stringify(saved)) } catch (e) {} }
+
+function showWhere() {
+  $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
+  $("whereBox").classList.toggle("peek", peek);
+  var on = savedIdx() >= 0;
+  $("starBtn").textContent = on ? "★" : "☆";
+  $("starBtn").setAttribute("aria-pressed", on ? "true" : "false");
+  $("starBtn").title = t(on ? "starDel" : "starAdd");
+  $("starBtn").setAttribute("aria-label", $("starBtn").title);
+  $("houseBtn").setAttribute("aria-pressed", peek ? "false" : "true");   // ⌂ świeci, gdy to Twoje miejsce
+  $("houseBtn").title = t(peek ? "houseSet" : "houseIs");
+  $("houseBtn").setAttribute("aria-label", $("houseBtn").title)
+}
+
+// ⌂ w podglądzie: oglądane miejsce staje się Twoim miejscem; dotychczasowe trafia na listę, żeby go nie zgubić
+$("houseBtn").onclick = function () {
+  if (!peek) return;
+  var old = home;
+  if (!saved.some(function (p) { return samePlace(p, old) })) { saved.push(old); storeSaved() }
+  apply();
+  if (!$("pickList").hidden) Picker.fill()
+};
+
+$("starBtn").onclick = function () {
+  var i = savedIdx();
+  if (i >= 0) saved.splice(i, 1); else saved.push(hereP());
+  storeSaved(); showWhere();
+  if (!$("pickList").hidden) Picker.fill()
+};
+
+// przeskok do miejsca p: Twoje miejsce = zwykły powrót, inne = podgląd
+function jumpTo(p) {
+  lat = p.lat; lon = p.lon; place = p.name; tz = p.tz;
+  apply(!samePlace(p, home))
+}
+
+// lista zapisanych miejsc pod nazwą miejsca (mysz i klawiatura jak w liście języków)
+var Picker = (function () {
+  var btn = $("where"), list = $("pickList"), opts = [], items = [], act = 0;
+  function mark(i) {
+    if (!opts.length) return;
+    act = (i + opts.length) % opts.length;
+    opts.forEach(function (o, k) { o.classList.toggle("active", k === act) });
+    list.setAttribute("aria-activedescendant", opts[act].id)
+  }
+  function fill() {
+    items = [home].concat(saved.filter(function (p) { return !samePlace(p, home) }));
+    list.innerHTML = "";
+    items.forEach(function (p, k) {
+      var li = document.createElement("li");
+      li.id = "pick-" + k; li.setAttribute("role", "option");
+      li.textContent = (k ? "" : "⌂ ") + placeLabel(p);
+      li.setAttribute("aria-selected", samePlace(p, hereP()) ? "true" : "false");
+      list.appendChild(li)
+    });
+    if (!saved.length) {
+      var h = document.createElement("li");
+      h.className = "hint"; h.setAttribute("role", "presentation"); h.textContent = t("pickHint");
+      list.appendChild(h)
+    }
+    opts = [].slice.call(list.querySelectorAll("[role=option]"));
+    var cur = 0;
+    opts.forEach(function (o, k) { if (o.getAttribute("aria-selected") === "true") cur = k });
+    mark(cur)
+  }
+  function open(on) {
+    list.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false");
+    if (on) { fill(); list.focus() }
+  }
+  function choose(i) { open(false); btn.focus(); if (items[i] && !samePlace(items[i], hereP())) jumpTo(items[i]) }
+  btn.onclick = function () { open(list.hidden) };
+  btn.onkeydown = function (e) { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); open(true) } };
+  list.onclick = function (e) { var o = e.target.closest("[role=option]"); if (o) choose(opts.indexOf(o)) };
+  list.onmousemove = function (e) { var o = e.target.closest("[role=option]"); if (o && opts.indexOf(o) !== act) mark(opts.indexOf(o)) };
+  list.onkeydown = function (e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); mark(act + 1) }
+    else if (e.key === "ArrowUp") { e.preventDefault(); mark(act - 1) }
+    else if (e.key === "Home") { e.preventDefault(); mark(0) }
+    else if (e.key === "End") { e.preventDefault(); mark(opts.length - 1) }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(act) }
+    else if (e.key === "Escape") { e.preventDefault(); open(false); btn.focus() }
+    else if (e.key === "Tab") open(false)
+  };
+  document.addEventListener("click", function (e) { if (!list.hidden && !$("whereBox").contains(e.target)) open(false) });
+  return { fill: fill, open: open }
+})();
 
 $("go").onclick = function () {
   var a = parseFloat($("lat").value), b = parseFloat($("lon").value),
@@ -550,6 +656,8 @@ function pickLang(l) {
   setMsg(msgKey);   // przetłumacz komunikat pod odczytem
   placeMsg(pmsgKey);
   $("placeBtn").textContent = t($("placeBox").hidden ? "placeChange" : "placeClose");
+  showWhere();                                   // podpis gwiazdki
+  if (!$("pickList").hidden) Picker.fill();      // podpowiedź w liście zapisanych miejsc
   lastL = "";       // wymuś odrysowanie listy wydarzeń
   if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
   if ($("mgrid")) buildMonthScale();            // nazwy rzędów i faz w siatce

@@ -324,6 +324,41 @@ button {
 .prow { flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
 .prow #loc { flex: 1 1 100%; }   /* lokalizacja w osobnym wierszu, pod nią współrzędne */
 .prow input { width: 6.5em; flex: 1 1 5em; min-width: 0; }
+/* zapisane miejsca: nazwa miejsca rozwija listę, ☆ zapisuje, w podglądzie linijka na kolor słońca */
+.where { position: relative; }
+.wherebtn { background: none; border: 0; padding: 0 2px; color: inherit; font: inherit; cursor: pointer; }
+.wherebtn::after { content: " ▾"; font-size: 10px; }
+.wherebtn:hover, .wherebtn[aria-expanded="true"] { color: var(--fg); }
+.where.peek .wherebtn { color: var(--sun); font-weight: 600; }
+.starbtn { background: none; border: 0; padding: 0 4px; color: var(--mut); font: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+.starbtn[aria-pressed="true"] { color: var(--sun); }
+.housebtn { font-size: 17px; }
+.housebtn[aria-pressed="true"] { cursor: default; }   /* to już jest Twoje miejsce */
+#pickList {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--arc);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(43, 33, 24, .18);
+}
+#pickList:focus { outline: none; }
+#pickList li { padding: 7px 12px; border-radius: 9px; font-size: 13px; color: var(--fg); cursor: pointer; }
+#pickList li.active { background: var(--card); }
+#pickList li[aria-selected="true"] { color: var(--sun); font-weight: 700; }
+#pickList li.hint { color: var(--mut); cursor: default; font-size: 12px; }
+[dir="rtl"] #pickList { text-align: right; }
 .pmsg { margin-top: 6px; font-size: 13px; color: var(--mut); }
 .pmsg:empty { display: none; }
 .dseg { margin: 0 0 8px; }   /* zakładka Doba: Tarcza / 3D */

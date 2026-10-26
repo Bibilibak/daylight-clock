@@ -35,8 +35,11 @@
   <!-- nagłówek zakładki (tytuł i główny odczyt), ustawiany w js/main.js -->
   <h1 id="hTitle">Zegar słoneczny</h1>
   <div class="lightH" id="lightH"></div>
-  <!-- miejsce: linijka ze współrzędnymi, po kliknięciu „zmień” wyszukiwarka miast, lokalizacja i współrzędne -->
-  <div class="where"><span id="where"></span> <button id="placeBtn" class="linkbtn" aria-expanded="false" aria-controls="placeBox" data-i18n="placeChange">zmień</button></div>
+  <!-- miejsce: linijka ze współrzędnymi, po kliknięciu „zmień” wyszukiwarka miast, lokalizacja i współrzędne;
+       kliknięcie nazwy rozwija zapisane miejsca (☆ zapisuje bieżące, ⌂ ustawia jako Twoje), przeskok to tylko podgląd -->
+  <div class="where" id="whereBox"><button id="where" class="wherebtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="pickList"></button><button id="houseBtn" class="starbtn housebtn" aria-pressed="true">⌂</button><button id="starBtn" class="starbtn" aria-pressed="false">☆</button> <button id="placeBtn" class="linkbtn" aria-expanded="false" aria-controls="placeBox" data-i18n="placeChange">zmień</button>
+    <ul id="pickList" role="listbox" tabindex="-1" data-i18n-aria="pickList" aria-label="Zapisane miejsca" hidden></ul>
+  </div>
   <div id="placeBox" class="placebox" hidden>
     <div class="place">
       <input id="city" type="search" enterkeyhint="search" autocomplete="off"

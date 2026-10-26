@@ -72,5 +72,5 @@ var OrbitCal = (function () {
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
 
   return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, dayStart: dayStart, lonAt: lonAt, dayAt: dayAt,
-    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, momentAt: momentAt }
+    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, momentAt: momentAt, cross: cross }
 })();

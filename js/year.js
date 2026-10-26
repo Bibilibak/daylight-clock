@@ -18,7 +18,6 @@
     for (var i = 1; i < a.length; i++) if (mx ? a[i] > a[k] + 1e-9 : a[i] < a[k] - 1e-9) k = i;
     return k
   }
-  function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
   /* Kolor odcinka: złoty = światła przybywa, fioletowy = ubywa, szary = prawie bez zmian,
      jasnozłoty = dzień polarny (360° światła), ciemnofioletowy = noc polarna (0°); odcienie z motywu (--pday, --pnight). */
   var KC = { r: "#e8a000", f: "#6a66b0", z: "var(--mut)", d: "var(--pday)", n: "var(--pnight)" };
@@ -27,7 +26,6 @@
     return '<polyline fill="none" stroke="' + KC[k] + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
   }
   function nd(n) { return n === 0 ? t("todayLbl") : n + " " + t(dayKey(n)) }   // forma liczby mnogiej wg języka
-  function dshort(y, i) { return new Date(Date.UTC(y, 0, 1 + i)).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: "UTC" }) }
 
   /* Rok jako zamknięta pętla (nie jest to klasyczna analemma, która pokazuje deklinację i równanie czasu):
      kąt na pętli = pozycja Słońca na ekliptyce (kąt roku, bez dat kalendarzowych), przesilenie letnie u góry;
@@ -41,9 +39,9 @@
   function render() {
     var box = $("yearView"); if (!box) return;
     if (ymode === "orbit" && window.OrbitWheel) { box.innerHTML = modeSeg() + '<div id="owBox"></div>'; return OrbitWheel.render($("owBox")) }
-    var now = new Date(), y = now.getFullYear(), a = series(y), n = a.length,
+    var now = tzParts(Date.now()), y = now.year, a = series(y), n = a.length,   // dzisiejsza data w wybranym mieście, nie w urządzeniu
       lam = a.map(function (_, i) { return sunLonDeg(Date.UTC(y, 0, 1 + i, 12)) }),
-      today = Math.round((Date.UTC(y, now.getMonth(), now.getDate()) - Date.UTC(y, 0, 1)) / 864e5),
+      today = Math.round((Date.UTC(y, now.month - 1, now.day) - Date.UTC(y, 0, 1)) / 864e5),
       h0 = a[today], hn = today < n - 1 ? a[today + 1] : dayHours(y + 1, 0, 1),
       rate = (hn - h0) * 15,                                           // zmiana stopni światła: jutro minus dziś (°/dobę)
       iMax = arg(a, 1), iMin = arg(a, 0), flat = a[iMax] - a[iMin] < 0.25, polar = h0 <= 0 || h0 >= 24;
@@ -181,9 +179,10 @@
   window.YearClock = { render: render, last: function () { return last } };
 
   // Po północy "dziś" na zegarze roku przesuwa się samo (jak w kalendarzu).
-  var shownDay = new Date().toDateString();
+  function cityDate() { var o = tzParts(Date.now()); return o.year + "-" + o.month + "-" + o.day }
+  var shownDay = cityDate();
   setInterval(function () {
-    var d = new Date().toDateString();
+    var d = cityDate();
     if (d === shownDay) return;
     shownDay = d;
     if ($("yearView") && !$("yearView").hidden) render()

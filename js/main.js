@@ -251,15 +251,15 @@ function phaseIdx(p) {   // 0 nów, 1 sierp przyb., 2 I kwadra, 3 garb przyb., 4
   return p < 12 || p >= 348 ? 0 : p < 78 ? 1 : p < 102 ? 2 : p < 168 ? 3 : p < 192 ? 4 : p < 258 ? 5 : p < 282 ? 6 : 7
 }
 function moonTilt() {   // obrót ikony Księżyca: północ 0° (jasna strona przybywającego po prawej), równik 90° ("łódka"), południe 180° (odwrotnie)
-    return Math.round(Math.max(0, Math.min(1, (23.5 - lat) / 47)) * 180)
-    }
-    function phaseGlyph(p, cx, cy, rr) {   // ikona fazy: ciemna tarcza + jasna część (limb + terminator), obrócona wg półkuli obserwatora
-      var c = Math.cos(p * R), wax = p < 180, top = cy - rr, bot = cy + rr, tilt = moonTilt(),
-          lit = "M" + cx + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + cx + " " + bot +
-                "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + cx + " " + top + "Z";
-                  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"' +
-                      (tilt ? ' transform="rotate(' + tilt + ' ' + cx + ' ' + cy + ')"' : '') + '/>'
-                      }
+  return Math.round(Math.max(0, Math.min(1, (23.5 - lat) / 47)) * 180)
+}
+function phaseGlyph(p, cx, cy, rr) {   // ikona fazy: ciemna tarcza + jasna część (limb + terminator), obrócona wg półkuli obserwatora
+  var c = Math.cos(p * R), wax = p < 180, top = cy - rr, bot = cy + rr, tilt = moonTilt(),
+    lit = "M" + cx + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + cx + " " + bot +
+      "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + cx + " " + top + "Z";
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"' +
+    (tilt ? ' transform="rotate(' + tilt + ' ' + cx + ' ' + cy + ')"' : '') + '/>'
+}
 var lastGlyph = "", lastIcon = "";
 
 /* ===== Wydarzenia użytkownika ===== */
@@ -725,14 +725,15 @@ if ($("viewBtn")) $("viewBtn").addEventListener("click", function () {
 });
 
 /* ===== Miesiąc księżycowy jako siatka dni =====
-   Dni od wschodu: dzień 1 = doba nowiu, ostatni = doba przed następnym nowiem (29 albo 30 dni).
+   Doby od słonecznej północy: dzień 1 = doba nowiu, ostatni = doba przed następnym nowiem (29 albo 30 dni).
    Ikona fazy stoi w dobie, w której faza naprawdę wypada. Przerwa między rzędami przy pełni:
    górny rząd = Księżyca przybywa (nów -> dzień przed pełnią), dolny = ubywa (pełnia -> nów). */
 var monthLast = null, monthDay = null, monthSel = null, monthCyc = null;   // monthSel: kliknięty dzień (null = dziś)
 // inny cykl niż w siatce? Chwila nowiu liczona za każdym razem od innego punktu startowego różni się o ułamki ms,
 // więc porównujemy z tolerancją (kolejne nowie dzieli ok. 29,5 doby)
 function newCycle(cyc) { return monthLast === null || Math.abs(cyc.last - monthLast) > 36e5 }
-function dnum(x) { return x.toFixed(2).replace(".", lang === "en" ? "." : ",") }
+// liczba z przecinkiem dziesiętnym (po angielsku z kropką); wspólna dla wszystkich plików
+function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
 function buildMonthScale(cyc) {
   cyc = cyc || lunarCycle(new Date());
   if (newCycle(cyc)) monthSel = null;   // nowy cykl: zaznaczenie wraca na dziś
@@ -757,7 +758,7 @@ function buildMonthScale(cyc) {
     return r + '</div></div>'
   }
   $("mgrid").innerHTML = row(1, full - 1, "moonWax") + row(full, N, "moonWane") +
-    '<p class="cnote mleg">' + t("orbLeg").split("{d}").join(od).replace("{l}", dnum((cyc.orbit - cyc.last) / 864e5)).replace("{c}", dnum((cyc.next - cyc.orbit) / 864e5)) + '</p>'
+    '<p class="cnote mleg">' + t("orbLeg").split("{d}").join(od).replace("{l}", num((cyc.orbit - cyc.last) / 864e5, 2)).replace("{c}", num((cyc.next - cyc.orbit) / 864e5, 2)) + '</p>'
 }
 
 /* ===== Chwile w stopniach doby =====

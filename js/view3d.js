@@ -72,8 +72,10 @@
     document.querySelectorAll("[data-v3d]").forEach(function (b) {
       b.classList.toggle("main", !follow && Math.abs(dec - +b.getAttribute("data-v3d")) < 0.05)
     });
-    try { localStorage.setItem("v3", JSON.stringify({ follow: follow, g: +$("v3g").value, lat: +$("v3lat").value, dec: dec, az: az, el: el })) } catch (e) {}
+    var st = JSON.stringify({ follow: follow, g: +$("v3g").value, lat: +$("v3lat").value, dec: dec, az: az, el: el });
+    if (st !== lastSt) { lastSt = st; try { localStorage.setItem("v3", st) } catch (e) {} }   // zapis tylko po zmianie (rysunek odświeża się co sekundę)
   }
+  var lastSt = "";
 
   function draw() {
     mark();

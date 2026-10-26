@@ -32,7 +32,6 @@
     label: function (d) { return deg(OrbitCal.lonAt(OrbitCal.dayN(d))) }
   };
   function same(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate() }
-  function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
   function short(d) { return d.toLocaleDateString(loc(), { day: "numeric", month: "short" }) }
 
   /* Nazwy i kolory pór roku. Ćwiartka q = 0…3 to kąt orbity 0–90°, 90–180°… Na półkuli północnej ćwiartka 0
@@ -80,7 +79,7 @@
       (ap ? '<div class="cap">' + t(ap.far ? "calAph" : "calPeri").replace("{k}", num(ap.km / 1e6, 1)) + ': ' + whenTxt(ap.ms) + '</div>' : '') +
       '<div>' + (light === null ? t("calPolar") : t("lightHead").replace("{a}", light)) + '</div>' +
       '<div>' + t("ph" + phaseIdx(ph)) + ' · ' + t("moonIll").replace("{i}", il) + '</div>' +
-      '<div>' + t("moonDayLine").replace("{d}", lc.day).replace("{l}", lc.length.toFixed(1).replace(".", lang === "en" ? "." : ",")) + '</div>' +
+      '<div>' + t("moonDayLine").replace("{d}", lc.day).replace("{l}", num(lc.length, 1)) + '</div>' +
       ev.map(function (e) { return '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' }).join("") + '</div>'
   }
 
@@ -263,7 +262,6 @@
       if (id === bpId && box.isConnected) box.innerHTML = '<div class="hint">' + t("searchErr") + '</div>'
     })
   }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] }) }
   // dzień powrotu w kalendarzu klimatycznym (w orbitalnym kąt jest co roku ten sam, więc tabela pokazuje dni)
   function bdOName(n) {
     var o = OrbitCal.date(OrbitCal.dateOf(n));
@@ -379,8 +377,8 @@
       '</tbody></table></details>'
   }
 
-  /* Siatka roku orbity: 12 miesięcy (klimatyczny) albo 4 pory roku po 89–94 dni (orbitalny), rzędami po 10 dni.
-     Na szerokim ekranie 3 miesiące w rzędzie (rząd = pora roku), pory roku po 2. Kropka = równonoc / przesilenie,
+  /* Siatka roku orbity: 12 miesięcy kalendarza klimatycznego, rzędami po 10 dni.
+     Na szerokim ekranie 3 miesiące w rzędzie (rząd = pora roku). Kropka = równonoc / przesilenie,
      ◆ = aphelium / peryhelium. */
   function renderGrid(box) {
     var s = OrbitCal.starts(oy), o = OrbitCal.apsisDays(oy), u, i, h = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
@@ -528,14 +526,14 @@
     oy = Math.max(Y0, Math.min(Y1, oy));   // strzałki roku też nie wychodzą poza lata 1000–3000
     render()
   };
-  window.Cal = { render: render, selected: function () { return sel },
-    // data doby n w kalendarzu orbity, np. "Pełna jesień · dzień 3" albo "Wieczór roku · dzień 33 z 90" (kafelek miesiąca księżycowego)
+  window.Cal = { render: render,
     // kąt urodzin (kąt roku w chwili urodzenia, w miejscu urodzenia) albo null, gdy urodziny nie są wpisane
     birthAngle: function () {
       if (!bday || !bplace) return null;
       var p = bday.d.split("-").map(Number), q = bday.t.split(":").map(Number), ms = atPlace(bplace, function () { return zoned(p[0], p[1] - 1, p[2], q[0], q[1]) });
       return isNaN(ms) ? null : sunLonDeg(ms)
     },
+    // data doby n w kalendarzu klimatycznym, np. "Pełna jesień · dzień 3" (kafelek miesiąca księżycowego)
     orbitName: function (n) { return dName(OrbitCal.date(OrbitCal.dateOf(n))) },
     // nagłówek zakładki: dzisiejsza data w kalendarzu klimatycznym
     head: function () { syncToday(); return dName(OrbitCal.date(today)) } };

@@ -6,13 +6,12 @@
    Lupa pokazuje 4° orbity: każda doba (od słonecznej północy do następnej) to pas noc / dzień / noc, ok. 1° szerokości. */
 (function () {
   function $(i) { return document.getElementById(i) }
-  var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"], BDC = "#d6457a";   // BDC: kąt urodzin, jak w drabinie lat w Kalendarzu   // kolory pór roku jak w kalendarzu (wiosna, lato, jesień, zima)
+  // kolory pór roku jak w kalendarzu (wiosna, lato, jesień, zima); BDC: kąt urodzin, jak w drabinie lat w Kalendarzu
+  var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"], BDC = "#d6457a";
   function sIdx(q) { return lat < 0 ? (q + 2) % 4 : q }   // nazwy idą za światłem, na południu przesunięte o pół roku
   function part(key, i) { return t(key).split("|")[i] }
-  function num(x, d) { return x.toFixed(d).replace(".", lang === "en" ? "." : ",") }
   // ucięte, nie zaokrąglone: 33,996° to jeszcze 33,99°, bo Ziemia nie doszła do 34°
   function trunc(x) { return num(Math.floor(x * 100 + 1e-9) / 100, 2) + "°" }
-  function crossAt(a, ms) { for (var i = 0; i < 6; i++) ms -= normDeg(sunLonDeg(ms) - a) / 0.9856 * 864e5; return ms }   // chwila przejścia przez kąt a
   function relQ(l) { var q = Math.floor(l / 90) % 4; return { q: q, a: l - q * 90 } }
   function short(n) { return OrbitCal.dateOf(n).toLocaleDateString(loc(), { day: "numeric", month: "short" }) }
   function rot() { return lat < 0 ? 180 : 0 }
@@ -101,17 +100,18 @@
   // opis doby: zakres kąta, przejścia przez pełne stopnie (stąd numer w kratce), prędkość Ziemi i odległość do następnego punktu
   function info(L, Q, d) {
     var l0 = sunLonDeg(d.a), sp = (sunLonDeg(d.b) - l0 + 360) % 360, r0 = relQ(l0), r1 = relQ((l0 + sp) % 360), h = "", k,
-      rate = (sunLonDeg(tm + 432e5) - sunLonDeg(tm - 432e5) + 360) % 360, nq = (Q.q + 1) % 4, left = 90 - Q.a, hr = 24 / rate;
+      rate = (sunLonDeg(tm + 432e5) - sunLonDeg(tm - 432e5) + 360) % 360, nq = (Q.q + 1) % 4, left = 90 - Q.a,
+      mins = Math.round(24 * 60 / rate);   // 1° orbity w minutach (zaokrąglone całe minuty, żeby nie wyszło „24 h 60 min”)
     for (k = Math.floor(l0) + 1; k <= Math.floor(l0 + sp); k++) {
       var kk = k % 360;
       h += '<div>' + t("calDegCross").replace("{d}", kk % 90) + (kk % 90 ? '' : ' (' + part("lpN", sIdx(kk / 90)) + ')') + ': ' +
-        whenTxt(crossAt(kk, d.a + (k - l0) / 0.9856 * 864e5)) + '</div>'
+        whenTxt(OrbitCal.cross(kk, d.a + (k - l0) / 0.9856 * 864e5)) + '</div>'
     }
     return '<h2>' + t("owDayT") + '</h2><div class="v">' + OrbitCal.dateOf(d.n).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
       '<div>' + (r1.q === r0.q ? trunc(r0.a) + '–' + trunc(r1.a) + ' ' + part("lsG", sIdx(r0.q))   // doba z granicą pór: od jednej pory do drugiej
         : trunc(r0.a) + ' ' + part("lsG", sIdx(r0.q)) + ' → ' + trunc(r1.a) + ' ' + part("lsG", sIdx(r1.q))) + '</div>' +
       (h || '<div>' + t("owNoCross") + '</div>') +
-      '<div>' + t("owRate").replace("{r}", num(rate, 3)).replace("{h}", Math.floor(hr)).replace("{m}", Math.round(hr % 1 * 60)) + '</div>' +
+      '<div>' + t("owRate").replace("{r}", num(rate, 3)).replace("{h}", Math.floor(mins / 60)).replace("{m}", mins % 60) + '</div>' +
       '<div>' + t("owNext").replace("{p}", part("lpN", sIdx(nq))).replace("{a}", trunc(left)).replace("{d}", num(left / rate, 1)) + '</div>'
   }
 
@@ -155,7 +155,7 @@
       if (!drag) return;
       if (drag.g.classList.contains("owheel")) return toAngle(e);
       var dd = (e.clientX - drag.x) / drag.g.getBoundingClientRect().width * 4; drag.x = e.clientX;
-      if (dd) go(crossAt(sunLonDeg(tm) - dd, tm - dd / 0.9856 * 864e5), false)
+      if (dd) go(OrbitCal.cross(sunLonDeg(tm) - dd, tm - dd / 0.9856 * 864e5), false)
     });
     var up = function () { if (drag) { drag.g.classList.remove("drag"); drag = null } };
     yv.addEventListener("pointerup", up); yv.addEventListener("pointercancel", up)
@@ -164,7 +164,7 @@
     var rc = drag.g.getBoundingClientRect(), x = (e.clientX - rc.left) / rc.width * 520 - 260, y = (e.clientY - rc.top) / rc.height * 444 - 222;
     if (x * x + y * y < 1600) return;   // przy samym środku kąt skacze
     var a = (Math.atan2(-y, -x) / R - rot() + 720) % 360;
-    go(crossAt(a, tm + normDeg(a - sunLonDeg(tm)) / 0.9856 * 864e5), false)
+    go(OrbitCal.cross(a, tm + normDeg(a - sunLonDeg(tm)) / 0.9856 * 864e5), false)
   }
   setInterval(function () { if (live && $("owBox") && !$("yearView").hidden) go(Date.now(), true) }, 5000);
 

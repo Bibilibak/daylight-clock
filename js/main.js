@@ -373,7 +373,8 @@ function tick() {
     live = null;
     $("deg").textContent = "--°";
     showNear(null);
-    if ($("light")) $("light").textContent = "";
+    if ($("dayArc")) $("dayArc").textContent = "";
+    if ($("light")) $("light").textContent = "--°";
     setMsg("noSun");
     return
   }
@@ -407,7 +408,7 @@ function tick() {
     });
     if (ml !== lastML) { $("labels").innerHTML = ml; lastML = ml }
   }
-  if ($("light")) $("light").textContent = !polar && deg < sd ? t("lightDay").replace("{b}", Math.round(sd - deg)) : "";
+  if ($("light")) $("light").textContent = polar ? "—" : (deg < sd ? Math.round(sd - deg) : 0) + "°";   // kafelek: stopnie światła do zachodu (po zachodzie 0°, dzień/noc polarna bez zachodu: —)
   // wskazówka centralna: obrót o kąt Słońca na tarczy
   $("hand").setAttribute("transform", "rotate(" + (deg) + " " + cx + " " + cy + ")");
   drawSky(cyc);
@@ -435,8 +436,7 @@ function tick() {
     }
   }
   if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t("modeRise") }
-  dayHead = t("lightHead").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy (nagłówek zakładki Doba)
-  if (curView === "dial" || curView === "3d") $("lightH").textContent = dayHead;
+  if ($("dayArc")) $("dayArc").textContent = t("dialDay").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy (w środku tarczy, pod odczytem)
   $("deg").textContent = deg.toFixed(1) + "°";
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
   showNear(noSet ? null : nearParts(deg, nd, sd));
@@ -496,6 +496,7 @@ function storeSaved() { try { localStorage.setItem("swp", JSON.stringify(saved))
 function showWhere() {
   $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
   $("whereBox").classList.toggle("peek", peek);
+  if (isDay(curView)) $("lightH").textContent = placeHead();   // nagłówek Doby = oglądane miejsce
   var on = savedIdx() >= 0;
   $("starBtn").textContent = on ? "★" : "☆";
   $("starBtn").setAttribute("aria-pressed", on ? "true" : "false");
@@ -852,13 +853,14 @@ function orbitSvg(c, ms) {
 /* ===== Zakładki: Doba (tarcza / 3D), Rok, Kalendarz =====
    Każda zakładka ma własny nagłówek: tytuł i główny odczyt (Doba: stopnie światła, Rok: miejsce Ziemi na orbicie,
    Kalendarz: dzisiejsza data w kalendarzu klimatycznym). Miejsce jest wspólne i stoi u góry każdej zakładki. */
-var curView = "dial", dayView = "dial", dayHead = "";   // dayView: ostatni widok zakładki Doba
+var curView = "dial", dayView = "dial";   // dayView: ostatni widok zakładki Doba
+function placeHead() { return place || lat + "°, " + lon + "°" }   // nagłówek zakładki Doba: oglądane miejsce
 try { if (localStorage.getItem("view") === "3d") dayView = "3d" } catch (e) {}
 function isDay(v) { return v === "dial" || v === "3d" }
 function updateHead() {
   var v = curView;
   $("hTitle").textContent = v === "year" && window.OrbitWheel ? OrbitWheel.title() : t(v === "cal" ? "calHeadT" : "title");
-  $("lightH").textContent = isDay(v) ? dayHead : v === "year" && window.OrbitWheel ? OrbitWheel.head() : v === "cal" && window.Cal ? Cal.head() : ""
+  $("lightH").textContent = isDay(v) ? placeHead() : v === "year" && window.OrbitWheel ? OrbitWheel.head() : v === "cal" && window.Cal ? Cal.head() : ""
 }
 function showView(v) {
   curView = v;

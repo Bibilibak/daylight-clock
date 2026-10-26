@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Zegar słoneczny</title>
-  <link rel="stylesheet" href="css/style.css?v=72">
+  <title>Zegar światła</title>
+  <link rel="stylesheet" href="css/style.css?v=74">
 </head>
 <body>
   <div class="top">
@@ -33,7 +33,7 @@
   </div>
 
   <!-- nagłówek zakładki (tytuł i główny odczyt), ustawiany w js/main.js -->
-  <h1 id="hTitle">Zegar słoneczny</h1>
+  <h1 id="hTitle">Zegar światła</h1>
   <div class="lightH" id="lightH"></div>
   <!-- miejsce: linijka ze współrzędnymi, po kliknięciu „zmień” wyszukiwarka miast, lokalizacja i współrzędne;
        kliknięcie nazwy rozwija zapisane miejsca (☆ zapisuje bieżące, ⌂ ustawia jako Twoje), przeskok to tylko podgląd -->
@@ -99,6 +99,7 @@
     <g id="near" text-anchor="middle">
       <text id="nearV" x="170" y="140" font-size="22" font-weight="700" fill="var(--fg)"></text>
       <text id="nearL" x="170" y="154" font-size="11" fill="var(--mut)"></text>
+      <text id="dayArc" x="170" y="196" font-size="11" fill="var(--mut)"></text>   <!-- długość dnia: łuk światła na tarczy -->
     </g>
 
     <!-- oś wskazówki -->
@@ -110,7 +111,6 @@
   <div class="legend"><span class="lg sun"></span><span data-i18n="sunH">Słońce</span><span class="lg moon"></span><span data-i18n="moonH">Księżyc</span></div>
 
   <div class="reading">
-    <div class="light" id="light"></div>
     <span id="msg"></span>
   </div>
   </div>
@@ -145,11 +145,21 @@
 
 
   <div id="dialExtras">
+  <!-- wydarzenia zaraz pod tarczą -->
+  <div class="row">
+    <input id="en" data-i18n-ph="eventPh" placeholder="Np. Lekcja">
+    <input id="et" type="time" value="08:00">
+    <button id="add" data-i18n="add">Dodaj</button>
+  </div>
+
+  <div class="ev" id="evl"></div>
+
   <div class="rowh" data-i18n="sunH">Słońce</div>
   <div class="row">
     <div class="box"><b id="deg">--°</b><span id="sinceL">Kąt Słońca</span><small id="sinceD"></small></div>
     <div class="box"><b id="alt">--°</b><span data-i18n="altitude">Wysokość słońca</span></div>
     <div class="box"><b id="nd">--°</b><span data-i18n="noon">● Górowanie</span></div>
+    <div class="box"><b id="light">--°</b><span data-i18n="lightLeft">Zostało światła</span></div>
   </div>
 
   <div class="rowh" data-i18n="moonH">Księżyc</div>
@@ -165,24 +175,16 @@
     <div class="mgrid" id="mgrid"></div>
     <div class="mdet" id="mdet" aria-live="polite"></div>
   </div>
-
-  <div class="row">
-    <input id="en" data-i18n-ph="eventPh" placeholder="Np. Lekcja">
-    <input id="et" type="time" value="08:00">
-    <button id="add" data-i18n="add">Dodaj</button>
-  </div>
-
-  <div class="ev" id="evl"></div>
   </div>
 
 
-  <script src="js/I18n.js?v=72"></script>
-  <script src="js/I18n-more.js?v=72"></script>
-  <script src="js/main.js?v=72"></script>
-  <script src="js/view3d.js?v=72"></script>
-  <script src="js/year.js?v=72"></script>
-  <script src="js/orbit.js?v=72"></script>
-  <script src="js/calendar.js?v=72"></script>
-  <script src="js/orbitwheel.js?v=72"></script>
+  <script src="js/I18n.js?v=74"></script>
+  <script src="js/I18n-more.js?v=74"></script>
+  <script src="js/main.js?v=74"></script>
+  <script src="js/view3d.js?v=74"></script>
+  <script src="js/year.js?v=74"></script>
+  <script src="js/orbit.js?v=74"></script>
+  <script src="js/calendar.js?v=74"></script>
+  <script src="js/orbitwheel.js?v=74"></script>
 </body>
 </html>

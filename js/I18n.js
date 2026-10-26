@@ -3,7 +3,7 @@
    i pozycję <option value="xx"> w liście języków w index.html. */
 var I18N = {
   pl: {
-    title: "Zegar słoneczny",
+    title: "Zegar światła",
     dial: "Tarcza",
     sinceRise: "od wschodu",
     altitude: "Wysokość słońca",
@@ -163,7 +163,8 @@ var I18N = {
     moonDown: "Księżyc pod horyzontem · faza {e}°",
     modeRise: "od wschodu",
     fromNoon: "Od południa",
-    lightDay: "zostało {b}° światła",
+    lightLeft: "Zostało światła",
+    dialDay: "dzień {a}°",
     lightNight: "{a}° światła",
     noon: "● Max wysokość",
     eventPh: "Np. Lekcja",
@@ -216,7 +217,7 @@ var I18N = {
     na3: "po północy"
   },
   en: {
-    title: "Solar clock",
+    title: "Light clock",
     dial: "Dial",
     sinceRise: "since sunrise",
     altitude: "Sun altitude",
@@ -376,7 +377,8 @@ var I18N = {
     moonDown: "Moon below the horizon · phase {e}°",
     modeRise: "from sunrise",
     fromNoon: "From noon",
-    lightDay: "{b}° of light left",
+    lightLeft: "Light left",
+    dialDay: "day {a}°",
     lightNight: "{a}° of light",
     noon: "● Max altitude",
     eventPh: "E.g. Class",
@@ -429,7 +431,7 @@ var I18N = {
     na3: "after midnight"
   },
   es: {
-    title: "Reloj solar",
+    title: "Reloj de luz",
     dial: "Esfera",
     sinceRise: "desde el amanecer",
     altitude: "Altura del sol",
@@ -589,7 +591,8 @@ var I18N = {
     moonDown: "Luna bajo el horizonte · fase {e}°",
     modeRise: "desde el amanecer",
     fromNoon: "Desde el mediodía",
-    lightDay: "quedan {b}° de luz",
+    lightLeft: "Luz restante",
+    dialDay: "día {a}°",
     lightNight: "{a}° de luz",
     noon: "● Altura máx.",
     eventPh: "Ej. Clase",

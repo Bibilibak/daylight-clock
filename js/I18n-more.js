@@ -3,7 +3,7 @@
    Żeby dodać język: dopisz blok tutaj i pozycję <option> w liście języków w index.html.
    Arabski pisze się od prawej do lewej: setLang() ustawia wtedy dir="rtl". */
 I18N.de = {
-  title: "Sonnenuhr",
+  title: "Lichtuhr",
   dial: "Zifferblatt",
   sinceRise: "seit Sonnenaufgang",
   altitude: "Sonnenhöhe",
@@ -152,7 +152,8 @@ I18N.de = {
   moonStripAria: "Mondmonat: 29,5 Tage von Neumond zu Neumond",
   moonUp: "Mond über dem Horizont · Phase {e}°",
   modeRise: "ab Sonnenaufgang",
-  lightDay: "noch {b}° Licht",
+  lightLeft: "Licht übrig",
+  dialDay: "Tag {a}°",
   noon: "● Max. Höhe",
   eventPh: "Z. B. Unterricht",
   add: "Hinzufügen",
@@ -198,7 +199,7 @@ I18N.de = {
 };
 
 I18N.fr = {
-  title: "Cadran solaire",
+  title: "Horloge de lumière",
   dial: "Cadran",
   sinceRise: "depuis le lever",
   altitude: "Hauteur du soleil",
@@ -347,7 +348,8 @@ I18N.fr = {
   moonStripAria: "Mois lunaire : 29,5 jours d’une nouvelle lune à la suivante",
   moonUp: "Lune au-dessus de l’horizon · phase {e}°",
   modeRise: "depuis le lever",
-  lightDay: "encore {b}° de lumière",
+  lightLeft: "Lumière restante",
+  dialDay: "jour {a}°",
   noon: "● Hauteur max.",
   eventPh: "Ex. Cours",
   add: "Ajouter",
@@ -393,7 +395,7 @@ I18N.fr = {
 };
 
 I18N.it = {
-  title: "Orologio solare",
+  title: "Orologio della luce",
   dial: "Quadrante",
   sinceRise: "dall’alba",
   altitude: "Altezza del sole",
@@ -542,7 +544,8 @@ I18N.it = {
   moonStripAria: "Mese lunare: 29,5 giorni da luna nuova a luna nuova",
   moonUp: "Luna sopra l’orizzonte · fase {e}°",
   modeRise: "dall’alba",
-  lightDay: "restano {b}° di luce",
+  lightLeft: "Luce rimasta",
+  dialDay: "giorno {a}°",
   noon: "● Altezza max",
   eventPh: "Es. Lezione",
   add: "Aggiungi",
@@ -588,7 +591,7 @@ I18N.it = {
 };
 
 I18N.pt = {
-  title: "Relógio solar",
+  title: "Relógio da luz",
   dial: "Mostrador",
   sinceRise: "desde o nascer do sol",
   altitude: "Altura do sol",
@@ -737,7 +740,8 @@ I18N.pt = {
   moonStripAria: "Mês lunar: 29,5 dias de lua nova a lua nova",
   moonUp: "Lua acima do horizonte · fase {e}°",
   modeRise: "desde o nascer do sol",
-  lightDay: "restam {b}° de luz",
+  lightLeft: "Luz restante",
+  dialDay: "dia {a}°",
   noon: "● Altura máx.",
   eventPh: "Ex. Aula",
   add: "Adicionar",
@@ -783,7 +787,7 @@ I18N.pt = {
 };
 
 I18N.uk = {
-  title: "Сонячний годинник",
+  title: "Годинник світла",
   dial: "Циферблат",
   sinceRise: "від сходу",
   altitude: "Висота сонця",
@@ -934,7 +938,8 @@ I18N.uk = {
   moonStripAria: "Місячний місяць: 29,5 доби від молодика до молодика",
   moonUp: "Місяць над горизонтом · фаза {e}°",
   modeRise: "від сходу",
-  lightDay: "залишилось {b}° світла",
+  lightLeft: "Залишилось світла",
+  dialDay: "день {a}°",
   noon: "● Макс. висота",
   eventPh: "Напр. Урок",
   add: "Додати",
@@ -980,7 +985,7 @@ I18N.uk = {
 };
 
 I18N.ar = {
-  title: "الساعة الشمسية",
+  title: "ساعة الضوء",
   dial: "الميناء",
   sinceRise: "منذ الشروق",
   altitude: "ارتفاع الشمس",
@@ -1132,7 +1137,8 @@ I18N.ar = {
   moonStripAria: "الشهر القمري: 29,5 يومًا من محاق إلى محاق",
   moonUp: "القمر فوق الأفق · الطور {e}°",
   modeRise: "من الشروق",
-  lightDay: "بقي {b}° من الضوء",
+  lightLeft: "الضوء المتبقي",
+  dialDay: "النهار {a}°",
   noon: "● أقصى ارتفاع",
   eventPh: "مثلًا: درس",
   add: "إضافة",

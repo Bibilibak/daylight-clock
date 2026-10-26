@@ -264,7 +264,6 @@
     })
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] }) }
-  function riseDeg(ms) { var c = dayCycle(new Date(ms)); return c ? degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a))) : "" }   // sam kąt z whenTxt (do tabeli)
   // dzień powrotu w kalendarzu klimatycznym (w orbitalnym kąt jest co roku ten sam, więc tabela pokazuje dni)
   function bdOName(n) {
     var o = OrbitCal.date(OrbitCal.dateOf(n));
@@ -305,8 +304,9 @@
     // chwila i doba urodzenia w miejscu urodzenia (strefa, słoneczna północ, półkula)
     var B = atPlace(bplace, function () {
       var ms = zoned(p[0], p[1] - 1, p[2], q[0], q[1]); if (isNaN(ms)) return null;
-      var o = OrbitCal.date(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), c = dayCycle(new Date(ms));   // orbitalny: pora roku według kąta w tej chwili
-      return { ms: ms, a: a, o: o, tod: riseDeg(ms), polar: !c || c.polar, color: qColor(o.season), clim: mName(o.month), orb: part("lsG", sIdx(qa)), oa: a - qa * 90 }
+      var o = OrbitCal.date(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), r = riseRel(ms);   // orbitalny: pora roku według kąta w tej chwili
+      return { ms: ms, a: a, o: o, tod: r ? degTxt(r.deg) : "", todK: r && r.key === "degToRise" ? "bdTodB" : r && r.key === "degRise" ? "bdTodR" : "bdTodP",
+        color: qColor(o.season), clim: mName(o.month), orb: part("lsG", sIdx(qa)), oa: a - qa * 90 }
     });
     if (!B) return '<p class="cnote">' + t("bdHint") + '</p>';
     var a = B.a, ob = B.o, bk = ob.month, bd = ob.day,
@@ -316,7 +316,7 @@
       var m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === bk && o.d === bd;
       if (!same0) shift++;
       rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + Y + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
-        short(OrbitCal.dateOf(n)) + '</td><td>' + riseDeg(m) + '</td></tr>'
+        short(OrbitCal.dateOf(n)) + '</td><td>' + whenTxt(m) + '</td></tr>'
     }
     // data urodzenia: dzień w kalendarzu klimatycznym, kąt w porze roku (orbitalny) i pora doby (kąt Słońca od wschodu, jak na tarczy)
     function bdCal(nm, big, sub, col) {
@@ -326,11 +326,11 @@
     function pin(p) { return '<span class="bdpin">📍 ' + esc(p.name || p.lat + "°, " + p.lon + "°") + '</span>' }
     return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + t("calOYear").replace("{y}", Yb) + ' ' + pin(bplace) + '</div>' +
       '<div class="bdcals">' + bdCal("calNmS", B.clim, t("calDay").replace("{d}", ob.day), B.color) +
-      bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.polar ? "bdTodP" : "bdTodR"), "var(--sun)") + '</div>' +
+      bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)") + '</div>' +
       '<div class="bdorb">' + t("bdOrb").replace("{a}", num(a, 2) + "°") + '</div></div>' +
       (rows ? '<div class="bdsec bdsec2"><small>' + t("bdRet") + '</small><div class="bdwhen">' + pin({ lat: lat, lon: lon, name: place }) + '</div>' +
         bdLadder(a, Yb, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Yb) + '</p>' +
-        '<div class="bdscr"><table class="ttab btab"><thead><tr><td>' + t("bdY") + '</td><td>' + t("bdAge") + '</td><td>' + t("bdODay") + '</td><td></td><td>' + t("bdWhen") +
+        '<div class="bdscr"><table class="ttab btab"><thead><tr><td>' + t("bdY") + '</td><td>' + t("bdAge") + '</td><td>' + t("bdODay") + '</td><td></td><td>' + t("bdTod") +
         '</td></tr></thead><tbody>' + rows + '</tbody></table></div></div>' : '') +
       '</div><p class="cnote">' + t("bdNote") + '</p>'
   }

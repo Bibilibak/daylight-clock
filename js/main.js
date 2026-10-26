@@ -637,15 +637,21 @@ function buildMonthScale(cyc) {
 
 /* ===== Chwile w stopniach doby =====
    Każde zdarzenie (faza Księżyca, równonoc, aphelium…) podajemy tak jak tarcza: kąt Słońca od wschodu
-   w dobie, w której wypada (w dzień / noc polarną od słonecznej północy). */
+   (w dzień / noc polarną od słonecznej północy). Wyjątek: chwila po słonecznej północy, a przed wschodem należy
+   już do nowej doby kalendarza, a tarcza liczy ją jeszcze od wczorajszego wschodu. Wtedy podajemy kąt DO wschodu
+   tej doby (np. „33° do wschodu” zamiast „327° od wschodu”). */
 // 137.4 -> "137°" (izolacja LTR jak w nearParts). Pełne stopnie (1° = 4 min): uproszczony model Księżyca
 // myli się nawet o kilka godzin, więc minuty łuku udawałyby dokładność, której nie ma.
 function degTxt(x) { return "⁦" + Math.min(359, Math.round(x)) + "°⁩" }
-// "137° 24′ od wschodu": kąt Słońca w dobie, w której wypada chwila ms
-function whenTxt(ms) {
-  var c = dayCycle(new Date(ms));
-  return c ? t(c.polar ? "degPolar" : "degRise").replace("{a}", degTxt(Math.min(359.99, 360 * (ms - c.a) / (c.b - c.a)))) : ""
+// chwila ms względem wschodu: { deg, key } (key: degRise, degToRise albo degPolar) albo null
+function riseRel(ms) {
+  var c = dayCycle(new Date(ms)); if (!c) return null;
+  var f = (ms - c.a) / (c.b - c.a);
+  if (c.polar) return { deg: Math.min(359.99, 360 * f), key: "degPolar" };
+  return sunDay(ms) > sunDay(c.a) ? { deg: 360 * (1 - f), key: "degToRise" } : { deg: Math.min(359.99, 360 * f), key: "degRise" }
 }
+// "137° od wschodu" albo "33° do wschodu": kąt Słońca w dobie, w której wypada chwila ms
+function whenTxt(ms) { var r = riseRel(ms); return r ? t(r.key).replace("{a}", degTxt(r.deg)) : "" }
 // główne fazy Księżyca (0 nów, 1 I kwadra, 2 pełnia, 3 III kwadra) w przedziale [a, b): [{ k, ms }]
 // c: cykl, z którego brać fazy (domyślnie ten, w którym leży a)
 function moonPhasesIn(a, b, c) {

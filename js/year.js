@@ -4,6 +4,8 @@
 (function () {
   var last = null;
   function $(i) { return document.getElementById(i) }
+  // dzisiejsza doba w wybranym miejscu (od słonecznej północy, jak w kalendarzu), a nie data urządzenia; month 0–11
+  function cityToday() { var u = new Date(sunDay(Date.now()) * 864e5); return { year: u.getUTCFullYear(), month: u.getUTCMonth(), day: u.getUTCDate() } }
 
   // długość dnia w godzinach (0 = noc polarna, 24 = dzień polarny)
   function dayHours(y, m, d) {
@@ -39,9 +41,9 @@
   function render() {
     var box = $("yearView"); if (!box) return;
     if (ymode === "orbit" && window.OrbitWheel) { box.innerHTML = modeSeg() + '<div id="owBox"></div>'; return OrbitWheel.render($("owBox")) }
-    var now = tzParts(Date.now()), y = now.year, a = series(y), n = a.length,   // dzisiejsza data w wybranym mieście, nie w urządzeniu
+    var now = cityToday(), y = now.year, a = series(y), n = a.length,
       lam = a.map(function (_, i) { return sunLonDeg(Date.UTC(y, 0, 1 + i, 12)) }),
-      today = Math.round((Date.UTC(y, now.month - 1, now.day) - Date.UTC(y, 0, 1)) / 864e5),
+      today = Math.round((Date.UTC(y, now.month, now.day) - Date.UTC(y, 0, 1)) / 864e5),
       h0 = a[today], hn = today < n - 1 ? a[today + 1] : dayHours(y + 1, 0, 1),
       rate = (hn - h0) * 15,                                           // zmiana stopni światła: jutro minus dziś (°/dobę)
       iMax = arg(a, 1), iMin = arg(a, 0), flat = a[iMax] - a[iMin] < 0.25, polar = h0 <= 0 || h0 >= 24;
@@ -179,7 +181,7 @@
   window.YearClock = { render: render, last: function () { return last } };
 
   // Po północy "dziś" na zegarze roku przesuwa się samo (jak w kalendarzu).
-  function cityDate() { var o = tzParts(Date.now()); return o.year + "-" + o.month + "-" + o.day }
+  function cityDate() { var o = cityToday(); return o.year + "-" + o.month + "-" + o.day }
   var shownDay = cityDate();
   setInterval(function () {
     var d = cityDate();

@@ -308,9 +308,10 @@
     });
     if (!B) return '<p class="cnote">' + t("bdHint") + '</p>';
     var a = B.a, ob = B.o, bk = ob.month, bd = ob.day,
-      Yb = ob.year, Yn = Math.min(Y1, OrbitCal.date(today).year + 1), rows = "", shift = 0;
+      Yb = ob.year, Yn = Math.min(Y1, OrbitCal.date(today).year + 1), rows = "", shift = 0,
+      Ys = Math.max(Yb + 1, Yn - 99);   // tabela i drabina: najwyżej 100 ostatnich lat (dawna data urodzenia liczyłaby się bardzo długo)
     // powroty na kąt urodzin: tam, gdzie jesteś (miasto wybrane na dole strony)
-    for (var Y = Yb + 1; Y <= Yn; Y++) {
+    for (var Y = Ys; Y <= Yn; Y++) {
       var m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === bk && o.d === bd;
       if (!same0) shift++;
       rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + Y + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
@@ -327,7 +328,7 @@
       bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)") + '</div>' +
       '<div class="bdorb">' + t("bdOrb").replace("{a}", num(a, 2) + "°") + '</div></div>' +
       (rows ? '<div class="bdsec bdsec2"><small>' + t("bdRet") + '</small><div class="bdwhen">' + pin({ lat: lat, lon: lon, name: place }) + '</div>' +
-        bdLadder(a, Yb, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Yb) + '</p>' +
+        bdLadder(a, Ys, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Ys + 1) + '</p>' +
         '<div class="bdscr"><table class="ttab btab"><thead><tr><td>' + t("bdY") + '</td><td>' + t("bdAge") + '</td><td>' + t("bdODay") + '</td><td></td><td>' + t("bdTod") +
         '</td></tr></thead><tbody>' + rows + '</tbody></table></div></div>' : '') +
       '</div><p class="cnote">' + t("bdNote") + '</p>'
@@ -338,11 +339,11 @@
      Pasy to doby tam, gdzie jesteś: jasna część dzień, ciemna noc, czarna kreska = słoneczna północ (początek doby).
      Doba, w którą wpada kąt urodzin, ma obwódkę: pomarańczową, gdy to ten sam dzień kalendarza co urodzenie, szarą, gdy inny.
      Widać, jak granice dób co rok przesuwają się względem kąta (ok. 0,24° orbity), a po roku z 366 dniami wracają. */
-  function bdLadder(a, Yb, Yn, bk, bd) {
+  function bdLadder(a, Ys, Yn, bk, bd) {   // lata Ys…Yn
     var W = 2.4, X0 = 40, X1 = 318, px = (X1 - X0) / W, xc = (X0 + X1) / 2, rh = 9, gap = 3, y0 = 4, h = "", Y;
     function X(l) { return xc + normDeg(l - a) * px }
-    for (Y = Yb + 1; Y <= Yn; Y++) {
-      var i = Y - Yb - 1, y = y0 + i * (rh + gap), m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), ok = o.k === bk && o.d === bd;
+    for (Y = Ys; Y <= Yn; Y++) {
+      var i = Y - Ys, y = y0 + i * (rh + gap), m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), ok = o.k === bk && o.d === bd;
       h += '<text class="ylb" x="' + (X0 - 4) + '" y="' + (y + rh - 1) + '" text-anchor="end" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + Y + '</text>' +
         '<text class="ylb" x="' + (X1 + 4) + '" y="' + (y + rh - 1) + '" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + short(OrbitCal.dateOf(n)) + '</text>';
       for (var k = n - 2; k <= n + 2; k++) {
@@ -358,7 +359,7 @@
           (cur ? '<rect x="' + x0.toFixed(1) + '" y="' + (y - .5) + '" width="' + (x1 - x0).toFixed(1) + '" height="' + (rh + 1) + '" fill="none" stroke="' + (ok ? "var(--sun)" : "var(--mut)") + '" stroke-width="1.5"/>' : '')
       }
     }
-    var H = y0 + (Yn - Yb) * (rh + gap);
+    var H = y0 + (Yn - Ys + 1) * (rh + gap);
     return '<svg class="bdlad" viewBox="0 0 360 ' + (H + 2) + '" role="img" aria-label="' + t("bdTitle") + '">' + h +
       '<line x1="' + xc + '" y1="0" x2="' + xc + '" y2="' + (H + 2) + '" stroke="' + BDC + '" stroke-width="2"/></svg>'
   }

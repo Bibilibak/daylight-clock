@@ -7,8 +7,8 @@
 <style>
   :root {
     --bg: #fff7ea; --fg: #2b2118; --mut: #8a7863; --card: #ffeed2; --arc: #f3dfb8;
-    --sun: #f08a00; --on-sun: #4f2c00; --night: #2f2a5a; --day: #ffd98a; --moon: #8ea3c2;
-    --v3a: #c86f00; --v3b: #185fa5; --bad: #b3261e;
+    --sun: #f08a00; --on-sun: #4f2c00; --night: #2f2a5a; --day: #ffd36a; --moon: #8ea3c2;
+    --v3a: #c86f00; --v3b: #185fa5; --bad: #b3261e; --chase: #cfdcf0;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #1d1712; color: var(--fg);
@@ -24,13 +24,13 @@
   .lead { font-size: 30px; line-height: 1.35; color: var(--fg); }
   .mut { color: var(--mut); }
   .small { font-size: 18px; color: var(--mut); }
-  .big { font-size: 96px; font-weight: 800; line-height: 1; color: var(--sun); }
   .row { display: flex; gap: 40px; align-items: center; flex: 1; min-height: 0; }
   .col { flex: 1; min-width: 0; }
   .card { background: var(--card); border-radius: 22px; padding: 22px 26px; }
+  .card p { font-size: 22px; }
   .pair { display: flex; gap: 28px; }
   .pair .card { flex: 1; }
-  .card h3 { font-size: 22px; margin: 0 0 6px; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; }
+  .card h3 { font-size: 20px; margin: 0 0 6px; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; }
   .card .v { font-size: 46px; font-weight: 800; line-height: 1.1; }
   .card .v small { font-size: 22px; font-weight: 600; color: var(--mut); }
   table { border-collapse: collapse; font-size: 24px; }
@@ -45,7 +45,51 @@
   .tag { display: inline-block; font-size: 16px; font-weight: 700; padding: 4px 12px; border-radius: 999px; background: var(--arc); color: var(--on-sun); margin-left: 10px; vertical-align: middle; }
   svg text { font-family: inherit; }
   .bad { color: var(--bad); font-weight: 700; }
+  .ex { font-size: 15px; color: var(--mut); font-style: italic; }
   iframe { border: 0; border-radius: 18px; background: #fff; width: 100%; height: 100%; }
+  .printonly { display: none; }
+  /* kroki instrukcji: numer w kółku */
+  .st { display: flex; gap: 14px; align-items: flex-start; margin: 0 0 14px; font-size: 24px; line-height: 1.38; }
+  .st b.n { flex: 0 0 34px; height: 34px; border-radius: 50%; background: var(--night); color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  /* makieta ekranu aplikacji */
+  .mock { background: #fff; border: 2px solid var(--arc); border-radius: 24px; padding: 20px 24px; font-size: 20px; box-shadow: 0 10px 30px rgba(43,33,24,.08); }
+  .mbtn { display: inline-block; padding: 7px 16px; border-radius: 999px; background: var(--card); font-weight: 700; margin: 0 6px 6px 0; font-size: 19px; }
+  .mbtn.on { background: var(--sun); color: var(--on-sun); }
+  .mlink { color: var(--sun); font-weight: 700; text-decoration: underline; }
+  .mfield { display: inline-block; border: 2px solid var(--arc); border-radius: 12px; padding: 6px 12px; color: var(--mut); min-width: 90px; margin: 0 6px 6px 0; }
+  .call { display: inline-flex; width: 26px; height: 26px; border-radius: 50%; background: var(--night); color: #fff; font-size: 14px; font-weight: 800; align-items: center; justify-content: center; vertical-align: middle; margin: 0 4px; }
+  /* kafelki jak pod tarczą */
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .tile { background: var(--card); border-radius: 18px; padding: 16px 20px; }
+  .tile b { display: block; font-size: 40px; line-height: 1.1; }
+  .tile span { font-size: 19px; color: var(--mut); }
+  /* siatka dni kalendarza i miesiąca księżycowego */
+  .g10 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+  .gc { background: var(--card); border-radius: 10px; text-align: center; padding: 4px 0 6px; font-size: 21px; font-weight: 700; }
+  .gc small { display: block; font-size: 12px; color: var(--mut); font-weight: 400; }
+  .gc.today { outline: 3px solid var(--sun); outline-offset: -3px; }
+  .gc.past { opacity: .5; }
+  .mrow { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .mrow > span { flex: 0 0 96px; font-size: 16px; color: var(--mut); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .mcells { flex: 1; display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
+  .mc { background: var(--card); border-radius: 8px; text-align: center; font-size: 15px; font-weight: 700; padding: 3px 0; height: 50px; position: relative; }
+  .mc svg { width: 20px; height: 20px; display: block; margin: 2px auto 0; }
+  .mc.past { opacity: .5; }
+  .mc.today { outline: 3px solid var(--sun); outline-offset: -3px; }
+  .mc.chase { background: var(--chase); }
+  .mc.orb { background: linear-gradient(90deg, var(--card) 48%, var(--chase) 48%); }
+  .mc i { display: block; font-style: normal; font-size: 16px; color: #3b6db0; }
+  .sw { display: inline-block; width: 46px; height: 22px; border-radius: 6px; vertical-align: middle; margin-right: 12px; }
+  .sws p { font-size: 21px; margin: 0 0 9px; }
+  .seas { display: grid; grid-template-columns: 150px repeat(3, 1fr); gap: 8px 10px; font-size: 21px; align-items: center; }
+  .seas .h { font-weight: 800; }
+  .seas .m { background: var(--card); border-radius: 12px; padding: 9px 12px; border-left: 6px solid; }
+  .seas .m small { display: block; font-size: 15px; color: var(--mut); }
+  .bdc { background: var(--card); border-radius: 18px; padding: 14px 18px; border-top: 6px solid #c8623a; }
+  .bdc small { display: block; font-size: 15px; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; }
+  .bdc b { display: block; font-size: 30px; line-height: 1.2; margin: 4px 0; }
+  .bdc span { font-size: 18px; color: var(--mut); }
+  .url { font-size: 30px; font-weight: 800; color: var(--day); letter-spacing: .01em; }
   /* pasek dolny */
   #bar { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.08); z-index: 5; }
   #bar i { display: block; height: 100%; background: var(--sun); width: 0; transition: width .25s; }
@@ -56,25 +100,39 @@
     padding: 16px 24px 44px; font-size: 18px; line-height: 1.5; z-index: 4; display: none; }
   #notes.on { display: block; }
   #notes b { color: var(--day); }
+  /* PDF: przycisk „PDF” albo Ctrl+P → „Zapisz jako PDF”. Każdy slajd na osobnej stronie 16:9. */
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html, body { height: auto; overflow: visible; background: #fff; }
+    #stage { position: static; width: 1280px; height: auto; transform: none !important; }
+    section { display: flex !important; flex-direction: column; position: relative; inset: auto; width: 1280px; height: 720px;
+      break-after: page; page-break-after: always; }
+    section:last-child { break-after: auto; page-break-after: auto; }
+    #ui, #bar, #notes { display: none !important; }
+    iframe { display: none; }
+    .printonly { display: flex; }
+  }
 </style>
 </head>
 <body>
 <div id="stage">
 
-<!-- ===== 1 ===== -->
-<section data-notes="Zacznę od jednego zdania, które jest sercem całego projektu: czas to miejsce Słońca w przestrzeni, które się porusza. Przez następne minuty pokażę, dlaczego to zdanie jest praktyczne, a nie tylko poetyckie.">
+<!-- ===== okładka ===== -->
+<section data-notes="Zegar światła. To zegar, który nie pokazuje godzin, tylko to, gdzie jest Słońce. W tej prezentacji pokażę, co przedstawia, jak go używać krok po kroku i do czego może się przydać na co dzień.">
   <div class="row">
     <div class="col">
       <div class="kicker">Zegar światła</div>
       <h1>Czas, który widać</h1>
       <p class="lead">Czas to miejsce Słońca w przestrzeni,<br>które właśnie się porusza.</p>
-      <p class="small" style="margin-top:40px">Natan · prezentacja zegara słonecznego</p>
+      <p style="margin-top:34px"><b>Przewodnik i instrukcja obsługi</b></p>
+      <p class="small">bibilibak.github.io/daylight-clock · za darmo · telefon i komputer</p>
     </div>
-    <div style="width:430px"><svg data-dial="252,300" viewBox="-14 -14 368 368" width="430" height="430"></svg></div>
+    <div style="width:440px"><svg data-dec="-12.18" data-sun="58" data-opt="nums near day" viewBox="-14 -14 368 368" width="440" height="440"></svg></div>
   </div>
 </section>
 
-<!-- ===== 2 ===== -->
+<!-- ===== dwa pytania ===== -->
 <section data-notes="Dwa pytania. Pierwsze znacie na pamięć: która jest godzina? Drugie jest dziwniejsze: ile światła nam jeszcze zostało? Na to zwykły zegar nie odpowie. Ten zegar odpowiada na oba.">
   <div class="row" style="justify-content:center;text-align:center;flex-direction:column;gap:30px">
     <div class="quote">Która jest godzina?</div>
@@ -83,143 +141,30 @@
   </div>
 </section>
 
+<!-- ===== w skrócie ===== -->
+<section data-notes="W skrócie: zegar ma trzy zakładki. Doba pokazuje, gdzie jest Słońce dzisiaj, w stopniach od wschodu. Rok pokazuje, gdzie Ziemia jest na swojej orbicie. Kalendarz zamienia to miejsce na orbicie w daty: pory roku i miesiące. Wszystko działa w przeglądarce, na telefonie i komputerze, w dziewięciu językach, bez instalowania i bez zakładania konta.">
+  <div class="kicker">W skrócie</div>
+  <h2>Trzy zakładki, jedna idea: światło w stopniach</h2>
+  <div class="row" style="align-items:stretch;gap:20px">
+    <div class="card col"><h3>Doba</h3><div class="v">137° <small>od wschodu</small></div><p>Gdzie jest Słońce dzisiaj: tarcza, Księżyc, wydarzenia, widok 3D.</p></div>
+    <div class="card col"><h3>Rok</h3><div class="v">32,99° <small>wieczoru roku</small></div><p>Gdzie jest Ziemia na orbicie i jak zmienia się długość dnia.</p></div>
+    <div class="card col"><h3>Kalendarz</h3><div class="v">Pełna jesień <small>· dzień 4</small></div><p>Pory roku i miesiące liczone z drogi Ziemi wokół Słońca. Urodziny na orbicie.</p></div>
+  </div>
+  <p class="small" style="margin-top:16px">Działa w przeglądarce, bez instalacji i bez konta · 9 języków · dane zostają na Twoim urządzeniu.</p>
+</section>
+
 <!-- ===== CZĘŚĆ I ===== -->
-<section class="part" data-notes="Pierwsza część: niezgodności. Zegar 24-godzinny jest świetny do pociągów, ale w wielu miejscach rozmija się z tym, co widać na niebie. Pokażę pięć takich miejsc, na prawdziwych liczbach.">
+<section class="part" data-notes="Pierwsza część: co ten zegar przedstawia i dlaczego w ogóle warto patrzeć na czas inaczej.">
   <div class="row"><div class="col">
     <div class="kicker">Część I</div>
-    <h1>Gdzie zegar rozmija się<br>z niebem</h1>
-    <p class="lead" style="color:#d8cbb6">Pięć niezgodności, policzonych tym samym kodem, który napędza zegar.</p>
+    <h1>Co przedstawia<br>zegar światła</h1>
+    <p class="lead" style="color:#d8cbb6">Ruch Ziemi zamiast umownych godzin.</p>
   </div></div>
 </section>
 
-<!-- ===== 3 historia ===== -->
-<section data-notes="Skąd się wzięło 24? Egipcjanie dzielili dzień na 12 części i noc na 12, ale te godziny były nierówne: latem dzienne długie, zimą krótkie. Babilończycy liczyli w systemie sześćdziesiątkowym, stąd 60 minut i 360 stopni. Zegary mechaniczne zrobiły z godziny stały odcinek, a kolej w XIX wieku wymusiła wspólny czas i strefy. Wniosek: godzina to umowa. Bardzo dobra do rozkładów jazdy, ale nie musi pasować do światła.">
-  <div class="kicker">Skąd 24 godziny</div>
-  <h2>Godzina to umowa, nie zjawisko</h2>
-  <div class="row" style="align-items:stretch;gap:18px">
-    <div class="card col"><h3>Egipt</h3><p>12 części dnia i 12 nocy. Godziny <b>nierówne</b>: latem dłuższe za dnia.</p></div>
-    <div class="card col"><h3>Babilon</h3><p>System sześćdziesiątkowy: stąd 60 minut i <b>360°</b> w kole.</p></div>
-    <div class="card col"><h3>Zegar mechaniczny</h3><p>Godzina staje się <b>stałym odcinkiem</b>, oderwanym od Słońca.</p></div>
-    <div class="card col"><h3>Kolej, XIX w.</h3><p>Wspólny czas i <b>strefy czasowe</b>, żeby pociągi się nie zderzały.</p></div>
-  </div>
-  <p class="small" style="margin-top:18px">Każdy krok rozwiązywał prawdziwy problem. Żaden nie pytał, ile światła zostało.</p>
-</section>
-
-<!-- ===== 4 17:00 ===== -->
-<section data-notes="Godzina 17:00 w Warszawie. 21 czerwca do zachodu zostaje 60 stopni, czyli około czterech godzin, a Słońce stoi 33 stopnie nad horyzontem. 21 grudnia o tej samej godzinie jest już prawie 24 stopnie po zachodzie, Słońce jest 13 stopni pod horyzontem. Zegar pokazuje to samo, a światło jest zupełnie inne.">
-  <div class="kicker">Niezgodność 1</div>
-  <h2>Ta sama 17:00, zupełnie inne światło</h2>
-  <div class="row">
-    <div class="col card" style="text-align:center">
-      <h3>Warszawa · 21 czerwca · 17:00</h3>
-      <svg data-dial="252,192,60" viewBox="-14 -14 368 368" width="300" height="300" style="margin:6px auto"></svg>
-      <div class="v">60° <small>do zachodu</small></div><p class="mut">Słońce 33° nad horyzontem</p>
-    </div>
-    <div class="col card" style="text-align:center">
-      <h3>Warszawa · 21 grudnia · 17:00</h3>
-      <svg data-dial="116,140,0,1" viewBox="-14 -14 368 368" width="300" height="300" style="margin:6px auto"></svg>
-      <div class="v">24° <small>po zachodzie</small></div><p class="mut">Słońce 13° pod horyzontem</p>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 5 południe ===== -->
-<section data-notes="Druga niezgodność: południe nie wypada o dwunastej. W Warszawie Słońce stoi najwyżej 21 grudnia o 11:33, a 21 czerwca o 12:37, bo latem przestawiamy zegarki. Do tego dochodzi tak zwane równanie czasu: przez nachylenie osi i eliptyczną orbitę Ziemi prawdziwe południe wędruje w ciągu roku o około pół godziny, od minus 14 do plus 16 minut. Słońce nie zna dwunastej.">
-  <div class="kicker">Niezgodność 2</div>
-  <h2>„Południe” nie wypada o 12:00</h2>
-  <div class="row">
-    <div class="col">
-      <table>
-        <tr><th>Warszawa</th><th>Słońce najwyżej</th></tr>
-        <tr><td>21 grudnia</td><td><b>11:33</b></td></tr>
-        <tr><td>20 marca</td><td><b>11:44</b></td></tr>
-        <tr><td>21 czerwca (czas letni)</td><td><b>12:37</b></td></tr>
-      </table>
-    </div>
-    <div class="col card">
-      <h3>Równanie czasu</h3>
-      <div class="v">−14 … +16 <small>min</small></div>
-      <p>O tyle w ciągu roku przesuwa się prawdziwe południe względem zegara. Powód: nachylona oś i eliptyczna orbita Ziemi.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 6 Madryt ===== -->
-<section data-notes="Trzecia: Madryt i Warszawa mają ten sam czas urzędowy. Ale Madryt leży prawie 25 stopni na zachód. 21 czerwca Słońce górowało w Warszawie o 12:37, a w Madrycie dopiero o 14:16. Prawie godzina czterdzieści różnicy przy tej samej godzinie na zegarku. Dlatego Hiszpanie jedzą obiad o czternastej: według Słońca to ich południe.">
-  <div class="kicker">Niezgodność 3</div>
-  <h2>Ta sama godzina, inne Słońce</h2>
-  <div class="row">
-    <div class="col">
-      <div class="pair">
-        <div class="card"><h3>Warszawa</h3><div class="v">12:37</div><p class="mut">górowanie, 21 czerwca</p></div>
-        <div class="card"><h3>Madryt</h3><div class="v">14:16</div><p class="mut">górowanie, 21 czerwca</p></div>
-      </div>
-      <p style="margin-top:22px">Ta sama strefa czasowa, a Słońce w Madrycie jest „spóźnione” o <b>1 h 39 min</b>, bo miasto leży <b>24,7°</b> na zachód.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 7 Brześć ===== -->
-<section data-notes="Czwarta, moja ulubiona. Biała Podlaska i Brześć na Białorusi dzieli około 30 kilometrów. Słońce wstaje tam praktycznie w tej samej chwili. A jednak 21 grudnia zegar w Białej Podlaskiej pokaże wschód o 7:33, a w Brześciu o 9:31, bo Białoruś ma czas moskiewski. Dwie godziny różnicy na zegarku, zero różnicy na niebie.">
-  <div class="kicker">Niezgodność 4</div>
-  <h2>30 km, to samo Słońce, 2 godziny różnicy</h2>
-  <div class="row">
-    <div class="col">
-      <table>
-        <tr><th>21 grudnia</th><th>wschód na zegarze</th><th>zachód na zegarze</th><th>światło</th></tr>
-        <tr><td>Biała Podlaska</td><td><b>7:33</b></td><td><b>15:17</b></td><td>116°</td></tr>
-        <tr><td>Brześć (Białoruś)</td><td><b>9:31</b></td><td><b>17:14</b></td><td>116°</td></tr>
-      </table>
-      <p style="margin-top:26px">Na zegarze <span class="bad">prawie 2 godziny</span> różnicy. Na tarczy zegara światła oba miasta wyglądają <b>tak samo</b>.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 8 Chiny ===== -->
-<section data-notes="Piąta: Chiny mają jedną strefę czasową na cały kraj. W Urumczi, na zachodzie, 21 czerwca Słońce góruje o 14:10, a zachodzi prawie o 22:00. Ludzie żyją tam z przesuniętym dniem, bo zegar mówi jedno, a niebo drugie.">
-  <div class="kicker">Niezgodność 5</div>
-  <h2>Jeden czas na cały kraj</h2>
-  <div class="row">
-    <div class="col">
-      <p class="lead">Chiny: jedna strefa czasowa (czas Pekinu) na szerokość prawie 5 stref.</p>
-      <div class="pair" style="margin-top:20px">
-        <div class="card"><h3>Urumczi · 21 czerwca</h3><div class="v">14:10</div><p class="mut">Słońce najwyżej</p></div>
-        <div class="card"><h3>Urumczi · 21 czerwca</h3><div class="v">21:54</div><p class="mut">zachód Słońca</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 9 biegun ===== -->
-<section data-notes="I na koniec bieguny. W Tromsø 21 grudnia Słońce w ogóle nie wschodzi, a 21 czerwca nie zachodzi. Zwykły zegar dalej pokazuje rano, południe i wieczór, jakby nic się nie stało. Zegar światła to pokazuje: w noc polarną nie ma jasnego łuku, w dzień polarny cała tarcza jest jasna, a pod spodem jest napis Noc polarna albo Dzień polarny.">
-  <div class="kicker">Niezgodność 6 · za kołem podbiegunowym</div>
-  <h2>Kiedy Słońce nie wschodzi</h2>
-  <div class="row">
-    <div class="col card" style="text-align:center">
-      <h3>Tromsø · 21 grudnia</h3>
-      <svg data-dial="0,180,0,1" viewBox="-14 -14 368 368" width="260" height="260" style="margin:4px auto"></svg>
-      <p><b>Noc polarna</b>: zero stopni światła.<br><span class="mut">Zegar i tak mówi „11:41 — południe”.</span></p>
-    </div>
-    <div class="col card" style="text-align:center">
-      <h3>Tromsø · 21 czerwca</h3>
-      <svg data-dial="360,180" viewBox="-14 -14 368 368" width="260" height="260" style="margin:4px auto"></svg>
-      <p><b>Dzień polarny</b>: 360° światła.<br><span class="mut">Zegar i tak mówi „23:00 — noc”.</span></p>
-    </div>
-  </div>
-</section>
-
-<!-- ===== CZĘŚĆ II ===== -->
-<section class="part" data-notes="Druga część: filozofia. Skoro godziny są umową, to co jest prawdziwe? Ruch. Ziemia się obraca, a my w każdej chwili jesteśmy w jakimś miejscu tego obrotu.">
-  <div class="row"><div class="col">
-    <div class="kicker">Część II</div>
-    <h1>Czas jako miejsce<br>w przestrzeni</h1>
-    <p class="lead" style="color:#d8cbb6">Nie liczba na ekranie, tylko położenie, które się zmienia.</p>
-  </div></div>
-</section>
-
-<!-- ===== 10 obrót ===== -->
+<!-- ===== obrót ===== -->
 <section data-notes="Co naprawdę mierzy zegar? Obrót Ziemi. Planeta obraca się raz dookoła osi w ciągu doby, czyli o 360 stopni, 15 stopni na godzinę. Kiedy mówię, która jest godzina, tak naprawdę mówię, gdzie jestem na tym kole względem Słońca. Ten zegar mówi to wprost: w stopniach.">
-  <div class="kicker">Filozofia</div>
+  <div class="kicker">Idea</div>
   <h2>Zegar mierzy obrót Ziemi</h2>
   <div class="row">
     <div class="col">
@@ -235,119 +180,294 @@
   </div>
 </section>
 
-<!-- ===== 11 znaczniki ===== -->
-<section data-notes="Zabierzmy z tarczy wszystkie cyfry. Zostają cztery rzeczy, które dzieją się naprawdę: wschód, górowanie, czyli Słońce najwyżej, zachód i środek nocy. Cyfry wymyślili ludzie. Te cztery momenty dzieją się bez względu na to, czy ktoś je policzył. To są stałe punkty doby i od nich liczymy.">
-  <div class="kicker">Filozofia</div>
+<!-- ===== znaczniki ===== -->
+<section data-notes="Zabierzmy z tarczy wszystkie cyfry. Zostają cztery rzeczy, które dzieją się naprawdę: wschód, górowanie, czyli Słońce najwyżej, zachód i środek nocy. Cyfry wymyślili ludzie. Te cztery chwile dzieją się bez względu na to, czy ktoś je policzył. To są stałe punkty doby i od nich liczymy.">
+  <div class="kicker">Idea</div>
   <h2>Cztery prawdziwe punkty doby</h2>
   <div class="row">
-    <div style="width:430px"><svg data-dial="200,60,0,0,1" viewBox="-14 -14 368 368" width="430" height="430"></svg></div>
+    <div style="width:440px"><svg data-dec="-12.18" data-sun="40" data-opt="words" viewBox="-14 -14 368 368" width="440" height="440"></svg></div>
     <div class="col">
-      <p><b>Wschód</b>: Słońce dotyka horyzontu.</p>
+      <p><b>Wschód</b>: Słońce dotyka horyzontu. Od niego tarcza liczy stopnie (0°).</p>
       <p><b>Górowanie</b> ●: Słońce najwyżej, prawdziwe południe.</p>
       <p><b>Zachód</b> ○: Słońce znika.</p>
-      <p><b>Środek nocy</b>: dokładnie naprzeciw górowania.</p>
+      <p><b>Środek nocy</b>: w połowie drogi od zachodu do wschodu.</p>
       <p class="mut" style="margin-top:18px">Cyfry wymyślili ludzie. Te cztery chwile dzieją się same.</p>
     </div>
   </div>
 </section>
 
-<!-- ===== CZĘŚĆ III ===== -->
-<section class="part" data-notes="Trzecia część: jak działa zegar. Przejdę przez tarczę, sposób odczytu, pory roku, Księżyc, zegar roku i na koniec zegar 3D.">
-  <div class="row"><div class="col">
-    <div class="kicker">Część III</div>
-    <h1>Jak działa zegar</h1>
-    <p class="lead" style="color:#d8cbb6">Tarcza · odczyt · pory roku · Księżyc · rok · 3D</p>
-  </div></div>
+<!-- ===== historia ===== -->
+<section data-notes="Skąd się wzięło 24? Egipcjanie dzielili dzień na 12 części i noc na 12, ale te godziny były nierówne: latem dzienne długie, zimą krótkie. Babilończycy liczyli w systemie sześćdziesiątkowym, stąd 60 minut i 360 stopni. Zegary mechaniczne zrobiły z godziny stały odcinek, a kolej w XIX wieku wymusiła wspólny czas i strefy. Wniosek: godzina to umowa. Bardzo dobra do rozkładów jazdy, ale nie musi pasować do światła.">
+  <div class="kicker">Skąd 24 godziny</div>
+  <h2>Godzina to umowa, nie zjawisko</h2>
+  <div class="row" style="align-items:stretch;gap:18px">
+    <div class="card col"><h3>Egipt</h3><p>12 części dnia i 12 nocy. Godziny <b>nierówne</b>: latem dłuższe za dnia.</p></div>
+    <div class="card col"><h3>Babilon</h3><p>System sześćdziesiątkowy: stąd 60 minut i <b>360°</b> w kole.</p></div>
+    <div class="card col"><h3>Zegar mechaniczny</h3><p>Godzina staje się <b>stałym odcinkiem</b>, oderwanym od Słońca.</p></div>
+    <div class="card col"><h3>Kolej, XIX w.</h3><p>Wspólny czas i <b>strefy czasowe</b>, żeby pociągi się nie zderzały.</p></div>
+  </div>
+  <p class="small" style="margin-top:18px">Każdy krok rozwiązywał prawdziwy problem. Żaden nie pytał, ile światła zostało.</p>
 </section>
 
-<!-- ===== 12 tarcza ===== -->
-<section data-notes="Tak wygląda tarcza. Cały krąg to jedna doba, od wschodu do następnego wschodu. Jasny łuk to dzień, ciemny to noc. Pomarańczowe kółko to Słońce, a wskazówka pokazuje, gdzie w dobie jesteśmy. Czarna kropka to górowanie, biała to zachód. Nad tarczą jest napis, ile stopni światła ma dzisiejszy dzień.">
-  <div class="kicker">Tarcza</div>
-  <h2>Jedna doba = jeden krąg</h2>
+<!-- ===== 17:00 ===== -->
+<section data-notes="Godzina 17:00 w Warszawie. 21 czerwca do zachodu zostaje 60 stopni, czyli około czterech godzin, a Słońce stoi 33 stopnie nad horyzontem. 21 grudnia o tej samej godzinie jest już prawie 24 stopnie po zachodzie, Słońce jest 13 stopni pod horyzontem. Zegar pokazuje to samo, a światło jest zupełnie inne. Widać to też w kolorach pierścienia.">
+  <div class="kicker">Zegar a niebo · 1</div>
+  <h2>Ta sama 17:00, zupełnie inne światło</h2>
   <div class="row">
-    <div style="width:460px"><svg data-dial="160,110,0,0,1,1" viewBox="-14 -14 368 368" width="460" height="460"></svg></div>
-    <div class="col">
-      <p><b>Jasny łuk</b>: dzień. <b>Ciemny pierścień</b>: noc.</p>
-      <p><b>Pomarańczowe Słońce</b> i wskazówka: gdzie w dobie jesteśmy.</p>
-      <p><b>●</b> górowanie, <b>○</b> zachód, mała kropka: wschód i środek nocy.</p>
-      <p><b>Cienka linia</b> po pierścieniu: ile doby już minęło.</p>
-      <p class="mut">Nad tarczą: „160° światła”, czyli długość dzisiejszego dnia.</p>
+    <div class="col card" style="text-align:center">
+      <h3>Warszawa · 21 czerwca · 17:00</h3>
+      <svg data-dec="23.44" data-sun="192" viewBox="-14 -14 368 368" width="300" height="300" style="margin:6px auto"></svg>
+      <div class="v">60° <small>do zachodu</small></div><p class="mut">Słońce 33° nad horyzontem</p>
+    </div>
+    <div class="col card" style="text-align:center">
+      <h3>Warszawa · 21 grudnia · 17:00</h3>
+      <svg data-dec="-23.44" data-sun="140" viewBox="-14 -14 368 368" width="300" height="300" style="margin:6px auto"></svg>
+      <div class="v">24° <small>po zachodzie</small></div><p class="mut">Słońce 13° pod horyzontem</p>
     </div>
   </div>
 </section>
 
-<!-- ===== 13 tryby i odczyt ===== -->
-<section data-notes="Tarczę można czytać na dwa sposoby. Od południa: górowanie zawsze jest u góry, tarcza stoi, a liczby mówią, ile stopni przed lub po południu. Od wschodu: zero to wschód i liczymy w górę. Pod tarczą jest najwygodniejszy odczyt: od najbliższego znacznika, na przykład 12 stopni 30 minut do południa. Liczby są małe, bo zawsze liczymy od najbliższego punktu. Jedna minuta łuku to cztery sekundy, więc odczyt zmienia się na oczach.">
-  <div class="kicker">Odczyt</div>
+<!-- ===== południe, Madryt, Chiny ===== -->
+<section data-notes="Kilka liczb, które pokazują, jak bardzo zegar rozmija się ze Słońcem. W Warszawie Słońce stoi najwyżej zimą o 11:33, a latem o 12:37, bo przestawiamy zegarki. Madryt ma ten sam czas co Warszawa, ale leży prawie 25 stopni na zachód, więc latem Słońce góruje tam dopiero o 14:16. Dlatego Hiszpanie jedzą obiad o czternastej. Chiny mają jedną strefę czasową na cały kraj: w Urumczi latem Słońce zachodzi prawie o 22:00.">
+  <div class="kicker">Zegar a niebo · 2</div>
+  <h2>„Południe” rzadko wypada o 12:00</h2>
+  <div class="row">
+    <div class="col">
+      <table>
+        <tr><th>Miejsce i dzień</th><th>Co robi Słońce</th><th>Zegar mówi</th></tr>
+        <tr><td>Warszawa · 21 grudnia</td><td>góruje</td><td><b>11:33</b></td></tr>
+        <tr><td>Warszawa · 21 czerwca</td><td>góruje</td><td><b>12:37</b></td></tr>
+        <tr><td>Madryt · 21 czerwca</td><td>góruje</td><td><b>14:16</b></td></tr>
+        <tr><td>Urumczi (Chiny) · 21 czerwca</td><td>zachodzi</td><td><b>21:54</b></td></tr>
+      </table>
+      <p class="small" style="margin-top:18px">Strefy czasowe, czas letni i nachylona, eliptyczna orbita Ziemi (równanie czasu, od −14 do +16 min) przesuwają zegar względem Słońca.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Brześć ===== -->
+<section data-notes="Moja ulubiona niezgodność. Biała Podlaska i Brześć na Białorusi dzieli około 30 kilometrów. Słońce wstaje tam praktycznie w tej samej chwili. A jednak 21 grudnia zegar w Białej Podlaskiej pokaże wschód o 7:33, a w Brześciu o 9:31, bo Białoruś ma czas moskiewski. Dwie godziny różnicy na zegarku, zero różnicy na niebie.">
+  <div class="kicker">Zegar a niebo · 3</div>
+  <h2>30 km, to samo Słońce, 2 godziny różnicy</h2>
+  <div class="row">
+    <div class="col">
+      <table>
+        <tr><th>21 grudnia</th><th>wschód na zegarze</th><th>zachód na zegarze</th><th>światło</th></tr>
+        <tr><td>Biała Podlaska</td><td><b>7:33</b></td><td><b>15:17</b></td><td>116°</td></tr>
+        <tr><td>Brześć (Białoruś)</td><td><b>9:31</b></td><td><b>17:14</b></td><td>116°</td></tr>
+      </table>
+      <p style="margin-top:26px">Na zegarze <span class="bad">prawie 2 godziny</span> różnicy. Na tarczy zegara światła oba miasta wyglądają <b>tak samo</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== bieguny ===== -->
+<section data-notes="I bieguny. W Tromsø 21 grudnia Słońce w ogóle nie wschodzi, a 21 czerwca nie zachodzi. Zwykły zegar dalej pokazuje rano, południe i wieczór, jakby nic się nie stało. Zegar światła to pokazuje: w noc polarną na pierścieniu nie ma dnia, najwyżej niebieski zmierzch w południe, a w dzień polarny cały pierścień jest jasny. Tarcza liczy wtedy od słonecznej północy.">
+  <div class="kicker">Zegar a niebo · 4 · za kołem podbiegunowym</div>
+  <h2>Kiedy Słońce nie wschodzi</h2>
+  <div class="row">
+    <div class="col card" style="text-align:center">
+      <h3>Tromsø · 21 grudnia</h3>
+      <svg data-lat="69.65" data-dec="-23.44" data-sun="180" viewBox="-14 -14 368 368" width="260" height="260" style="margin:4px auto"></svg>
+      <p><b>Noc polarna</b>: zero stopni światła, w południe tylko zmierzch.<br><span class="mut">Zegar i tak mówi „11:41, południe”.</span></p>
+    </div>
+    <div class="col card" style="text-align:center">
+      <h3>Tromsø · 21 czerwca</h3>
+      <svg data-lat="69.65" data-dec="23.44" data-sun="334" viewBox="-14 -14 368 368" width="260" height="260" style="margin:4px auto"></svg>
+      <p><b>Dzień polarny</b>: 360° światła.<br><span class="mut">Zegar i tak mówi „23:00, noc”.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CZĘŚĆ II ===== -->
+<section class="part" data-notes="Druga część: instrukcja obsługi. Przejdę po kolei przez to, co widać na ekranie: miejsce, zakładkę Doba, potem Rok i Kalendarz.">
+  <div class="row"><div class="col">
+    <div class="kicker">Część II</div>
+    <h1>Instrukcja obsługi</h1>
+    <p class="lead" style="color:#d8cbb6">Miejsce · Doba · Księżyc · 3D · Rok · Kalendarz</p>
+  </div></div>
+</section>
+
+<!-- ===== pierwsze kroki ===== -->
+<section data-notes="Pierwsze kroki. Otwórz stronę w przeglądarce, na telefonie albo komputerze. Na górze są trzy zakładki: Doba, Rok i Kalendarz, a w prawym rogu lista języków. Pod nimi jest nazwa miejsca i współrzędne. Zegar liczy wszystko dla tego miejsca, więc najpierw warto je ustawić. W zakładce Doba możesz przełączać się między tarczą a widokiem 3D. Na telefonie warto dodać stronę do ekranu głównego, wtedy otwiera się jak aplikacja.">
+  <div class="kicker">Pierwsze kroki</div>
+  <h2>Co widać po otwarciu strony</h2>
+  <div class="row" style="align-items:flex-start;gap:44px">
+    <div class="col">
+      <div class="mock">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><span class="call">1</span><span class="mbtn on">Doba</span><span class="mbtn">Rok</span><span class="mbtn">Kalendarz</span></div>
+          <div><span class="mbtn">Polski ▾</span><span class="call">2</span></div>
+        </div>
+        <div style="font-size:34px;font-weight:800;margin:14px 0 4px"><span class="call">3</span> Warszawa, Polska</div>
+        <div style="color:var(--mut)">📍 52.23°, 21.01° &nbsp;⌂ ☆ <span class="mlink">zmień</span> <span class="call">4</span></div>
+        <div style="margin-top:14px"><span class="call">5</span><span class="mbtn on">Tarcza</span><span class="mbtn">3D</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="st"><b class="n">1</b><span><b>Zakładki</b>: Doba, Rok, Kalendarz.</span></div>
+      <div class="st"><b class="n">2</b><span><b>Język</b>: 9 języków, wybór zostaje zapamiętany.</span></div>
+      <div class="st"><b class="n">3</b><span><b>Miejsce</b>, dla którego liczy się wszystko.</span></div>
+      <div class="st"><b class="n">4</b><span><b>Zmień</b> miejsce, zapisz je ☆ albo ustaw jako swoje ⌂.</span></div>
+      <div class="st"><b class="n">5</b><span>W zakładce Doba: <b>Tarcza</b> albo <b>3D</b>.</span></div>
+      <p class="small">Adres: bibilibak.github.io/daylight-clock. Na telefonie: „Dodaj do ekranu głównego”.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== miejsce ===== -->
+<section data-notes="Ustawianie miejsca. Kliknij zmień. Możesz wpisać nazwę miasta, użyć lokalizacji telefonu albo wpisać współrzędne. Gwiazdka zapisuje bieżące miejsce na liście. Kliknięcie nazwy miejsca rozwija tę listę, więc możesz szybko zajrzeć, jak wygląda dzień w innym mieście, na przykład u rodziny za granicą. To tylko podgląd: po odświeżeniu strona wraca do Twojego miejsca. Domek ustawia oglądane miejsce jako Twoje.">
+  <div class="kicker">Miejsce</div>
+  <h2>Ustaw miejsce, zapisz ulubione</h2>
+  <div class="row" style="align-items:flex-start;gap:44px">
+    <div class="col">
+      <div class="mock">
+        <div style="color:var(--mut);margin-bottom:12px">📍 52.23°, 21.01° &nbsp;⌂ ☆ <span class="mlink">zamknij</span></div>
+        <div class="mfield" style="width:100%">Szukaj miasta…</div>
+        <div style="margin-top:8px"><span class="mbtn">Użyj mojej lokalizacji</span></div>
+        <div><span class="mfield">Szer.</span><span class="mfield">Dł.</span><span class="mbtn">Ustaw</span></div>
+      </div>
+      <div class="mock" style="margin-top:16px">
+        <div style="font-weight:700">⌂ Warszawa, Polska</div>
+        <div style="padding:6px 0">Buenos Aires, Argentyna</div>
+        <div>Tromsø, Norwegia</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="st"><b class="n">1</b><span>Kliknij <b>zmień</b>.</span></div>
+      <div class="st"><b class="n">2</b><span>Wpisz <b>miasto</b>, użyj <b>lokalizacji</b> albo wpisz <b>współrzędne</b>.</span></div>
+      <div class="st"><b class="n">3</b><span><b>☆</b> zapisuje miejsce na liście.</span></div>
+      <div class="st"><b class="n">4</b><span>Kliknij <b>nazwę miejsca</b>: lista zapisanych miejsc do szybkiego podglądu.</span></div>
+      <div class="st"><b class="n">5</b><span><b>⌂</b> ustawia oglądane miejsce jako Twoje.</span></div>
+      <p class="small">Godziny wydarzeń i daty liczą się w strefie czasowej wybranego miasta.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== tarcza ===== -->
+<section data-notes="Zakładka Doba i jej tarcza. Cały krąg to jedna doba, od wschodu do następnego wschodu. Wschód jest po lewej, to zero stopni, i liczymy zgodnie z ruchem wskazówek. Pomarańczowe kółko to Słońce, a liczba w nim to kąt od wschodu. Pełna kropka to górowanie, pusta to zachód, małe kropki to wschód i środek nocy. Liczby przy znacznikach mówią, na którym stopniu wypadają. W środku tarczy jest odczyt od najbliższego znacznika i długość dnia w stopniach.">
+  <div class="kicker">Doba · tarcza</div>
+  <h2>Jedna doba = jeden krąg</h2>
+  <div class="row">
+    <div style="width:470px"><svg data-dec="-12.18" data-sun="58" data-opt="nums near day" viewBox="-14 -14 368 368" width="470" height="470"></svg></div>
+    <div class="col">
+      <p><b>0° po lewej</b>: wschód. Liczymy zgodnie z ruchem wskazówek.</p>
+      <p><b>Pomarańczowe Słońce</b> i wskazówka: gdzie w dobie jesteśmy. Liczba w kółku to kąt od wschodu.</p>
+      <p><b>●</b> górowanie, <b>○</b> zachód, małe kropki: wschód i środek nocy, z ich stopniami.</p>
+      <p><b>W środku</b>: odczyt od najbliższego znacznika i długość dnia, np. „dzień 151°”.</p>
+      <p class="ex">Przykład: Warszawa, 26 października, ok. 10:10.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== kolory pierścienia ===== -->
+<section data-notes="Kolory pierścienia. Każdy kawałek pierścienia ma kolor nieba w tej chwili doby, według wysokości Słońca. Granatowy to noc. Potem zmierzch astronomiczny i żeglarski, niebieska godzina, różowo-pomarańczowy świt albo zmierzch, złota godzina, kiedy Słońce stoi nisko, i pełny dzień. Fotograf od razu widzi, kiedy będzie złota albo niebieska godzina.">
+  <div class="kicker">Doba · kolory</div>
+  <h2>Pierścień ma kolory nieba</h2>
+  <div class="row">
+    <div style="width:440px"><svg data-dec="-12.18" data-sun="58" viewBox="-14 -14 368 368" width="440" height="440"></svg></div>
+    <div class="col sws" id="swatches"></div>
+  </div>
+</section>
+
+<!-- ===== odczyt ===== -->
+<section data-notes="Najwygodniejszy odczyt jest w środku tarczy: odległość od najbliższego znacznika doby, na przykład 12 stopni 30 minut do południa. Liczby są małe, bo zawsze liczymy od najbliższego punktu. Jedna minuta łuku to cztery sekundy, więc odczyt zmienia się na oczach.">
+  <div class="kicker">Doba · odczyt</div>
   <h2>Małe liczby, od najbliższego znacznika</h2>
   <div class="row" style="align-items:flex-start">
     <div class="col">
-      <div class="card" style="margin-bottom:18px"><h3>Pod tarczą</h3><div class="v">12° 30′ <small>do południa</small></div></div>
-      <p><b>Od południa</b>: górowanie zawsze u góry, liczymy ± od niego.</p>
-      <p><b>Od wschodu</b>: 0° = wschód, liczymy w górę do 360°.</p>
+      <div class="card" style="margin-bottom:18px"><h3>W środku tarczy</h3><div class="v">12° 30′ <small>do południa</small></div></div>
+      <p>Odczyt mówi, ile stopni dzieli Cię od <b>wschodu</b>, <b>południa</b>, <b>zachodu</b> albo <b>północy</b>, zależnie od tego, który punkt jest najbliżej.</p>
     </div>
     <div class="col">
       <table>
-        <tr><th>Przykład</th><th>Znaczy</th></tr>
+        <tr><th>Odczyt</th><th>Znaczy</th></tr>
         <tr><td>40° po wschodzie</td><td>ranek</td></tr>
         <tr><td>15° do południa</td><td>przed obiadem</td></tr>
+        <tr><td>20° do zachodu</td><td>późne popołudnie</td></tr>
         <tr><td>5° po zachodzie</td><td>zmierzch</td></tr>
-        <tr><td>1′ (minuta łuku)</td><td>4 sekundy</td></tr>
+        <tr><td>1° / 1′</td><td>4 minuty / 4 sekundy</td></tr>
       </table>
     </div>
   </div>
 </section>
 
-<!-- ===== 14 pory roku ===== -->
-<section data-notes="Na tej samej tarczy widać pory roku. W Warszawie w czerwcu jasny łuk ma 252 stopnie, ponad dwie trzecie kręgu. W równonoc połowę, 182 stopnie. W grudniu 116 stopni, mniej niż jedną trzecią. Nie muszę pamiętać, że dni się wydłużają. Widzę to w kształcie.">
-  <div class="kicker">Pory roku</div>
-  <h2>Długość dnia widać w kształcie</h2>
-  <div class="row" style="justify-content:space-around;text-align:center">
-    <div><svg data-dial="252,180" viewBox="-14 -14 368 368" width="300" height="300"></svg><div class="v" style="font-size:40px;font-weight:800">252°</div><p class="mut">21 czerwca</p></div>
-    <div><svg data-dial="182,180" viewBox="-14 -14 368 368" width="300" height="300"></svg><div class="v" style="font-size:40px;font-weight:800">182°</div><p class="mut">20 marca</p></div>
-    <div><svg data-dial="116,180" viewBox="-14 -14 368 368" width="300" height="300"></svg><div class="v" style="font-size:40px;font-weight:800">116°</div><p class="mut">21 grudnia</p></div>
+<!-- ===== kafelki ===== -->
+<section data-notes="Pod tarczą są kafelki ze Słońcem. Kąt Słońca, czyli to samo co na tarczy, dokładnie, z dziesiątą częścią stopnia. Wysokość Słońca nad horyzontem, z plusem nad i minusem pod horyzontem. Największa wysokość Słońca dzisiaj, w chwili górowania. I najważniejsze: zostało światła, czyli ile stopni zostało do zachodu.">
+  <div class="kicker">Doba · Słońce w liczbach</div>
+  <h2>Kafelki pod tarczą</h2>
+  <div class="row" style="gap:50px">
+    <div class="col">
+      <div class="tiles">
+        <div class="tile"><b>58,0°</b><span>Kąt Słońca · od wschodu</span></div>
+        <div class="tile"><b>+23,9°</b><span>Wysokość słońca</span></div>
+        <div class="tile"><b>25,6°</b><span>● Max wysokość</span></div>
+        <div class="tile"><b>93°</b><span>Zostało światła</span></div>
+      </div>
+      <p class="ex" style="margin-top:12px">Przykład: Warszawa, 26 października, ok. 10:10.</p>
+    </div>
+    <div class="col">
+      <p><b>Kąt Słońca</b>: to samo co na tarczy, z dokładnością do 0,1°.</p>
+      <p><b>Wysokość</b>: + nad horyzontem, − pod nim.</p>
+      <p><b>Max wysokość</b>: jak wysoko Słońce stanie dziś w południe.</p>
+      <p><b>Zostało światła</b>: stopnie do zachodu. 93° to ok. 6 godzin.</p>
+    </div>
   </div>
-  <p class="small" style="text-align:center">Warszawa, stopnie światła = jasny łuk tarczy (24 h = 360°).</p>
 </section>
 
-<!-- ===== 15 Księżyc ===== -->
-<section data-notes="Na tej samej tarczy jest Księżyc. Srebrna wskazówka pokazuje, gdzie jest na niebie, w tym samym układzie co Słońce. Srebrny łuk przy krawędzi to czas, kiedy Księżyc jest nad horyzontem. Pod tarczą jest faza, procent oświetlenia i pasek miesiąca księżycowego: od nowiu do nowiu, około 29 i pół doby.">
-  <div class="kicker">Księżyc</div>
+<!-- ===== wydarzenia ===== -->
+<section data-notes="Wydarzenia. Pod tarczą wpisujesz nazwę i godzinę, na przykład lekcja o ósmej, i klikasz Dodaj. Wydarzenie pojawia się na tarczy jako numerowane kółko, a na liście widać jego kąt od wschodu. Iksem usuwasz wydarzenie. W ten sposób widać swój dzień na tle światła: ile jasnego dnia zostanie po pracy, a ile przed nią.">
+  <div class="kicker">Doba · wydarzenia</div>
+  <h2>Twój dzień na tle światła</h2>
+  <div class="row">
+    <div style="width:430px"><svg data-dec="-12.18" data-sun="58" data-ev="25,115,183" viewBox="-14 -14 368 368" width="430" height="430"></svg></div>
+    <div class="col">
+      <div class="mock" style="margin-bottom:18px">
+        <div><span class="mfield">Lekcja</span><span class="mfield">08:00</span><span class="mbtn on">Dodaj</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>1. Lekcja <i class="mut">(08:00)</i></span><span><b>25°</b> od wschodu ×</span></div>
+        <div style="display:flex;justify-content:space-between"><span>2. Obiad <i class="mut">(14:00)</i></span><span><b>115°</b> od wschodu ×</span></div>
+        <div style="display:flex;justify-content:space-between"><span>3. Spacer <i class="mut">(18:30)</i></span><span><b>183°</b> od wschodu ×</span></div>
+      </div>
+      <p>Wpisz <b>nazwę i godzinę</b>, kliknij <b>Dodaj</b>. Wydarzenie stanie na tarczy jako kółko z numerem. <b>×</b> usuwa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Księżyc ===== -->
+<section data-notes="Na tej samej tarczy jest Księżyc. Srebrna wskazówka pokazuje, gdzie jest na niebie, w tym samym układzie co Słońce. Srebrny łuk przy krawędzi pokazuje, kiedy Księżyc jest nad horyzontem: gdy jego wskazówka leży na łuku. Teraz, w pełnię przed południem, Księżyc jest po drugiej stronie Ziemi. Pod tarczą jest faza i procent oświetlenia, a ikona fazy jest obrócona tak, jak widać Księżyc z Twojej półkuli.">
+  <div class="kicker">Doba · Księżyc</div>
   <h2>Księżyc na tej samej tarczy</h2>
   <div class="row">
-    <div style="width:430px"><svg data-dial="160,110,0,0,1,0,1" viewBox="-14 -14 368 368" width="430" height="430"></svg></div>
+    <div style="width:440px"><svg data-dec="-12.18" data-sun="58" data-moon="238,180,114" viewBox="-14 -14 368 368" width="440" height="440"></svg></div>
     <div class="col">
       <p><b>Srebrna wskazówka</b>: gdzie Księżyc jest na niebie, w tym samym układzie co Słońce.</p>
-      <p><b>Srebrny łuk</b>: kiedy Księżyc jest nad horyzontem.</p>
-      <p><b>Faza i oświetlenie</b>: „Sierp przybywający · 25%”.</p>
-      <p><b>Pasek miesiąca</b>: dzień cyklu od nowiu, około 29,5 doby.</p>
+      <p><b>Srebrny łuk</b> przy krawędzi: gdy wskazówka Księżyca leży na łuku, Księżyc jest nad horyzontem. Tu, w pełnię przed południem, jest jeszcze pod horyzontem.</p>
+      <p><b>Faza i oświetlenie</b> pod tarczą, np. „Pełnia · 100% oświetlenia”. Ikona jest obrócona tak, jak widać Księżyc z Twojej półkuli.</p>
     </div>
   </div>
 </section>
 
-<!-- ===== 16 rok ===== -->
-<section data-notes="Ta sama idea działa dla roku. Położenie Słońca w roku zapisujemy w stopniach: zero to równonoc wiosenna, 90 przesilenie letnie, 180 równonoc jesienna, 270 przesilenie zimowe. Dziś, 16 października, jesteśmy na 203 stopniach. Zegar roku ma dwie wersje. Wykres: na dole kąt roku, z boku stopnie światła. Pętla: rok jako zamknięte koło. Złoty kolor znaczy, że światła przybywa, fioletowy, że ubywa.">
-  <div class="kicker">Zegar roku</div>
-  <h2>Rok też jest kątem</h2>
-  <div class="row">
-    <div class="col">
-      <div class="card" style="margin-bottom:18px"><h3>Kąt roku · 16 października</h3><div class="v">203°</div></div>
-      <p><b>0°</b> równonoc wiosenna · <b>90°</b> przesilenie letnie · <b>180°</b> równonoc jesienna · <b>270°</b> przesilenie zimowe</p>
-      <p><b>Wykres</b> albo <b>Pętla</b>: <span style="color:#e8a000;font-weight:700">złoty</span> = światła przybywa, <span style="color:#6a66b0;font-weight:700">fioletowy</span> = ubywa.</p>
-    </div>
-    <div style="width:520px"><svg id="yearchart" viewBox="0 0 360 206" width="520" height="298"></svg></div>
+<!-- ===== miesiąc księżycowy ===== -->
+<section data-notes="Miesiąc księżycowy jako siatka dni. Górny rząd: Księżyca przybywa, od nowiu do pełni. Dolny: ubywa, od pełni do następnego nowiu. Ikony faz stoją w dniach, w których fazy naprawdę wypadają. Dzisiejszy dzień ma pomarańczową ramkę, minione są przygaszone. Strzałka w kółku oznacza dzień, w którym Księżyc kończy pełne okrążenie wokół Ziemi, a niebieskie dni to czas, kiedy dogania jeszcze Słońce, które w tym czasie się przesunęło. Kliknięty dzień pokazuje kafelek ze szczegółami.">
+  <div class="kicker">Doba · miesiąc księżycowy</div>
+  <h2>Cały cykl Księżyca na jednej siatce</h2>
+  <div id="moongrid" style="margin-bottom:12px"></div>
+  <div class="row" style="align-items:flex-start;gap:30px">
+    <div class="col"><p style="font-size:22px"><b>Przybywa</b>: od nowiu do pełni. <b>Ubywa</b>: od pełni do nowiu. Ikony faz stoją w dniach, w których fazy naprawdę wypadają.</p></div>
+    <div class="col"><p style="font-size:22px"><b>↻</b> Księżyc kończy pełną orbitę. <span style="background:var(--chase);padding:0 6px;border-radius:6px">Niebieskie</span> dni: dogania Słońce do nowiu. Kliknij dzień, żeby zobaczyć szczegóły.</p></div>
   </div>
+  <p class="ex">Przykład: cykl od nowiu 10 października 2026; dziś (26 października) pełnia.</p>
 </section>
 
-<!-- ===== 17 3D co widać ===== -->
-<section data-notes="Teraz zegar 3D, krok po kroku. Stoisz w środku, na płaskim krążku, to jest horyzont. Szara pochylona linia to oś Ziemi: wskazuje biegun niebieski, a jej wysokość nad horyzontem jest równa szerokości geograficznej, w Warszawie 52 stopnie. Słońce w ciągu doby przechodzi po okręgu, który leży prostopadle do tej osi. Część okręgu nad horyzontem to dzień, część pod nim to noc. Pomarańczowy kąt to obrót Ziemi od wschodu, mierzony wokół osi: to dokładnie kąt z tarczy zegara i rośnie równo przez całą dobę. Niebieski kąt to wysokość Słońca nad horyzontem: rośnie do południa i potem spada. Żółta linia to ekliptyka, czyli roczna droga Słońca, a przerywana to orbita Księżyca.">
-  <div class="kicker">Zegar 3D · co widać</div>
+<!-- ===== 3D co widać ===== -->
+<section data-notes="Widok 3D, w zakładce Doba przycisk 3D. Stoisz w środku, na płaskim krążku, to jest horyzont. Pochylona linia to oś Ziemi: jej wysokość nad horyzontem jest równa szerokości geograficznej, w Warszawie 52 stopnie. Słońce w ciągu doby przechodzi po okręgu prostopadłym do tej osi. Część okręgu nad horyzontem to dzień, pod nim noc. Pomarańczowy kąt to obrót Ziemi od wschodu, ten sam co na tarczy. Niebieski kąt to wysokość Słońca nad horyzontem. Żółta linia to ekliptyka, roczna droga Słońca.">
+  <div class="kicker">Doba · 3D · co widać</div>
   <h2>Ty w środku, Słońce na okręgu</h2>
   <div class="row">
     <div style="width:540px"><svg id="sky3d" viewBox="0 0 380 340" width="540" height="483"></svg></div>
     <div class="col">
       <p><b>Krążek</b>: Twój horyzont, Ty w środku.</p>
-      <p><b>Oś Ziemi</b>: wskazuje biegun; jej wysokość = szerokość geograficzna (Warszawa 52°).</p>
+      <p><b>Oś Ziemi</b>: jej wysokość = szerokość geograficzna (Warszawa 52°).</p>
       <p><b>Okrąg Słońca</b>: droga w ciągu doby. Nad horyzontem dzień, pod nim noc.</p>
       <p><b style="color:var(--v3a)">Pomarańczowy kąt</b>: obrót Ziemi od wschodu, ten sam co na tarczy.</p>
       <p><b style="color:var(--v3b)">Niebieski kąt</b>: wysokość Słońca nad horyzontem.</p>
@@ -355,56 +475,173 @@
   </div>
 </section>
 
-<!-- ===== 18 3D pory roku ===== -->
-<section data-notes="Dlaczego dzień latem jest dłuższy? W 3D widać to od razu. Okrąg Słońca przesuwa się w ciągu roku w górę i w dół wzdłuż osi Ziemi. W czerwcu jest wysoko, więc większa część okręgu jest nad horyzontem: długi dzień. W równonoc horyzont przecina go dokładnie na pół. W grudniu okrąg jest nisko i nad horyzontem zostaje mały kawałek. Ten kawałek to dokładnie jasny łuk z tarczy zegara.">
-  <div class="kicker">Zegar 3D · pory roku</div>
+<!-- ===== 3D pory roku ===== -->
+<section data-notes="Dlaczego dzień latem jest dłuższy? W 3D widać to od razu. Okrąg Słońca przesuwa się w ciągu roku w górę i w dół wzdłuż osi Ziemi. W czerwcu jest wysoko, więc większa część okręgu jest nad horyzontem: długi dzień. W równonoc horyzont przecina go dokładnie na pół. W grudniu okrąg jest nisko i nad horyzontem zostaje mały kawałek. Ten kawałek to dokładnie jasna część pierścienia na tarczy.">
+  <div class="kicker">Doba · 3D · pory roku</div>
   <h2>Dlaczego latem dzień jest dłuższy</h2>
   <div class="row" style="justify-content:space-around;text-align:center">
-    <div><svg class="sky3s" data-dec="23.4" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>21 czerwca</b><br><span class="mut">większość okręgu nad horyzontem</span></p></div>
-    <div><svg class="sky3s" data-dec="0" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>Równonoc</b><br><span class="mut">dokładnie pół na pół</span></p></div>
-    <div><svg class="sky3s" data-dec="-23.4" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>21 grudnia</b><br><span class="mut">mały kawałek nad horyzontem</span></p></div>
+    <div><svg class="sky3s" data-d="23.4" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>21 czerwca</b><br><span class="mut">większość okręgu nad horyzontem</span></p></div>
+    <div><svg class="sky3s" data-d="0" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>Równonoc</b><br><span class="mut">dokładnie pół na pół</span></p></div>
+    <div><svg class="sky3s" data-d="-23.4" viewBox="20 40 340 260" width="360" height="275"></svg><p><b>21 grudnia</b><br><span class="mut">mały kawałek nad horyzontem</span></p></div>
   </div>
 </section>
 
-<!-- ===== 19 3D na żywo ===== -->
-<section data-notes="Tak się tego używa. Kliknij Wizualizacja zegara w 3D. Przeciągnij rysunek, żeby obrócić widok. Suwak obrotu przesuwa Słońce po jego okręgu, suwak szerokości przenosi cię w inne miejsce na Ziemi, a suwak deklinacji zmienia porę roku. Przyciski 21 czerwca, Równonoc i 21 grudnia ustawiają porę roku jednym kliknięciem, a Teraz wraca do prawdziwego Słońca w twoim miejscu.">
-  <div class="kicker">Zegar 3D · spróbuj</div>
+<!-- ===== 3D obsługa ===== -->
+<section data-notes="Tak się tego używa. W zakładce Doba kliknij 3D. Przeciągnij rysunek, żeby obrócić widok. Suwak obrotu przesuwa Słońce po jego okręgu, suwak szerokości przenosi cię w inne miejsce na Ziemi, a suwak deklinacji zmienia porę roku. Przyciski 21 cze, Równonoc i 21 gru ustawiają porę roku jednym kliknięciem, a Teraz wraca do prawdziwego Słońca w twoim miejscu.">
+  <div class="kicker">Doba · 3D · spróbuj</div>
   <div class="row" style="align-items:stretch;gap:30px">
-    <div class="col" style="flex:0 0 360px">
+    <div class="col" style="flex:0 0 380px">
       <h2 style="font-size:36px">Obsługa</h2>
-      <p>1. Kliknij <b>„Wizualizacja zegara w 3D”</b>.</p>
-      <p>2. <b>Przeciągnij</b> rysunek, żeby go obrócić.</p>
-      <p>3. Suwaki: <b>obrót</b> (pora dnia), <b>szerokość</b> (miejsce), <b>deklinacja</b> (pora roku).</p>
-      <p>4. <b>21 cze · Równonoc · 21 gru</b>, a <b>Teraz</b> wraca do prawdziwego Słońca.</p>
-      <p class="small">Na żywo obok: prawdziwy zegar z folderu daylight-clock.</p>
+      <div class="st"><b class="n">1</b><span>W zakładce Doba kliknij <b>3D</b>.</span></div>
+      <div class="st"><b class="n">2</b><span><b>Przeciągnij</b> rysunek, żeby go obrócić.</span></div>
+      <div class="st"><b class="n">3</b><span>Suwaki: <b>obrót</b> (pora dnia), <b>szerokość</b> (miejsce), <b>deklinacja</b> (pora roku).</span></div>
+      <div class="st"><b class="n">4</b><span><b>21 cze · Równonoc · 21 gru</b>, a <b>Teraz</b> wraca do prawdziwego Słońca.</span></div>
     </div>
-    <div class="col"><iframe src="../index.html" title="Zegar słoneczny na żywo"></iframe></div>
+    <div class="col"><iframe data-src="../index.html" title="Zegar światła na żywo"></iframe>
+      <div class="printonly card" style="height:100%;align-items:center;justify-content:center;text-align:center;flex-direction:column">
+        <p class="lead">Wypróbuj na żywo:</p><p style="font-size:34px;font-weight:800;color:var(--sun)">bibilibak.github.io/daylight-clock</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ===== CZĘŚĆ IV ===== -->
-<section class="part" data-notes="Czwarta część: do czego to służy na co dzień i czego ten zegar nie zastąpi.">
+<!-- ===== Rok: orbita ===== -->
+<section data-notes="Zakładka Rok, widok Orbita. Ta sama idea co na tarczy doby, tylko dla roku. Koło to droga Ziemi wokół Słońca. Czyta się je jak tarczę: po lewej wschód roku, czyli równonoc marcowa, u góry południe roku, czyli przesilenie letnie, po prawej zachód roku i na dole północ roku. Między nimi są cztery pory: przedpołudnie, popołudnie, wieczór i noc roku. Datą jest kąt przebyty w porze roku, na przykład 33 stopnie wieczoru roku. Przyciski przesuwają czas o godzinę albo dobę, a koło można przeciągać.">
+  <div class="kicker">Rok · orbita</div>
+  <h2>Rok też jest kołem</h2>
+  <div class="row">
+    <div style="width:500px"><svg id="wheel" viewBox="-60 -22 520 444" width="500" height="427"></svg></div>
+    <div class="col">
+      <p>Koło czyta się jak tarczę doby: <b>wschód roku</b> (równonoc marcowa, 0°) po lewej, <b>południe roku</b> (najdłuższy dzień) u góry.</p>
+      <p>Datą jest <b>kąt w porze roku</b>, np. <b id="whead">32,99° wieczoru roku</b>.</p>
+      <p>Przyciski <b>− doba · − 1 h · Teraz · + 1 h · + doba</b> przesuwają czas. Koło można też <b>przeciągać</b>.</p>
+      <p class="ex">Przykład: 26 października 2026. Na półkuli południowej koło jest obrócone, żeby najdłuższy dzień był zawsze u góry.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Rok: lupa ===== -->
+<section data-notes="Pod kołem jest lupa: cztery stopnie orbity w powiększeniu. Każdy pas to jedna doba, jasna część to dzień, ciemna to noc. Doba to mniej więcej jeden stopień orbity, ale nie zaczyna się równo na pełnym stopniu, więc przerywane linie pełnych stopni wypadają w różnych porach doby. Pod lupą jest opis doby: przez które pełne stopnie przechodzi Ziemia i o ile przesuwa się na dobę.">
+  <div class="kicker">Rok · lupa</div>
+  <h2>Doba w lupie: ok. 1° orbity</h2>
+  <svg id="zoom" viewBox="0 0 360 120" width="1136" height="379" style="margin:0 auto"></svg>
+  <p style="margin-top:10px">Każdy pas to <b>jedna doba</b> (od słonecznej północy): jasna część dzień, ciemna noc. <span style="color:var(--sun);font-weight:700">Przerywane linie</span>: pełne stopnie pory roku. <span style="color:#3b82c4;font-weight:700">Niebieska</span>: Ziemia teraz.</p>
+</section>
+
+<!-- ===== Rok: długość dnia ===== -->
+<section data-notes="Drugi widok zakładki Rok to Długość dnia. Na dole kąt roku, z boku stopnie światła, czyli długość dnia. Złoty kolor znaczy, że światła przybywa, fioletowy, że ubywa. Pod wykresem jest napis, o ile stopni dzień zmienia się do jutra i ile dni zostało do najdłuższego i najkrótszego dnia. Ten sam rok można pokazać jako pętlę.">
+  <div class="kicker">Rok · długość dnia</div>
+  <h2>Ile światła przybywa, a ile ubywa</h2>
+  <div class="row">
+    <div class="col">
+      <div class="card" style="margin-bottom:18px"><h3>Warszawa · 26 października</h3><div class="v">151° <small>światła · −1,0° na dobę</small></div></div>
+      <p><span style="color:#e8a000;font-weight:700">Złoty</span> = światła przybywa, <span style="color:#6a66b0;font-weight:700">fioletowy</span> = ubywa.</p>
+      <p>Widać też, ile dni zostało do <b>najdłuższego</b> i <b>najkrótszego</b> dnia. Do wyboru: <b>Wykres</b> albo <b>Pętla</b>.</p>
+    </div>
+    <div style="width:540px"><svg id="yearchart" viewBox="0 0 360 206" width="540" height="309"></svg></div>
+  </div>
+</section>
+
+<!-- ===== Kalendarz klimatyczny ===== -->
+<section data-notes="Zakładka Kalendarz. To kalendarz klimatyczny: rok zaczyna się w dniu równonocy marcowej, tym samym dla całej Ziemi. Każda pora roku to 90 stopni drogi Ziemi wokół Słońca, podzielone na trzy miesiące po 30 stopni: wczesna, pełna i późna pora. Na przykład wczesna wiosna, pełna wiosna, późna wiosna. Ziemia biegnie po orbicie nierówno, więc miesiące mają od 29 do 32 dni. Na półkuli południowej pory roku są odwrócone. Doba zaczyna się o słonecznej północy, więc daty prawie zawsze zgadzają się ze zwykłym kalendarzem.">
+  <div class="kicker">Kalendarz</div>
+  <h2>Miesiące z drogi Ziemi wokół Słońca</h2>
+  <div id="seasons" class="seas"></div>
+  <p class="small" style="margin-top:18px">Rok zaczyna się w równonoc marcową (0°), wspólną dla całej Ziemi. Miesiąc = 30° orbity, 29–32 dni. Doba od słonecznej północy. Na półkuli południowej pory roku są odwrócone.</p>
+</section>
+
+<!-- ===== Kalendarz: widoki ===== -->
+<section data-notes="Kalendarz ma dwa widoki. Kalendarz, czyli domyślny: cały rok, dwanaście miesięcy w rzędach po dziesięć dni. Przy każdym dniu jest mała data zwykłego kalendarza. Koło: rok jako koło, które obraca się palcem albo myszą, a wybrany dzień jest zawsze u góry. Kropka oznacza równonoc albo przesilenie, romb dzień, w którym Ziemia jest najdalej albo najbliżej Słońca. Kliknięty dzień pokazuje szczegóły: światło, fazę Księżyca i zdarzenia tego dnia w stopniach doby. Kliknięcie w rok pozwala wpisać dowolny rok od 1000 do 3000.">
+  <div class="kicker">Kalendarz · widoki</div>
+  <h2>Kalendarz albo Koło</h2>
+  <div class="row" style="align-items:flex-start;gap:40px">
+    <div class="col">
+      <div class="mock">
+        <div><span class="mbtn on">Kalendarz</span><span class="mbtn">Koło</span> <span style="margin-left:20px;font-weight:700">« Rok orbity 2026 »</span></div>
+        <div style="font-weight:800;margin:12px 0 2px;border-bottom:3px solid #c8623a;display:inline-block">Pełna jesień</div>
+        <div class="small" style="margin-bottom:8px">23 paź – 21 lis</div>
+        <div id="calgrid" class="g10"></div>
+      </div>
+      <p class="ex" style="margin-top:8px">Przykład: Warszawa, 2026; dziś 26 października = Pełna jesień · dzień 4.</p>
+    </div>
+    <div class="col" style="flex:0 0 430px">
+      <p><b>Kalendarz</b>: cały rok, 12 miesięcy po 10 dni w rzędzie, z datą zwykłego kalendarza.</p>
+      <p><b>Koło</b>: rok jako koło, które obracasz palcem.</p>
+      <p><b>●</b> równonoc / przesilenie, <b>◆</b> Ziemia najdalej / najbliżej Słońca.</p>
+      <p>Kliknięty dzień: <b>światło</b>, <b>Księżyc</b> i zdarzenia w stopniach doby, np. „Równonoc: 299° od wschodu”.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== urodziny ===== -->
+<section data-notes="Urodziny na orbicie, na dole zakładki Kalendarz. Wpisujesz datę, godzinę i miejsce urodzenia. Strona pokazuje trzy rzeczy: dzień w kalendarzu klimatycznym, dokładny kąt w porze roku, czyli gdzie dokładnie była Ziemia na orbicie, i porę doby w stopniach od wschodu. Potem widać, w który dzień co roku Ziemia wraca na ten sam kąt. Rok orbity trwa około 365 i ćwierć doby, więc powrót przesuwa się co roku o prawie sześć godzin i czasem wypada dzień później. To piękny pomysł na prezent: prawdziwe urodziny Ziemi i Twoje.">
+  <div class="kicker">Kalendarz · urodziny</div>
+  <h2>Urodziny na orbicie</h2>
+  <div class="row" style="align-items:flex-start;gap:40px">
+    <div class="col">
+      <div class="mock" style="margin-bottom:16px"><span class="mfield">dzień</span><span class="mfield">miesiąc</span><span class="mfield">rok</span><span class="mfield">godz.</span><span class="mfield">min</span><br><span class="mfield" style="min-width:280px">Miejsce urodzenia</span><span class="mbtn">Tu, gdzie jestem</span></div>
+      <div class="pair" style="gap:14px">
+        <div class="bdc col"><small>Klimatyczny</small><b>Pełna jesień</b><span>dzień 4</span></div>
+        <div class="bdc col"><small>Orbitalny</small><b>33,99°</b><span>wieczoru roku</span></div>
+        <div class="bdc col" style="border-top-color:var(--sun)"><small>Pora doby</small><b>137°</b><span>od wschodu Słońca</span></div>
+      </div>
+      <p class="ex" style="margin-top:8px">Przykład wyniku.</p>
+    </div>
+    <div class="col" style="flex:0 0 440px">
+      <p>Wpisz <b>datę, godzinę i miejsce</b> urodzenia.</p>
+      <p>Zobaczysz, <b>gdzie była Ziemia</b> na orbicie w chwili Twoich narodzin.</p>
+      <p>Tabela i „drabina lat” pokazują, <b>w który dzień co roku</b> Ziemia wraca na ten sam kąt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== dlaczego żaden kalendarz ===== -->
+<section data-notes="Na dole kalendarza jest jeszcze krótkie wyjaśnienie, dlaczego żaden kalendarz nie jest idealny. Kalendarz próbuje zgrać trzy niezależne ruchy: dobę, czyli obrót Ziemi, miesiąc, czyli obieg Księżyca, i rok, czyli obieg Ziemi wokół Słońca. Żaden nie mieści się w drugim całą liczbę razy. Każdy kalendarz coś zachowuje i czymś płaci. Ten kalendarz zachowuje zgodność z drogą Ziemi i porami roku.">
+  <div class="kicker">Kalendarz · dlaczego</div>
+  <h2>Trzy ruchy, które się nie zgrywają</h2>
+  <div class="row" style="align-items:stretch;gap:20px">
+    <div class="card col"><h3>Doba</h3><div class="v">1</div><p>Obrót Ziemi wokół osi.</p></div>
+    <div class="card col"><h3>Miesiąc</h3><div class="v">29,53 <small>doby</small></div><p>Od nowiu do nowiu.</p></div>
+    <div class="card col"><h3>Rok</h3><div class="v">365,2422 <small>doby</small></div><p>Obieg Ziemi wokół Słońca.</p></div>
+  </div>
+  <p style="margin-top:20px">Żaden ruch nie mieści się w drugim całą liczbę razy, więc każdy kalendarz coś zachowuje i czymś płaci. W aplikacji jest tabela: gregoriański, księżycowy, księżycowo-słoneczny i ten.</p>
+</section>
+
+<!-- ===== CZĘŚĆ III ===== -->
+<section class="part" data-notes="Trzecia część: do czego to służy na co dzień i czego ten zegar nie zastąpi.">
   <div class="row"><div class="col">
-    <div class="kicker">Część IV</div>
-    <h1>Jak tego używać</h1>
-    <p class="lead" style="color:#d8cbb6">Na co dzień, z innymi ludźmi i uczciwie o granicach.</p>
+    <div class="kicker">Część III</div>
+    <h1>Do czego się przydaje</h1>
+    <p class="lead" style="color:#d8cbb6">Na co dzień, w szkole, z innymi ludźmi i uczciwie o granicach.</p>
   </div></div>
 </section>
 
-<!-- ===== 20 użycie ===== -->
-<section data-notes="Zamiast mam jeszcze trzy godziny mówię zostało mi 45 stopni światła: w górach, na łodzi, przy zdjęciach. Wydarzenia mogę wpisać na tarczę i widzę je jako numerowane kółka na pierścieniu. Budzik w stopniach, na przykład pięć stopni po wschodzie, budzi zawsze w tej samej relacji ze światłem; to jest w planach. A jajko na miękko? Półtora stopnia, czyli sześć minut.">
+<!-- ===== na co dzień ===== -->
+<section data-notes="Na co dzień. Zamiast mam jeszcze trzy godziny mówię: zostało mi 45 stopni światła. Przydaje się w górach, na łodzi, na rowerze, przy pracy w ogrodzie. Fotograf widzi na pierścieniu, kiedy będzie złota i niebieska godzina. Wydarzenia na tarczy pokazują, ile jasnego dnia zostanie po pracy. A jajko na miękko? Półtora stopnia, czyli sześć minut.">
   <div class="kicker">Na co dzień</div>
   <h2>Planowanie wobec światła</h2>
   <div class="row" style="align-items:stretch;gap:18px">
-    <div class="card col"><h3>Ile zostało</h3><div class="v" style="font-size:38px">45° <small>światła</small></div><p>Zamiast „trzy godziny”: kawałek koła, który widać.</p></div>
-    <div class="card col"><h3>Wydarzenia</h3><div class="v" style="font-size:38px">① ② ③</div><p>Wpisane godziny pojawiają się jako kółka na pierścieniu.</p></div>
-    <div class="card col"><h3>Budzik <span class="tag">plan</span></h3><div class="v" style="font-size:38px">5° <small>po wschodzie</small></div><p>Latem wcześniej, zimą później, zawsze ze światłem.</p></div>
+    <div class="card col"><h3>Ile zostało</h3><div class="v" style="font-size:38px">45° <small>światła</small></div><p>Góry, rower, łódź, ogród: kawałek koła, który widać.</p></div>
+    <div class="card col"><h3>Fotografia</h3><div class="v" style="font-size:38px">złota godzina</div><p>Kolory pierścienia pokazują złotą i niebieską godzinę.</p></div>
+    <div class="card col"><h3>Wydarzenia</h3><div class="v" style="font-size:38px">① ② ③</div><p>Ile jasnego dnia zostanie przed pracą i po niej.</p></div>
     <div class="card col"><h3>Jajko</h3><div class="v" style="font-size:38px">1,5°</div><p>Na miękko: 6 minut. Na twardo: 2,5–3°.</p></div>
   </div>
 </section>
 
-<!-- ===== 21 umawianie ===== -->
-<section data-notes="Jak umówić się z kimś na drugim końcu świata bez stref czasowych? Ala jest w Warszawie, Bartek w El Bolsón w Argentynie. Dzieli ich 92 i pół stopnia długości geograficznej, a ta różnica jest stała. Ala mówi: spotkajmy się 30 stopni po moim południu. Bartek odejmuje ćwiartkę, 90 stopni, i jeszcze 2 i pół: u niego to 62 i pół stopnia przed południem, czyli rano. Najlepiej umawiać się względem południa i północy, bo zawsze dzieli je dokładnie 180 stopni. Docelowo aplikacja policzy to za nas.">
+<!-- ===== szkoła ===== -->
+<section data-notes="W szkole i w domu. Widok 3D tłumaczy pory roku lepiej niż rysunek w podręczniku: przesuwasz suwak i widzisz, dlaczego zimą dzień jest krótki. Siatka miesiąca księżycowego pokazuje fazy i różnicę między miesiącem synodycznym a syderycznym. Strefy czasowe i czas letni przestają być abstrakcją, kiedy porównasz Warszawę z Madrytem albo Brześciem. Zapisane miejsca pozwalają zajrzeć do rodziny za granicą albo na drugą półkulę.">
+  <div class="kicker">W szkole i w domu</div>
+  <h2>Astronomia, którą da się dotknąć</h2>
+  <div class="row" style="align-items:stretch;gap:18px">
+    <div class="card col"><h3>Pory roku</h3><p>W 3D przesuwasz suwak i <b>widzisz</b>, dlaczego zimą dzień jest krótki.</p></div>
+    <div class="card col"><h3>Księżyc</h3><p>Fazy, oświetlenie i <b>pełna orbita</b> na jednej siatce.</p></div>
+    <div class="card col"><h3>Strefy czasowe</h3><p>Porównaj miasta: ta sama godzina, inne Słońce.</p></div>
+    <div class="card col"><h3>Świat</h3><p>☆ Zapisane miejsca: rodzina za granicą, druga półkula, biegun.</p></div>
+  </div>
+</section>
+
+<!-- ===== umawianie ===== -->
+<section data-notes="Jak umówić się z kimś na drugim końcu świata bez stref czasowych? Ala jest w Warszawie, Bartek w El Bolsón w Argentynie. Dzieli ich 92 i pół stopnia długości geograficznej, a ta różnica jest stała. Ala mówi: spotkajmy się 30 stopni po moim południu. Bartek odejmuje 92 i pół: u niego to 62 i pół stopnia przed południem, czyli rano. Najlepiej umawiać się względem południa i północy, bo zawsze dzieli je dokładnie 180 stopni. Docelowo aplikacja policzy to za nas.">
   <div class="kicker">Z innymi ludźmi</div>
   <h2>Umawianie się bez stref czasowych</h2>
   <div class="row">
@@ -420,28 +657,30 @@
   </div>
 </section>
 
-<!-- ===== 22 uczciwie ===== -->
-<section data-notes="Bądźmy uczciwi. Rozkład pociągu nadal poda godzinę, bo ludzie umówili się na wspólny zegar. Zegar liczy wschód dla płaskiego horyzontu, więc w górach Słońce pokaże się później. Za kołem podbiegunowym bywają doby bez wschodu albo bez zachodu; zegar to pokazuje, ale liczy wtedy od słonecznej północy. A dokładność to około minuty. To nie jest zamiennik stref czasowych, tylko inny punkt widzenia na czas.">
+<!-- ===== uczciwie ===== -->
+<section data-notes="Bądźmy uczciwi. Rozkład pociągu nadal poda godzinę, bo ludzie umówili się na wspólny zegar. Zegar liczy wschód dla płaskiego horyzontu, więc w górach Słońce pokaże się później. Za kołem podbiegunowym bywają doby bez wschodu albo bez zachodu; zegar to pokazuje, ale liczy wtedy od słonecznej północy. Słońce jest liczone z dokładnością około minuty, a Księżyc uproszczonym wzorem, więc jego chwile podajemy w pełnych stopniach. To nie jest zamiennik stref czasowych, tylko inny punkt widzenia na czas.">
   <div class="kicker">Uczciwie</div>
   <h2>Czego ten zegar nie zastąpi</h2>
   <div class="row" style="align-items:stretch;gap:18px">
     <div class="card col"><h3>Pociągi</h3><p>Rozkłady jazdy dalej potrzebują wspólnej umowy: godzin.</p></div>
     <div class="card col"><h3>Góry</h3><p>Wschód liczony dla płaskiego horyzontu. Za górą Słońce pokaże się później.</p></div>
     <div class="card col"><h3>Bieguny</h3><p>W noc i dzień polarny tarcza liczy od słonecznej północy.</p></div>
-    <div class="card col"><h3>Dokładność</h3><p>Około minuty. Wystarczy do życia, nie do nawigacji.</p></div>
+    <div class="card col"><h3>Dokładność</h3><p>Słońce: ok. minuty. Księżyc: pełne stopnie (4 min). Do życia, nie do nawigacji.</p></div>
   </div>
 </section>
 
-<!-- ===== 23 koniec ===== -->
-<section class="part" data-notes="Chciałbym, żebyście z tej prezentacji zabrali jedno pytanie. Następnym razem, gdy zobaczycie Słońce, zapytajcie: ile stopni od wschodu? Czas nie musi być liczbą na ekranie. Czas to miejsce Słońca na niebie. Dziękuję.">
+<!-- ===== koniec ===== -->
+<section class="part" data-notes="Chciałbym, żebyście z tej prezentacji zabrali jedno pytanie. Następnym razem, gdy zobaczycie Słońce, zapytajcie: ile stopni od wschodu? A potem sprawdźcie na zegarze światła. Adres jest na slajdzie. Dziękuję.">
   <div class="row">
     <div class="col">
       <div class="kicker">Na koniec</div>
       <h1>Ile stopni<br>od wschodu?</h1>
       <p class="lead" style="color:#d8cbb6">Czas nie musi być liczbą na ekranie.<br>Czas to miejsce Słońca na niebie.</p>
-      <p style="margin-top:36px;color:#f6ead8">Dziękuję.</p>
+      <p style="margin-top:30px;color:#f6ead8">Wypróbuj:</p>
+      <div class="url">bibilibak.github.io/daylight-clock</div>
+      <p class="small" style="color:#cbbca5;margin-top:8px">Za darmo · bez instalacji · telefon i komputer · 9 języków</p>
     </div>
-    <div style="width:400px"><svg data-dial="160,60,0,0,0,0,0,1" viewBox="-14 -14 368 368" width="400" height="400"></svg></div>
+    <div style="width:400px"><svg data-dec="-12.18" data-sun="58" data-opt="dark" viewBox="-14 -14 368 368" width="400" height="400"></svg></div>
   </div>
 </section>
 
@@ -449,12 +688,9 @@
 
 <div id="notes"></div>
 <div id="bar"><i></i></div>
-<div id="ui"><span id="count"></span><button id="bNotes" title="Notatki (N)">Notatki</button><button id="bFull" title="Pełny ekran (F)">⛶</button><button id="bPrev" title="Wstecz (←)">‹</button><button id="bNext" title="Dalej (→)">›</button></div>
+<div id="ui"><span id="count"></span><button id="bNotes" title="Notatki (N)">Notatki</button><button id="bPdf" title="Zapisz wszystkie slajdy jako PDF (P)">PDF</button><button id="bFull" title="Pełny ekran (F)">⛶</button><button id="bPrev" title="Wstecz (←)">‹</button><button id="bNext" title="Dalej (→)">›</button></div>
 
 <script>
-/* ===== Rysunki: tarcza zegara (ten sam układ co na stronie: 0° = wschód po lewej, zgodnie z ruchem wskazówek) =====
-   data-dial = "światło°, położenie Słońca° od wschodu, [nieużywane], noc (1 = Słońce pod horyzontem),
-                podpisy znaczników, linia postępu, Księżyc, ciemne tło" */
 var R = Math.PI / 180, cx = 170, cy = 170, r = 140;
 function pt(t, rr) { rr = rr || r; return [cx - rr * Math.cos(t * R), cy - rr * Math.sin(t * R)] }
 function arc(a0, a1, rad) {
@@ -463,36 +699,94 @@ function arc(a0, a1, rad) {
   var p = pt(a0, rad), m = pt((a0 + a1) / 2, rad), q = pt(a1, rad), A = " A" + rad + " " + rad + " 0 0 1 ";
   return "M" + p[0].toFixed(2) + " " + p[1].toFixed(2) + A + m[0].toFixed(2) + " " + m[1].toFixed(2) + A + q[0].toFixed(2) + " " + q[1].toFixed(2)
 }
+function f1(p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) }
+
+/* Kolor nieba według wysokości Słońca (te same progi co w zegarze, js/main.js): noc, zmierzch astronomiczny i żeglarski,
+   niebieska godzina, świt / zmierzch, złota godzina, dzień */
+var SKY = [[-18, [47, 42, 90]], [-12, [62, 63, 126]], [-6, [90, 98, 168]], [-3, [154, 111, 166]], [-0.833, [224, 122, 95]],
+  [3, [245, 154, 62]], [8, [255, 191, 79]], [14, [255, 211, 106]]];
+function skyColor(h) {
+  if (h <= SKY[0][0]) return SKY[0][1];
+  for (var i = 1; i < SKY.length; i++) if (h < SKY[i][0]) {
+    var a = SKY[i - 1], b = SKY[i], x = (h - a[0]) / (b[0] - a[0]);
+    return a[1].map(function (v, j) { return Math.round(v + (b[1][j] - v) * x) })
+  }
+  return SKY[SKY.length - 1][1]
+}
+function rgb(c) { return "rgb(" + c.join(",") + ")" }
+
+// ikona fazy Księżyca (jak w zegarze): ciemna tarcza + jasna część
+function phaseGlyph(p, x, y, rr) {
+  var c = Math.cos(p * R), wax = p < 180, top = y - rr, bot = y + rr,
+    lit = "M" + x + " " + top + "A" + rr + " " + rr + " 0 0 " + (wax ? 1 : 0) + " " + x + " " + bot +
+      "A" + Math.abs(rr * c).toFixed(2) + " " + rr + " 0 0 " + (wax ? (c > 0 ? 0 : 1) : (c > 0 ? 1 : 0)) + " " + x + " " + top + "Z";
+  return '<circle cx="' + x + '" cy="' + y + '" r="' + rr + '" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="' + lit + '" fill="#e6ebf5"/>'
+}
+
+/* ===== Tarcza zegara (ten sam układ co w zegarze: 0° = wschód po lewej, zgodnie z ruchem wskazówek) =====
+   data-lat (domyślnie Warszawa 52,23°), data-dec = deklinacja Słońca (pora roku), data-sun = kąt Słońca od wschodu
+   (w dzień / noc polarną od słonecznej północy), data-moon = "kąt Księżyca na tarczy, faza, połowa łuku nad horyzontem" (łuk wokół górowania, jak w zegarze:
+   Księżyc jest nad horyzontem, gdy jego wskazówka leży na łuku),
+   data-ev = kąty wydarzeń, data-opt: nums (stopnie znaczników), words (nazwy znaczników), near (odczyt w środku),
+   day (długość dnia w środku), dark (na ciemne tło). */
+var NEAR = [["do wschodu", "po wschodzie"], ["do południa", "po południu"], ["do zachodu", "po zachodzie"], ["do północy", "po północy"]];
 function dial(svg) {
-  var a = svg.getAttribute("data-dial").split(",").map(Number), L = a[0], s = a[1], labels = a[4], prog = a[5], moon = a[6], dark = a[7];
-  var nd = L / 2, off = 90 - nd, o = "";                 // tryb "od południa": górowanie u góry
-  var fg = dark ? "#f6ead8" : "#2b2118", bg = dark ? "#2f2a5a" : "#fff7ea", mut = dark ? "#cbbca5" : "#8a7863";
-  o += '<circle cx="170" cy="170" r="140" fill="none" stroke="' + (dark ? '#5d579c' : '#2f2a5a') + '" stroke-width="14"/>';
-  if (L >= 360) o += '<circle cx="170" cy="170" r="140" fill="none" stroke="#ffd98a" stroke-width="14"/>';
-  else if (L > 0) o += '<path d="' + arc(off, L + off) + '" fill="none" stroke="#ffd98a" stroke-width="14"/>';
+  var d = svg.dataset, lat = d.lat !== undefined ? +d.lat : 52.23, dec = +d.dec, s = +d.sun, opt = " " + (d.opt || "") + " ";
+  function has(k) { return opt.indexOf(" " + k + " ") >= 0 }
+  var F = lat * R, E = dec * R, c = (Math.sin(-0.833 * R) - Math.sin(F) * Math.sin(E)) / (Math.cos(F) * Math.cos(E)),
+    polar = c > 1 ? "night" : c < -1 ? "day" : "", H0 = polar ? 180 : Math.acos(c) / R,
+    nd = H0, sd = 2 * H0, md = H0 + 180, L = polar === "day" ? 360 : polar ? 0 : 2 * H0;
+  function alt(a) { return Math.asin(Math.sin(F) * Math.sin(E) + Math.cos(F) * Math.cos(E) * Math.cos((a - H0) * R)) / R }
+  var dark = has("dark"), fg = dark ? "#f6ead8" : "#2b2118", bg = dark ? "#2f2a5a" : "#fff7ea", mut = dark ? "#cbbca5" : "#8a7863", o = "";
+  for (var a = 0; a < 360; a += 1.5)   // pierścień: kolor nieba w tej chwili doby; kawałki lekko na siebie zachodzą (bez szwów)
+    o += '<path d="' + arc(a, Math.min(360, a + 1.9)) + '" fill="none" stroke="' + rgb(skyColor(alt(a + 0.75))) + '" stroke-width="14"/>';
+  o += '<circle cx="170" cy="170" r="147.5" fill="none" stroke="' + mut + '" stroke-opacity=".35" stroke-width=".8"/><circle cx="170" cy="170" r="132.5" fill="none" stroke="' + mut + '" stroke-opacity=".35" stroke-width=".8"/>';
+  var mo = d.moon ? d.moon.split(",").map(Number) : null;
+  if (mo) o += '<path d="' + arc(nd - mo[2], nd + mo[2], 152) + '" fill="none" stroke="#aab6cc" stroke-width="4"/>';
   for (var t = 0; t < 360; t += 30) { var l = t % 90 ? 10 : 16, p = pt(t, r - 7), q = pt(t, r - 7 - l); o += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + q[0] + '" y2="' + q[1] + '" stroke="' + mut + '" stroke-width="' + (t % 90 ? 1.5 : 2) + '"/>' }
-  if (prog && s > 0) o += '<path d="' + arc(off, s + off) + '" fill="none" stroke="#f08a00" stroke-width="3" stroke-linecap="round"/>';
-  if (moon) {
-    var mA = s + off + 50; o += '<path d="' + arc(mA - 80, mA + 80, 152) + '" fill="none" stroke="#aab6cc" stroke-width="4"/>';
-    var mp = pt(mA, 22); o += '<line x1="170" y1="170" x2="' + mp[0] + '" y2="' + mp[1] + '" stroke="#8ea3c2" stroke-width="1.8" stroke-linecap="round"/>';
-    var mq = pt(mA, 140); o += '<circle cx="' + mq[0] + '" cy="' + mq[1] + '" r="8" fill="#4a5068" stroke="#8ea3c2" stroke-width="1.2"/><path d="M' + mq[0] + ' ' + (mq[1] - 8) + 'A8 8 0 0 1 ' + mq[0] + ' ' + (mq[1] + 8) + 'A4 8 0 0 0 ' + mq[0] + ' ' + (mq[1] - 8) + 'Z" fill="#e6ebf5"/>'
+  o += '<g transform="rotate(' + s + ' 170 170)"><path d="M190 170 L170 166.5 L46 170 L170 173.5 Z" fill="' + fg + '"/></g>';
+  if (mo) o += '<g transform="rotate(' + mo[0] + ' 170 170)"><line x1="170" y1="170" x2="22" y2="170" stroke="#8ea3c2" stroke-width="1.8" stroke-linecap="round"/></g>';
+  var marks = polar ? [[nd, "górowanie"], [0, "północ"]] : [[0, "wschód"], [nd, "górowanie"], [sd, "zachód"], [md, "środek nocy"]];
+  if (has("nums")) marks.forEach(function (m) { var q = pt(m[0], r - 36); o += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" fill="' + mut + '">' + Math.round(m[0]) + '°</text>' });
+  if (has("words")) marks.forEach(function (m) { var q = pt(m[0], r - 42); o += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="13" font-weight="700" fill="' + fg + '">' + m[1] + '</text>' });
+  var pn = pt(nd);
+  o += '<circle cx="' + f1(pn).replace(",", '" cy="') + '" r="5" fill="' + fg + '" stroke="' + bg + '" stroke-width="2"/>';
+  if (!polar) {
+    var ps = pt(sd), pr = pt(0), pm = pt(md);
+    o += '<circle cx="' + f1(ps).replace(",", '" cy="') + '" r="5" fill="' + bg + '" stroke="' + fg + '" stroke-width="2"/>' +
+      '<circle cx="' + f1(pr).replace(",", '" cy="') + '" r="3" fill="' + mut + '"/><circle cx="' + f1(pm).replace(",", '" cy="') + '" r="3" fill="' + mut + '"/>';
   }
-  var hp = pt(s + off, 46);
-  o += '<line x1="170" y1="170" x2="' + hp[0].toFixed(1) + '" y2="' + hp[1].toFixed(1) + '" stroke="' + fg + '" stroke-width="5" stroke-linecap="round"/>';
-  if (L > 0 && L < 360) {
-    var n = pt(nd + off), z = pt(L + off), w = pt(off), m = pt((L + 360) / 2 + off);
-    o += '<circle cx="' + w[0] + '" cy="' + w[1] + '" r="3.5" fill="' + mut + '"/><circle cx="' + m[0] + '" cy="' + m[1] + '" r="3.5" fill="' + mut + '"/>';
-    o += '<circle cx="' + n[0] + '" cy="' + n[1] + '" r="6" fill="' + fg + '" stroke="' + bg + '" stroke-width="2"/><circle cx="' + z[0] + '" cy="' + z[1] + '" r="6" fill="' + bg + '" stroke="' + fg + '" stroke-width="2"/>';
-    if (labels) [[off, "wschód"], [nd + off, "górowanie"], [L + off, "zachód"], [(L + 360) / 2 + off, "środek nocy"]].forEach(function (k) {
-      var q = pt(k[0], r - 40); o += '<text x="' + q[0].toFixed(1) + '" y="' + (q[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="13" font-weight="700" fill="' + fg + '">' + k[1] + '</text>'
-    });
+  if (d.ev) d.ev.split(",").forEach(function (e, i) {
+    var p = pt(+e, r + 32);
+    o += '<circle cx="' + f1(p).replace(",", '" cy="') + '" r="9" fill="' + fg + '"/><text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 4).toFixed(1) + '" fill="' + bg + '" font-size="11" font-weight="700" text-anchor="middle">' + (i + 1) + '</text>'
+  });
+  if (mo) { var mq = pt(mo[0], Math.abs(mo[0] - s) < 10 ? 158 : r); o += '<g transform="translate(' + f1(mq).replace(",", " ") + ')">' + phaseGlyph(mo[1], 0, 0, 8) + '</g>' }
+  var sp = pt(s);
+  o += '<circle cx="' + f1(sp).replace(",", '" cy="') + '" r="11" fill="#f08a00" stroke="' + bg + '" stroke-width="2"/>' +
+    '<text x="' + sp[0].toFixed(1) + '" y="' + (sp[1] + 3.5).toFixed(1) + '" font-size="10" font-weight="700" text-anchor="middle" fill="#2b2118">' + Math.round(s) + '</text>';
+  if (has("near") && !polar) {   // odczyt względem najbliższego znacznika, jak w zegarze
+    var m = [[0, 0], [nd, 1], [sd, 2], [md, 3], [360, 0]], best = m[0];
+    m.forEach(function (x) { if (Math.abs(s - x[0]) < Math.abs(s - best[0])) best = x });
+    var diff = s - best[0], am = Math.round(Math.abs(diff) * 60), dg = Math.floor(am / 60), mm = am % 60;
+    o += '<text x="170" y="140" font-size="22" font-weight="700" text-anchor="middle" fill="' + fg + '">' + (dg ? dg + "°" + (mm ? " " + mm + "′" : "") : mm + "′") + '</text>' +
+      '<text x="170" y="154" font-size="11" text-anchor="middle" fill="' + mut + '">' + NEAR[best[1]][diff < 0 ? 0 : 1] + '</text>'
   }
-  var sp = pt(s + off);
-  o += '<circle cx="' + sp[0].toFixed(1) + '" cy="' + sp[1].toFixed(1) + '" r="12" fill="#f08a00" stroke="' + bg + '" stroke-width="2"/>';
+  if (has("day")) o += '<text x="170" y="196" font-size="11" text-anchor="middle" fill="' + mut + '">dzień ' + Math.round(L) + '°</text>';
   o += '<circle cx="170" cy="170" r="8" fill="' + fg + '"/><circle cx="170" cy="170" r="3.5" fill="#f08a00"/>';
   svg.innerHTML = o
 }
-document.querySelectorAll("[data-dial]").forEach(dial);
+document.querySelectorAll("svg[data-dec]").forEach(dial);
+
+/* ===== Legenda kolorów pierścienia ===== */
+(function () {
+  var box = document.getElementById("swatches"), h = "";
+  [[-22, "Noc", "Słońce głębiej niż 18° pod horyzontem"], [-15, "Zmierzch astronomiczny", "−18° … −12°"], [-9, "Zmierzch żeglarski", "−12° … −6°"],
+   [-4.5, "Niebieska godzina", "−6° … −3°"], [-1.8, "Świt i zmierzch", "różowo-pomarańczowe niebo tuż przy horyzoncie"],
+   [4, "Złota godzina", "Słońce nisko nad horyzontem"], [20, "Pełny dzień", "Słońce wyżej niż ok. 14°"]].forEach(function (x) {
+    h += '<p><span class="sw" style="background:' + rgb(skyColor(x[0])) + '"></span><b>' + x[1] + '</b> <span class="mut" style="font-size:17px">· ' + x[2] + '</span></p>'
+  });
+  box.innerHTML = h + '<p class="small" style="margin-top:12px">Każdy kawałek pierścienia ma kolor nieba w tej chwili doby, według wysokości Słońca.</p>'
+})();
 
 /* ===== Ziemia znad bieguna ===== */
 (function () {
@@ -503,25 +797,88 @@ document.querySelectorAll("[data-dial]").forEach(dial);
   o += '<path d="M' + c + ' ' + (c - R0) + ' A' + R0 + ' ' + R0 + ' 0 0 1 ' + c + ' ' + (c + R0) + ' Z" fill="#ffd98a"/>';
   o += '<path d="M' + c + ' ' + (c - R0) + ' A' + R0 + ' ' + R0 + ' 0 0 0 ' + c + ' ' + (c + R0) + ' Z" fill="#2f2a5a"/>';
   o += '<circle cx="' + c + '" cy="' + c + '" r="' + R0 + '" fill="none" stroke="#8a7863" stroke-width="2"/>';
-  o += '<path d="' + 'M' + (c - 150) + ' ' + c + ' A150 150 0 0 1 ' + c + ' ' + (c - 150) + '" fill="none" stroke="#c86f00" stroke-width="3" marker-end="url(#ah)"/>';
+  // znad bieguna północnego Ziemia obraca się przeciwnie do ruchu wskazówek zegara: łuk od godziny 12 do 9
+  o += '<path d="M' + c + ' ' + (c - 150) + ' A150 150 0 0 0 ' + (c - 150) + ' ' + c + '" fill="none" stroke="#c86f00" stroke-width="3" marker-end="url(#ah)"/>';
   o += '<text x="' + (c - 140) + '" y="' + (c - 112) + '" font-size="18" font-weight="700" fill="#c86f00">obrót 15°/h</text>';
   var a = -35 * R, px = c + R0 * Math.cos(a), py = c + R0 * Math.sin(a);
   o += '<circle cx="' + px + '" cy="' + py + '" r="8" fill="#f08a00" stroke="#fff" stroke-width="2"/><text x="' + (px - 14) + '" y="' + (py - 14) + '" text-anchor="end" font-size="16" font-weight="700" fill="#2b2118">Ty</text>';
-  o += '<text x="' + c + '" y="' + (c + 6) + '" text-anchor="middle" font-size="15" fill="#fff">biegun</text>';
+  o += '<text x="' + c + '" y="' + (c + 6) + '" text-anchor="middle" font-size="15" fill="#fff">biegun N</text>';
   o += '<text x="' + (c + 60) + '" y="' + (c + R0 + 34) + '" text-anchor="middle" font-size="16" fill="#8a7863">dzień</text><text x="' + (c - 60) + '" y="' + (c + R0 + 34) + '" text-anchor="middle" font-size="16" fill="#8a7863">noc</text>';
   s.innerHTML = o
 })();
 
-/* ===== Wykres roku (ten sam wzór co w zegarze: długość dnia NOAA, Warszawa) ===== */
+/* ===== Obliczenia do rysunków roku (te same wzory co w zegarze, uproszczone) ===== */
+function gam(d) { var y = d.getUTCFullYear(), n = Math.floor((d - Date.UTC(y, 0, 0)) / 864e5), yl = (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 864e5; return 2 * Math.PI / yl * (n - 1 + (d.getUTCHours() - 12) / 24) }
+function decl(g) { return .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g) }
+// kąt roku: długość ekliptyczna Słońca (0° = równonoc marcowa)
+function sunLon(ms) { var d = ms / 864e5 - 10957.5, M = R * (357.5291 + 0.98560028 * d); return (((M + R * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M)) + R * (102.9372 + 4.70935e-5 * d - 0.0057) + Math.PI) / R) % 360 + 360) % 360 }
+var EX = Date.UTC(2026, 9, 26, 10, 0), SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"];   // przykładowa chwila: 26 października 2026, ok. 11:00 w Warszawie
+function num(x, d) { return x.toFixed(d).replace(".", ",") }
+
+/* ===== Koło orbity (zakładka Rok): 0° po lewej, 90° u góry, jak tarcza doby ===== */
+(function () {
+  var s = document.getElementById("wheel"), L = sunLon(EX), Q = Math.floor(L / 90), o = "", a, q;
+  function P(a, rr) { return [200 - rr * Math.cos(a * R), 200 - rr * Math.sin(a * R)] }
+  function ar(a0, a1, rr) { return "M" + f1(P(a0, rr)) + " A" + rr + " " + rr + " 0 " + (a1 - a0 > 180 ? 1 : 0) + " 1 " + f1(P(a1, rr)) }
+  for (q = 0; q < 4; q++) o += '<path d="' + ar(q * 90 + 0.4, q * 90 + 89.6, 160) + '" fill="none" stroke="' + SC[q] + '" stroke-width="12" stroke-opacity="' + (q === Q ? 1 : .35) + '"/>';
+  var tk = ""; for (a = 0; a < 360; a++) tk += "M" + f1(P(a, 152)) + "L" + f1(P(a, 152 - (a % 10 ? a % 5 ? 5 : 9 : 14)));
+  o += '<path d="' + tk + '" stroke="#8a7863" stroke-width=".8" fill="none"/>';
+  for (a = 10; a < 360; a += 10) if (a % 90) { var p = P(a, 129); o += '<text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" fill="#8a7863">' + a % 90 + '</text>' }
+  var names = [["Wschód", "roku"], ["Południe", "roku"], ["Zachód", "roku"], ["Północ", "roku"]], dates = ["20 mar", "21 cze", "23 wrz", "21 gru"];
+  for (q = 0; q < 4; q++) {
+    var p0 = P(q * 90, 138), p1 = P(q * 90, 167), cs = Math.round(Math.cos(q * 90 * R)), sn = Math.round(Math.sin(q * 90 * R)),
+      tx = P(q * 90, cs ? 172 : 174), anc = cs ? (cs > 0 ? "end" : "start") : "middle", ty = tx[1] + (sn > 0 ? -30 : sn < 0 ? 14 : -14),
+      ln = cs ? names[q] : [names[q].join(" ")];
+    o += '<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="#2b2118" stroke-width="1.6"/>' +
+      '<text y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-size="14" font-weight="700" fill="#2b2118">' +
+      ln.map(function (x, i) { return '<tspan x="' + tx[0].toFixed(1) + '" dy="' + (i ? 15 : 0) + '">' + x + '</tspan>' }).join("") + '</text>' +
+      '<text x="' + tx[0].toFixed(1) + '" y="' + (ty + 15 * ln.length).toFixed(1) + '" text-anchor="' + anc + '" font-size="11" fill="#8a7863">' + q * 90 + '° · ' + dates[q] + '</text>'
+  }
+  // Ziemia: wskazówka w kolorze pory roku i Ziemia na pasie pór roku
+  var sc = SC[Q], u = P(L, 1), nx = -(u[1] - 200), ny = u[0] - 200, b0 = P(L, 98), tip = P(L, 151), pe = P(L, 160),
+    w = function (p3, k) { return (p3[0] + nx * k).toFixed(1) + "," + (p3[1] + ny * k).toFixed(1) };
+  o += '<polygon points="' + w(b0, 3.2) + ' ' + f1(tip) + ' ' + w(b0, -3.2) + '" fill="' + sc + '"/>' +
+    '<circle cx="' + f1(b0).replace(",", '" cy="') + '" r="4.5" fill="#fff7ea" stroke="' + sc + '" stroke-width="2.2"/>' +
+    '<circle cx="' + f1(pe).replace(",", '" cy="') + '" r="14" fill="' + sc + '" opacity=".22"/>' +
+    '<circle cx="' + f1(pe).replace(",", '" cy="') + '" r="8" fill="#3b82c4" stroke="#fff7ea" stroke-width="2"/>';
+  function trunc(x) { return num(Math.floor(x * 100 + 1e-9) / 100, 2) }   // ucięte jak w aplikacji: 32,996° to jeszcze 32,99°
+  var head = trunc(L - Q * 90) + "° " + ["przedpołudnia", "popołudnia", "wieczoru", "nocy"][Q] + " roku";
+  o += '<text x="200" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2118">26 października 2026</text>' +
+    '<text x="200" y="212" text-anchor="middle" font-size="13" fill="#2b2118">' + head + '</text>' +
+    '<text x="200" y="230" text-anchor="middle" font-size="11" fill="#8a7863">kąt roku ' + trunc(L) + '°</text>';
+  s.innerHTML = o;
+  document.getElementById("whead").textContent = head
+})();
+
+/* ===== Lupa: 4° orbity wokół Ziemi, doby jako pasy noc / dzień / noc (Warszawa, ok. 150,5° światła) ===== */
+(function () {
+  var s = document.getElementById("zoom"), L = sunLon(EX), px = 90, z = "", k,
+    X = function (l) { var d = ((l - L + 540) % 360) - 180; return 180 + d * px }, f = (360 - 150.5) / 2 / 360;
+  for (k = -3; k <= 3; k++) {
+    var a = Date.UTC(2026, 9, 25 + k, 22, 20), b = a + 864e5, ri = a + f * 864e5, se = ri + 150.5 / 360 * 864e5, cur = k === 0, op = cur ? 1 : .55,
+      a0 = X(sunLon(a)), ar = X(sunLon(ri)), as = X(sunLon(se)), a1 = X(sunLon(b)), mx = (a0 + a1) / 2;
+    z += '<rect x="' + a0.toFixed(1) + '" y="34" width="' + (ar - a0).toFixed(1) + '" height="44" fill="#2f2a5a" opacity="' + op + '"/>' +
+      '<rect x="' + ar.toFixed(1) + '" y="34" width="' + (as - ar).toFixed(1) + '" height="44" fill="#ffd36a" opacity="' + op + '"/>' +
+      '<rect x="' + as.toFixed(1) + '" y="34" width="' + (a1 - as).toFixed(1) + '" height="44" fill="#2f2a5a" opacity="' + op + '"/>' +
+      '<line x1="' + a0.toFixed(1) + '" y1="30" x2="' + a0.toFixed(1) + '" y2="82" stroke="#2b2118"/>' +
+      (mx > 18 && mx < 342 ? '<text x="' + mx.toFixed(1) + '" y="96" text-anchor="middle" font-size="11" fill="#2b2118" font-weight="' + (cur ? 700 : 400) + '">' + (26 + k) + ' paź</text>' : '')
+  }
+  for (k = Math.ceil(L - 3); k <= L + 3; k++) {
+    var x = X(k); if (x < 0 || x > 360) continue;
+    z += '<line x1="' + x.toFixed(1) + '" y1="22" x2="' + x.toFixed(1) + '" y2="86" stroke="#f08a00" stroke-width="1.6" stroke-dasharray="3 2"/>' +
+      '<text x="' + x.toFixed(1) + '" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#2b2118">' + (k % 90) + '°</text>' +
+      '<text x="' + x.toFixed(1) + '" y="112" text-anchor="middle" font-size="9" fill="#8a7863">' + k + '° roku</text>'
+  }
+  s.innerHTML = '<rect x="0" y="0" width="360" height="120" fill="#fff7ea"/>' + z + '<path d="M180 30 l-6 -8 h12 z" fill="#3b82c4"/><line x1="180" y1="30" x2="180" y2="82" stroke="#3b82c4" stroke-width="2.5"/>'
+})();
+
+/* ===== Wykres roku (długość dnia NOAA, Warszawa) ===== */
 (function () {
   var s = document.getElementById("yearchart"), lat = 52.23, o = "", X0 = 40, X1 = 350, Y0 = 12, Y1 = 166, pts = [];
-  function gam(d) { var y = d.getUTCFullYear(), n = Math.floor((d - Date.UTC(y, 0, 0)) / 864e5), yl = (Date.UTC(y + 1, 0, 1) - Date.UTC(y, 0, 1)) / 864e5; return 2 * Math.PI / yl * (n - 1 + (d.getUTCHours() - 12) / 24) }
-  function dec(g) { return .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g) }
-  function lon(ms) { var d = ms / 864e5 - 10957.5, M = R * (357.5291 + 0.98560028 * d); return (((M + R * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M)) + R * 102.9372 + Math.PI) / R) % 360 + 360) % 360 }
   for (var i = 0; i < 365; i++) {
-    var ms = Date.UTC(2026, 0, 1 + i, 12), dc = dec(gam(new Date(ms))),
+    var ms = Date.UTC(2026, 0, 1 + i, 12), dc = decl(gam(new Date(ms))),
       c = Math.cos(90.833 * R) / (Math.cos(lat * R) * Math.cos(dc)) - Math.tan(lat * R) * Math.tan(dc);
-    pts.push([lon(ms), 2 * Math.acos(Math.max(-1, Math.min(1, c))) / R, i])
+    pts.push([sunLon(ms), 2 * Math.acos(Math.max(-1, Math.min(1, c))) / R, i])
   }
   var X = function (l) { return X0 + (X1 - X0) * l / 360 }, Y = function (v) { return Y0 + (Y1 - Y0) * (1 - v / 360) };
   [90, 180, 270].forEach(function (g) { o += '<line x1="' + X0 + '" x2="' + X1 + '" y1="' + Y(g) + '" y2="' + Y(g) + '" stroke="#8a7863" stroke-opacity="' + (g === 180 ? .6 : .3) + '" stroke-dasharray="3 4"/><text x="' + (X0 - 5) + '" y="' + (Y(g) + 3) + '" text-anchor="end" font-size="10" fill="#8a7863">' + g + '°</text>' });
@@ -534,9 +891,45 @@ document.querySelectorAll("[data-dial]").forEach(dial);
     if (prev) o += '<line x1="' + X(prev[0]).toFixed(1) + '" y1="' + Y(prev[1]).toFixed(1) + '" x2="' + X(p[0]).toFixed(1) + '" y2="' + Y(p[1]).toFixed(1) + '" stroke="' + col + '" stroke-width="2.5" stroke-linecap="round"/>';
     prev = p
   });
-  var td = pts[288];                                   // 16 października
+  var td = pts[298];                                   // 26 października
   o += '<line x1="' + X(td[0]) + '" x2="' + X(td[0]) + '" y1="' + Y(td[1]) + '" y2="' + Y1 + '" stroke="#2b2118" stroke-opacity=".35" stroke-dasharray="3 3"/><circle cx="' + X(td[0]) + '" cy="' + Y(td[1]) + '" r="5.5" fill="#f08a00" stroke="#fff7ea" stroke-width="2"/>';
   s.innerHTML = o
+})();
+
+/* ===== Pory roku i miesiące kalendarza klimatycznego ===== */
+(function () {
+  var box = document.getElementById("seasons"), N = ["Wiosna", "Lato", "Jesień", "Zima"],
+    M = [["Wczesna wiosna", "Pełna wiosna", "Późna wiosna"], ["Wczesne lato", "Pełne lato", "Późne lato"],
+      ["Wczesna jesień", "Pełna jesień", "Późna jesień"], ["Wczesna zima", "Pełna zima", "Późna zima"]],
+    S = ["równonoc marcowa", "przesilenie czerwcowe", "równonoc wrześniowa", "przesilenie grudniowe"], h = "";
+  for (var q = 0; q < 4; q++) {
+    h += '<div class="h" style="color:' + SC[q] + '">' + N[q] + '<small style="display:block;font-size:14px;color:var(--mut);font-weight:400">od: ' + S[q] + '</small></div>';
+    for (var k = 0; k < 3; k++) h += '<div class="m" style="border-left-color:' + SC[q] + '">' + M[q][k] + '<small>' + (q * 90 + k * 30) + '° – ' + (q * 90 + k * 30 + 30) + '°</small></div>'
+  }
+  box.innerHTML = h
+})();
+
+/* ===== Przykładowy miesiąc: Pełna jesień 2026 w Warszawie (23 października – 21 listopada) ===== */
+(function () {
+  var box = document.getElementById("calgrid"), h = "", mn = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
+  for (var i = 0; i < 30; i++) {
+    var dt = new Date(Date.UTC(2026, 9, 23 + i)), dd = dt.getUTCDate(), lab = i === 0 || dd === 1 ? dd + " " + mn[dt.getUTCMonth()] : dd;
+    h += '<div class="gc' + (i === 3 ? " today" : i < 3 ? " past" : "") + '"><small>' + lab + '</small>' + (i + 1) + '</div>'
+  }
+  box.innerHTML = h
+})();
+
+/* ===== Przykładowy miesiąc księżycowy: nów 10 października 2026, pełnia 26 października (dziś), 30 dni ===== */
+(function () {
+  var box = document.getElementById("moongrid"), N = 30, full = 17, od = 28, today = 17, ph = { 1: 0, 9: 90, 17: 180, 24: 270 };
+  function cell(d) {
+    var cls = "mc" + (d === od ? " orb" : d > od ? " chase" : "") + (d === today ? " today" : d < today ? " past" : "");
+    return '<div class="' + cls + '">' + d + (d in ph ? '<svg viewBox="-9 -9 18 18">' + phaseGlyph(ph[d], 0, 0, 8) + '</svg>' : d === od ? '<i>↻</i>' : '') + '</div>'
+  }
+  var a = "", b = "", d;
+  for (d = 1; d < full; d++) a += cell(d);
+  for (d = full; d <= N; d++) b += cell(d);
+  box.innerHTML = '<div class="mrow"><span>Przybywa</span><div class="mcells">' + a + '</div></div><div class="mrow"><span>Ubywa</span><div class="mcells">' + b + '</div></div>'
 })();
 
 /* ===== Sfera niebieska 3D (ten sam model co w zegarze: x = wschód, y = północ, z = zenit) ===== */
@@ -577,7 +970,7 @@ function sky(svg, latD, decD, gD, full) {
   svg.innerHTML = o
 }
 sky(document.getElementById("sky3d"), 52.23, 12, 110, true);
-document.querySelectorAll(".sky3s").forEach(function (s) { sky(s, 52.23, +s.getAttribute("data-dec"), 0, false) });
+document.querySelectorAll(".sky3s").forEach(function (s) { sky(s, 52.23, +s.getAttribute("data-d"), 0, false) });
 
 /* ===== Nawigacja ===== */
 var slides = [].slice.call(document.querySelectorAll("section")), cur = 0, stage = document.getElementById("stage");
@@ -589,22 +982,26 @@ function show(i) {
   document.querySelector("#bar i").style.width = ((cur + 1) / slides.length * 100) + "%";
   document.getElementById("notes").innerHTML = "<b>Mówię:</b> " + (slides[cur].getAttribute("data-notes") || "");
   try { history.replaceState(null, "", "#" + (cur + 1)) } catch (e) {}
+  // aplikacja na żywo ładuje się dopiero na swoim slajdzie (nie działa w tle i nie zmienia zapisanych ustawień zegara)
+  var fr = slides[cur].querySelector("iframe[data-src]"); if (fr && !fr.src) fr.src = fr.getAttribute("data-src")
 }
 addEventListener("resize", fit);
 addEventListener("keydown", function (e) {
-  if (e.target.tagName === "IFRAME") return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+P, Ctrl+F, Alt+← zostają przeglądarce
   if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); show(cur + 1) }
   else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); show(cur - 1) }
   else if (e.key === "Home") show(0);
   else if (e.key === "End") show(slides.length - 1);
   else if (e.key === "n" || e.key === "N") document.getElementById("notes").classList.toggle("on");
   else if (e.key === "f" || e.key === "F") toggleFull();
+  else if (e.key === "p" || e.key === "P") print();
 });
 function toggleFull() { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen() }
 document.getElementById("bNext").onclick = function () { show(cur + 1) };
 document.getElementById("bPrev").onclick = function () { show(cur - 1) };
 document.getElementById("bNotes").onclick = function () { document.getElementById("notes").classList.toggle("on") };
 document.getElementById("bFull").onclick = toggleFull;
+document.getElementById("bPdf").onclick = function () { print() };   // w oknie drukowania: „Zapisz jako PDF”
 fit();
 show((parseInt(location.hash.slice(1), 10) || 1) - 1);
 </script>

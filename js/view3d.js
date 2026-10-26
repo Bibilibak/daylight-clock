@@ -234,7 +234,7 @@
     restore: function () {
       var st = null;
       try { st = JSON.parse(localStorage.getItem("v3") || "null") } catch (e) {}
-      if (st && isFinite(st.g) && isFinite(st.lat) && isFinite(st.dec) && isFinite(st.az) && isFinite(st.el)) {
+      if (st && [st.g, st.lat, st.dec, st.az, st.el].every(function (x) { return typeof x === "number" && isFinite(x) })) {   // isFinite(null) to true
         follow = !!st.follow; $("v3lat").value = st.lat; $("v3dec").value = st.dec; $("v3g").value = st.g; az = st.az; el = st.el;
         if (follow) sync()
       } else { follow = true; sync(); resetView() }

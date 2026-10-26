@@ -638,7 +638,9 @@ function showResults(list) {
 function geoSearch(q) {
   return fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=5&format=json&language=" + lang)
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json() })
-    .then(function (d) { return d.results || [] })
+    .then(function (d) {   // wyniki bez poprawnych współrzędnych pomijamy (inaczej lat / lon = NaN)
+      return (Array.isArray(d.results) ? d.results : []).filter(function (c) { return c && validCoords(+c.latitude, +c.longitude) })
+    })
 }
 function cityLabel(c) { return [c.name, c.admin1 && c.admin1 !== c.name ? c.admin1 : "", c.country || ""].filter(Boolean).join(", ") }
 
@@ -883,7 +885,8 @@ function showView(v) {
 }
 if ($("dialBtn")) $("dialBtn").onclick = function () { showView("dial") };
 // Doba: wraca do ostatniego widoku (tarcza albo 3D; 3D otwiera js/view3d.js przyciskiem viewBtn)
-if ($("dayBtn")) $("dayBtn").onclick = function () { if (dayView === "3d" && window.Sun3D) $("viewBtn").click(); else showView("dial") };
+// (powrót do 3D zachowuje suwaki i obrót widoku; przycisk 3D ustawia je od nowa na „Teraz”)
+if ($("dayBtn")) $("dayBtn").onclick = function () { if (dayView === "3d" && window.Sun3D) showView("3d"); else showView("dial") };
 if ($("yearBtn")) $("yearBtn").onclick = function () { showView("year") };
 if ($("calBtn")) $("calBtn").onclick = function () { showView("cal") };
 

@@ -6,6 +6,8 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 
 ## ✅ Od kiedy liczyć dni miesiąca księżycowego: od północy, od wschodu czy od chwili nowiu?
 
+**Zmiana (26 października 2026): doba kalendarza od słonecznej północy, nie od wschodu.** Słoneczna północ to połowa drogi między dwoma górowaniami Słońca. W ciągu roku przesuwa się tylko o ok. ±15 min, a wschód o kilka godzin. Jest wszędzie, także w dzień i noc polarną, więc nie trzeba osobnej reguły. Wypada blisko północy na zegarze (w Warszawie ok. 23:35 zimą, 0:35 latem), dzięki czemu daty prawie zawsze zgadzają się z gregoriańskimi. Powód: urodziny o 2:16 w nocy wypadały „23 maja”, choć na zegarze był już 24. Dotyczy kalendarza klimatycznego, urodzin, lupy na kole orbity i dni miesiąca księżycowego. Tarcza nadal liczy stopnie od wschodu, bo mierzy światło, a nie datę. Kod: `sunDay()`, `sunDayStart()` i `sunDayParts()` w `js/main.js`.
+
 **Decyzja (17 października 2026): od wschodu Słońca.** Tak samo jak tarcza i kalendarz orbity: dzień 1 to doba (od wschodu do wschodu), w której wypada nów, a cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Dzięki temu każdy dzień księżycowy to jedna doba kalendarza orbity, a chwile faz podajemy w stopniach od wschodu tej doby. Wynik zależy od miejsca (od godziny wschodu). Historia: 16 października od północy, potem krótko od chwili nowiu (możliwość B, commit `17a86c6`).
 
 **Uzupełnienie (24 października 2026):** doby nadal liczą się od wschodu, ale siatka pokazuje ułamki. Doba 1 jest podzielona w chwili nowiu. Doba, w której Księżyc kończy pełną orbitę (miesiąc syderyczny, ok. 27,32 doby od nowiu, znak ↻), jest podzielona w chwili powrotu. Niebieskie części to czas, w którym Księżyc dogania Słońce, łącznie ok. 2,2 doby. Kod: `orbitDone()`, `orbitFrom()` i `buildMonthScale()` w `js/main.js`.
@@ -41,6 +43,8 @@ Decyzje, które nie zostały jeszcze podjęte. Każde pytanie opisuje możliwoś
 ---
 
 ## ✅ Kalendarz orbity: od kiedy liczyć dni miesiąca (północ, wschód czy chwila przejścia przez 30°)?
+
+**Zmiana (26 października 2026): doba kalendarza od słonecznej północy, nie od wschodu.** Słoneczna północ to połowa drogi między dwoma górowaniami Słońca. W ciągu roku przesuwa się tylko o ok. ±15 min, a wschód o kilka godzin. Jest wszędzie, także w dzień i noc polarną, więc nie trzeba osobnej reguły. Wypada blisko północy na zegarze (w Warszawie ok. 23:35 zimą, 0:35 latem), dzięki czemu daty prawie zawsze zgadzają się z gregoriańskimi. Powód: urodziny o 2:16 w nocy wypadały „23 maja”, choć na zegarze był już 24. Dotyczy kalendarza klimatycznego, urodzin, lupy na kole orbity i dni miesiąca księżycowego. Tarcza nadal liczy stopnie od wschodu, bo mierzy światło, a nie datę. Kod: `sunDay()`, `sunDayStart()` i `sunDayParts()` w `js/main.js`.
 
 **Decyzja (17 października 2026): całe doby od wschodu Słońca.** W tym systemie doba zaczyna się o wschodzie, tak jak na tarczy (w dzień i noc polarną od słonecznej północy). Dzień 1 miesiąca lub pory roku to doba, w której Słońce przechodzi przez granicę 30°·k. Wszystkie dni są pełne, a granica zależy od miejsca (od godziny wschodu). Przykład: równonoc wrześniowa 2026 wypada 23 września około 2:05 czasu polskiego, czyli przed wschodem, więc w Warszawie jesień zaczyna się dobą 22 września. (Od 16 do 17 października 2026 dni liczono od północy.)
 

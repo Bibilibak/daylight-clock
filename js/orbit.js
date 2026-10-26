@@ -2,8 +2,8 @@
    Rok orbity zaczyna się w dniu równonocy marcowej (kąt roku 0°), wspólnym dla całej Ziemi.
    4 pory roku po 90° kąta orbity, w każdej kreski co 30° (podział na wzór miesięcy gregoriańskich). Ziemia biegnie
    po orbicie nierówno (najszybciej w peryhelium), więc pory roku mają 89–94 dni, a części po 30° 29–32 dni.
-   Doba zaczyna się od wschodu Słońca, jak na tarczy (w dzień / noc polarną od słonecznej północy): dzień 1 pory roku
-   to doba równonocy albo przesilenia, a kreska co 30° stoi przy dobie, w której Słońce przechodzi przez granicę 30°·k.
+   Doba zaczyna się o słonecznej północy (sunDay w main.js): dzień 1 pory roku to doba równonocy albo przesilenia,
+   a kreska co 30° stoi przy dobie, w której Słońce przechodzi przez granicę 30°·k.
    Dobę nazywamy datą jej górowania (strefa miasta). Zob. OTWARTE-PYTANIA.md. */
 var OrbitCal = (function () {
   var cache = {}, local = {};
@@ -50,7 +50,7 @@ var OrbitCal = (function () {
     return { year: Y, month: k, season: q, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], sday: n - s[q * 3] + 1, slen: s[q * 3 + 3] - s[q * 3],
       yday: n - s[0] + 1, ylen: s[12] - s[0] }
   }
-  // chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ)
+  // słoneczna północ, od której zaczyna się doba n
   function dayStart(n) { return sunDayStart(n) }
   // kąt roku w chwili górowania Słońca w dobie n
   function lonAt(n) { return sunLonDeg(sunNoon(n)) }

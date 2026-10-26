@@ -3,7 +3,7 @@
    u góry, zachód roku (180°) po prawej, północ roku (270°) na dole; Ziemia idzie zgodnie z ruchem wskazówek.
    Na półkuli południowej koło jest obrócone o 180°, żeby południe roku (najdłuższy dzień) było zawsze u góry.
    Datą jest kąt przebyty w porze roku (kalendarz orbitalny), np. „32,46° wieczoru roku”.
-   Lupa pokazuje 4° orbity: każda doba (od wschodu do wschodu Słońca) to pas dzień / noc, ok. 1° szerokości. */
+   Lupa pokazuje 4° orbity: każda doba (od słonecznej północy do następnej) to pas noc / dzień / noc, ok. 1° szerokości. */
 (function () {
   function $(i) { return document.getElementById(i) }
   var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"], BDC = "#d6457a";   // BDC: kąt urodzin, jak w drabinie lat w Kalendarzu   // kolory pór roku jak w kalendarzu (wiosna, lato, jesień, zima)
@@ -22,13 +22,10 @@
   function arc(a0, a1, r) { return "M" + f(P(a0, r)) + " A" + r + " " + r + " 0 " + (((a1 - a0) % 360 + 360) % 360 > 180 ? 1 : 0) + " 1 " + f(P(a1, r)) }
 
   var tm = Date.now(), live = true;   // pokazywana chwila; live: idzie za zegarem
-  // doby n-k…n+k wokół doby n: { n, rise, set, end, noon } (wschód, zachód, następny wschód; w dzień / noc polarną od słonecznej północy)
+  // doby n-k…n+k wokół doby n: { n, a, rise, set, b } (słoneczna północ, wschód, zachód, następna północ; sunDayParts w main.js)
   function days(n, k) {
     var list = [];
-    for (var i = n - k; i <= n + k; i++) {
-      var c = dayCycle(new Date(sunNoon(i))), rise = OrbitCal.dayStart(i), end = OrbitCal.dayStart(i + 1);
-      list.push({ n: i, rise: rise, end: end, set: c ? Math.min(end, Math.max(rise, c.set)) : rise })   // dzień polarny: zachód = koniec doby, noc: = wschód
-    }
+    for (var i = n - k; i <= n + k; i++) { var p = sunDayParts(i); p.n = i; list.push(p) }
     return list
   }
 
@@ -42,7 +39,7 @@
     h += '<path d="' + tk + '" stroke="var(--mut)" stroke-width=".8" fill="none"/>';
     for (a = 10; a < 360; a += 10) if (a % 90) { p = P(a, 129); h += '<text class="ylb" x="' + p[0].toFixed(1) + '" y="' + (p[1] + 4).toFixed(1) + '" text-anchor="middle">' + a % 90 + '</text>' }
     // bieżąca doba (ok. 1°)
-    var l0 = sunLonDeg(d.rise), l1 = sunLonDeg(d.end);
+    var l0 = sunLonDeg(d.a), l1 = sunLonDeg(d.b);
     h += '<path d="' + arc(l0, l1 < l0 ? l1 + 360 : l1, 147) + '" fill="none" stroke="var(--sun)" stroke-width="10"/>';
     // aphelium i peryhelium tego roku orbity
     var o = OrbitCal.year(OrbitCal.date(OrbitCal.dateOf(d.n)).year);
@@ -77,14 +74,16 @@
       '<text class="ylb" x="200" y="228" text-anchor="middle">' + t("owAngle").replace("{a}", trunc(L)) + '</text>'
   }
 
-  // lupa: 4° orbity wokół Ziemi, doby jako pasy dzień / noc, pełne stopnie pory roku jako przerywane kreski
+  // lupa: 4° orbity wokół Ziemi, doby jako pasy noc / dzień / noc, pełne stopnie pory roku jako przerywane kreski
   function zoom(L, list, n) {
     var W = 4, px = 360 / W, X = function (l) { return 180 + normDeg(l - L) * px }, z = "", k;
     list.forEach(function (d) {
-      var a0 = X(sunLonDeg(d.rise)), as = X(sunLonDeg(d.set)), a1 = X(sunLonDeg(d.end)), cur = d.n === n, mx = (a0 + a1) / 2;
+      var a0 = X(sunLonDeg(d.a)), ar = X(sunLonDeg(d.rise)), as = X(sunLonDeg(d.set)), a1 = X(sunLonDeg(d.b)), cur = d.n === n, mx = (a0 + a1) / 2,
+        op = cur ? 1 : .55;
       if (a1 < -50 || a0 > 410) return;
-      z += '<rect x="' + a0.toFixed(1) + '" y="34" width="' + Math.max(0, as - a0).toFixed(1) + '" height="44" fill="var(--day)" opacity="' + (cur ? 1 : .55) + '"/>' +
-        '<rect x="' + as.toFixed(1) + '" y="34" width="' + Math.max(0, a1 - as).toFixed(1) + '" height="44" fill="var(--night)" opacity="' + (cur ? 1 : .55) + '"/>' +
+      z += '<rect x="' + a0.toFixed(1) + '" y="34" width="' + Math.max(0, ar - a0).toFixed(1) + '" height="44" fill="var(--night)" opacity="' + op + '"/>' +
+        '<rect x="' + ar.toFixed(1) + '" y="34" width="' + Math.max(0, as - ar).toFixed(1) + '" height="44" fill="var(--day)" opacity="' + op + '"/>' +
+        '<rect x="' + as.toFixed(1) + '" y="34" width="' + Math.max(0, a1 - as).toFixed(1) + '" height="44" fill="var(--night)" opacity="' + op + '"/>' +
         '<line x1="' + a0.toFixed(1) + '" y1="30" x2="' + a0.toFixed(1) + '" y2="82" stroke="var(--fg)"/>' +
         (mx > 18 && mx < 342 ? '<text x="' + mx.toFixed(1) + '" y="96" text-anchor="middle" font-size="11" fill="var(--fg)" font-weight="' + (cur ? 700 : 400) + '">' + short(d.n) + '</text>' : '')
     });
@@ -101,12 +100,12 @@
 
   // opis doby: zakres kąta, przejścia przez pełne stopnie (stąd numer w kratce), prędkość Ziemi i odległość do następnego punktu
   function info(L, Q, d) {
-    var l0 = sunLonDeg(d.rise), sp = (sunLonDeg(d.end) - l0 + 360) % 360, r0 = relQ(l0), r1 = relQ((l0 + sp) % 360), h = "", k,
+    var l0 = sunLonDeg(d.a), sp = (sunLonDeg(d.b) - l0 + 360) % 360, r0 = relQ(l0), r1 = relQ((l0 + sp) % 360), h = "", k,
       rate = (sunLonDeg(tm + 432e5) - sunLonDeg(tm - 432e5) + 360) % 360, nq = (Q.q + 1) % 4, left = 90 - Q.a, hr = 24 / rate;
     for (k = Math.floor(l0) + 1; k <= Math.floor(l0 + sp); k++) {
       var kk = k % 360;
       h += '<div>' + t("calDegCross").replace("{d}", kk % 90) + (kk % 90 ? '' : ' (' + part("lpN", sIdx(kk / 90)) + ')') + ': ' +
-        whenTxt(crossAt(kk, d.rise + (k - l0) / 0.9856 * 864e5)) + '</div>'
+        whenTxt(crossAt(kk, d.a + (k - l0) / 0.9856 * 864e5)) + '</div>'
     }
     return '<h2>' + t("owDayT") + '</h2><div class="v">' + OrbitCal.dateOf(d.n).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
       '<div>' + (r1.q === r0.q ? trunc(r0.a) + '–' + trunc(r1.a) + ' ' + part("lsG", sIdx(r0.q))   // doba z granicą pór: od jednej pory do drugiej

@@ -161,8 +161,17 @@ function dayCycle(now) {
   }
   return cyc || polarCycle(now)
 }
-// numer doby tarczy (od wschodu do wschodu), w której leży chwila ms: dzień kalendarzowy jej górowania w strefie miasta
-function sunDay(ms) { var c = dayCycle(new Date(ms)); return dayNum(c ? c.noon : ms) }
+/* Doby kalendarza (kalendarz orbity, urodziny, dni księżycowe): od słonecznej północy do następnej, czyli od połowy drogi
+   między dwoma górowaniami. Słoneczna północ przesuwa się w roku tylko o ok. ±15 min (wschód o kilka godzin), jest wszędzie,
+   także w dzień i noc polarną, i wypada blisko północy zegarowej, więc daty prawie zawsze zgadzają się z gregoriańskimi.
+   Dobę nazywamy datą jej górowania w strefie miasta. Tarcza nadal liczy od wschodu (dayCycle), bo mierzy światło, nie datę. */
+// numer doby, w której leży chwila ms (dayNum daje przybliżenie, poprawiamy o ±1)
+function sunDay(ms) {
+  var n = dayNum(ms);
+  while (ms < sunDayStart(n)) n--;
+  while (ms >= sunDayStart(n + 1)) n++;
+  return n
+}
 // numer daty chwili ms: w strefie miasta, a bez strefy (współrzędne wpisane ręcznie albo z lokalizacji) według
 // czasu słonecznego miejsca, a nie strefy urządzenia (inaczej przy zmianie czasu doba mogłaby zniknąć albo się zdublować)
 function dayNum(ms) { return tz ? localDay(ms) : Math.floor((ms + lon * 24e4) / 864e5) }
@@ -172,9 +181,15 @@ function sunNoon(n) {
   var ms = at(n), k = n - dayNum(ms);
   return k ? at(n + k) : ms
 }
-// chwila wschodu, od której zaczyna się doba n (w dzień / noc polarną: słoneczna północ); zaokrąglona w górę do ms,
-// żeby sunDay(sunDayStart(n)) === n (new Date() obcina ułamki ms)
-function sunDayStart(n) { var c = dayCycle(new Date(sunNoon(n))); return c ? Math.ceil(c.a) : n * 864e5 }
+// słoneczna północ, od której zaczyna się doba n; zaokrąglona w górę do ms, żeby sunDay(sunDayStart(n)) === n
+function sunDayStart(n) { return Math.ceil((sunNoon(n - 1) + sunNoon(n)) / 2) }
+// doba n do rysowania: { a: początek, rise, set, b: koniec } - noc od a do wschodu, dzień do zachodu, noc do b
+// (dzień polarny: dzień przez całą dobę, noc polarna: bez dnia)
+function sunDayParts(n) {
+  var a = sunDayStart(n), b = sunDayStart(n + 1), c = dayCycle(new Date(sunNoon(n)));
+  function in_(x) { return Math.min(b, Math.max(a, x)) }
+  return { a: a, b: b, rise: c ? in_(c.rise) : a, set: c ? in_(c.set) : a }
+}
 
 /* ===== TRZY RÓŻNE WARTOŚCI KSIĘŻYCA (nie mylić) =====
    1. kąt fazy ph (0-360°): miejsce w cyklu synodycznym od nowiu do nowiu. Pokazuje go pasek miesiąca.
@@ -211,8 +226,8 @@ function elong(ms) {
 function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
 // numer dnia kalendarzowego (od północy do północy) w strefie czasowej wybranego miasta
 function localDay(ms) { var o = tzParts(ms); return Math.round(Date.UTC(o.year, o.month - 1, o.day) / 864e5) }
-/* Dni cyklu to doby tarczy, OD WSCHODU do wschodu (jak w kalendarzu orbity): dzień 1 = doba, w której wypada nów;
-   cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Wynik zależy od miejsca (wschód).
+/* Dni cyklu to doby kalendarza, od słonecznej północy do następnej (jak w kalendarzu orbity): dzień 1 = doba, w której
+   wypada nów; cykl kończy się dobą przed dobą następnego nowiu, więc ma 29 albo 30 pełnych dni. Wynik zależy od długości geograficznej.
    d0: numer doby dnia 1 (sunDay); elapsed/length: dokładny czas od chwili nowiu i długość cyklu (doby). */
 function lunarCycle(now) {
   var t = now.getTime(), last = newMoonNear(t - elong(t) / 12.19 * 864e5);
@@ -220,7 +235,7 @@ function lunarCycle(now) {
   var next = newMoonNear(last + 29.53 * 864e5);
   if (next <= t) { last = next; next = newMoonNear(last + 29.53 * 864e5) }
   var n = sunDay(t);
-  if (sunDay(next) <= n) { last = next; next = newMoonNear(last + 29.53 * 864e5) }   // dziś jest doba nowiu: od wschodu nowy cykl
+  if (sunDay(next) <= n) { last = next; next = newMoonNear(last + 29.53 * 864e5) }   // dziś jest doba nowiu: od słonecznej północy nowy cykl
   var d0 = sunDay(last);
   return { day: n - d0 + 1, days: sunDay(next) - d0, d0: d0,
     elapsed: (t - last) / 864e5, length: (next - last) / 864e5, last: last, next: next }
@@ -640,7 +655,7 @@ function moonPhasesIn(a, b, c) {
   return out
 }
 
-/* Kafelek wybranego dnia miesiąca księżycowego (pod siatką). Dzień d to doba d0 + d − 1 (od wschodu do wschodu),
+/* Kafelek wybranego dnia miesiąca księżycowego (pod siatką). Dzień d to doba d0 + d − 1 (od słonecznej północy),
    podpisana datą kalendarza orbity. Bez powtórzeń z kartą Księżyca: tu zakresy w ciągu doby i chwile faz w stopniach. */
 function renderMoonDet() {
   var c = monthCyc, d = monthSel || monthDay;

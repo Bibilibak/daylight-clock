@@ -2,7 +2,7 @@
    Daty kalendarza orbity liczy js/orbit.js. */
 (function () {
   function $(i) { return document.getElementById(i) }
-  function dayStart() { return OrbitCal.dateOf(sunDay(Date.now())) }   // dzisiejsza doba (od wschodu Słońca w wybranym miejscu)
+  function dayStart() { return OrbitCal.dateOf(sunDay(Date.now())) }   // dzisiejsza doba (od słonecznej północy w wybranym miejscu)
   var today = dayStart();
   var sel = today;
   var cvO = "grid";   // widok: "grid" (Kalendarz) albo "ring" (Koło), zapamiętany w przeglądarce
@@ -16,7 +16,7 @@
   var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok orbity i miesiąc (0–11)
   if (cs && inYears(cs.oy) && cs.om >= 0 && cs.om < 12 && cs.om % 1 === 0) { oy = cs.oy; om = cs.om }
 
-  // O wschodzie Słońca (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
+  // O słonecznej północy (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
   // zaznaczenie idzie razem z nim. Zwraca true, gdy "dziś" się zmieniło.
   function syncToday() {
     var n = dayStart();
@@ -65,8 +65,8 @@
   function dName(o) { return mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) }
 
   function detail(d) {   // dane wybranego dnia, tylko to, co potrzebne: data, granice miesięcy i apsydy, światło, Księżyc
-    // Wszystko z doby n w wybranym miejscu (od wschodu do wschodu), nie z zegara urządzenia: Księżyc w chwili górowania Słońca,
-    // światło = łuk od wschodu do zachodu w tej dobie (w dzień / noc polarną: komunikat calPolar).
+    // Wszystko z doby n w wybranym miejscu (od słonecznej północy), nie z zegara urządzenia: Księżyc w chwili górowania Słońca,
+    // światło = łuk od wschodu do zachodu tego dnia (w dzień / noc polarną: komunikat calPolar).
     var n = OrbitCal.dayN(d), noon = sunNoon(n), c = dayCycle(new Date(noon)),
       ph = elong(noon), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(new Date(noon)),
       light = c && !c.polar && !c.noDay ? Math.round(360 * (c.set - c.a) / (c.b - c.a)) : null,
@@ -155,7 +155,7 @@
         '<text x="' + b[0].toFixed(1) + '" y="' + (b[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + qColor(q) + '">' +
         qName(q) + '</text>'
     }
-    var tk = "";                                                        // granice dób (wschód Słońca w mieście); co 10 dni miesiąca dłuższa kreska
+    var tk = "";                                                        // granice dób (słoneczna północ w mieście); co 10 dni miesiąca dłuższa kreska
     for (u = 0; u < 12; u++) for (n = s[u]; n < s[u + 1]; n++) {
       var l = sunLonDeg(OrbitCal.dayStart(n)), d0 = n - s[u];
       tk += "M" + f(P(l, 132)) + "L" + f(P(l, d0 % 10 ? 135 : 139))
@@ -225,9 +225,9 @@
 
   /* Urodziny na orbicie: chwila urodzenia (data i godzina według zegara w miejscu urodzenia) -> data w kalendarzu orbity.
      Miejsce urodzenia jest osobne od miasta wybranego na dole strony, bo od niego zależą strefa czasowa (która chwila
-     to była), wschód Słońca (od którego liczy się doba) i półkula (ten sam kąt to jesień na północy, a wiosna na południu).
+     to była), słoneczna północ (od której liczy się doba) i półkula (ten sam kąt to jesień na północy, a wiosna na południu).
      Ziemia wraca na kąt urodzin co rok orbity, ale rok ma ok. 365,2422 doby, więc powrót wypada co rok ok. 5 h 49 min
-     później (o ok. 87° dalej na tarczy), a po roku przestępnym się cofa. Czasem przechodzi przez wschód Słońca
+     później (o ok. 87° dalej na tarczy), a po roku przestępnym się cofa. Czasem przechodzi przez słoneczną północ
      i wtedy urodziny wypadają w kalendarzu orbity o dzień dalej (albo bliżej). Powroty liczą się tam, gdzie jesteś. */
   var bday = null, bdOpen = false, bplace = null, bpList = [], bpTimer = null, bpId = 0;   // bday: { d: "2000-10-24", t: "12:00" }
   try {
@@ -302,7 +302,7 @@
     if (!bplace) return '<p class="cnote">' + t("bdPlNone") + '</p>';
     var p = bday.d.split("-").map(Number), q = bday.t.split(":").map(Number);
     if (!(p[0] >= Y0 && p[0] <= Y1)) return '<p class="cnote">' + t("bdHint") + '</p>';
-    // chwila i doba urodzenia w miejscu urodzenia (strefa, wschód Słońca, półkula)
+    // chwila i doba urodzenia w miejscu urodzenia (strefa, słoneczna północ, półkula)
     var B = atPlace(bplace, function () {
       var ms = zoned(p[0], p[1] - 1, p[2], q[0], q[1]); if (isNaN(ms)) return null;
       var o = OrbitCal.date(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), c = dayCycle(new Date(ms));   // orbitalny: pora roku według kąta w tej chwili
@@ -336,22 +336,27 @@
   }
 
   /* Drabina lat: każdy wiersz to jeden rok, wycinek orbity ±1,2° wokół kąta urodzin (pionowa linia, co roku ta sama).
-     Pasy to doby tam, gdzie jesteś: jasna część dzień, ciemna noc, czarna kreska = wschód Słońca (początek doby).
+     Po prawej data doby z kątem urodzin (ta sama co w tabeli), bo z samych pasów nie widać, czy to np. 23, czy 24 maja.
+     Pasy to doby tam, gdzie jesteś: jasna część dzień, ciemna noc, czarna kreska = słoneczna północ (początek doby).
      Doba, w którą wpada kąt urodzin, ma obwódkę: pomarańczową, gdy to ten sam dzień kalendarza co urodzenie, szarą, gdy inny.
-     Widać, jak wschody co rok przesuwają się względem kąta (ok. 0,24° orbity), a po roku z 366 dniami wracają. */
+     Widać, jak granice dób co rok przesuwają się względem kąta (ok. 0,24° orbity), a po roku z 366 dniami wracają. */
   function bdLadder(a, Yb, Yn, bk, bd) {
-    var W = 2.4, X0 = 40, X1 = 356, px = (X1 - X0) / W, xc = (X0 + X1) / 2, rh = 9, gap = 3, y0 = 4, h = "", Y;
+    var W = 2.4, X0 = 40, X1 = 318, px = (X1 - X0) / W, xc = (X0 + X1) / 2, rh = 9, gap = 3, y0 = 4, h = "", Y;
     function X(l) { return xc + normDeg(l - a) * px }
     for (Y = Yb + 1; Y <= Yn; Y++) {
       var i = Y - Yb - 1, y = y0 + i * (rh + gap), m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), ok = o.k === bk && o.d === bd;
-      h += '<text class="ylb" x="' + (X0 - 4) + '" y="' + (y + rh - 1) + '" text-anchor="end" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + Y + '</text>';
+      h += '<text class="ylb" x="' + (X0 - 4) + '" y="' + (y + rh - 1) + '" text-anchor="end" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + Y + '</text>' +
+        '<text class="ylb" x="' + (X1 + 4) + '" y="' + (y + rh - 1) + '" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + short(OrbitCal.dateOf(n)) + '</text>';
       for (var k = n - 2; k <= n + 2; k++) {
-        var c = dayCycle(new Date(sunNoon(k))), r0 = OrbitCal.dayStart(k), r1 = OrbitCal.dayStart(k + 1), st = c ? Math.min(r1, Math.max(r0, c.set)) : r0,
-          x0 = Math.max(X0, X(sunLonDeg(r0))), xs = Math.min(X1, Math.max(X0, X(sunLonDeg(st)))), x1 = Math.min(X1, X(sunLonDeg(r1))), cur = k === n;
-        if (x1 <= X0 || x0 >= X1) continue;
-        h += '<rect x="' + x0.toFixed(1) + '" y="' + y + '" width="' + Math.max(0, xs - x0).toFixed(1) + '" height="' + rh + '" fill="var(--day)" opacity="' + (cur ? 1 : .45) + '"/>' +
-          '<rect x="' + xs.toFixed(1) + '" y="' + y + '" width="' + Math.max(0, x1 - xs).toFixed(1) + '" height="' + rh + '" fill="var(--night)" opacity="' + (cur ? 1 : .45) + '"/>' +
-          (X(sunLonDeg(r0)) > X0 ? '<line x1="' + x0.toFixed(1) + '" y1="' + (y - 1) + '" x2="' + x0.toFixed(1) + '" y2="' + (y + rh + 1) + '" stroke="var(--fg)" stroke-width="1.2"/>' : '') +
+        var p = sunDayParts(k), cur = k === n, op = cur ? 1 : .45;
+        if (X(sunLonDeg(p.b)) <= X0 || X(sunLonDeg(p.a)) >= X1) continue;
+        // noc do wschodu, dzień, noc od zachodu; kreska na początku doby, obwódka wokół doby z kątem urodzin
+        [[p.a, p.rise, "var(--night)"], [p.rise, p.set, "var(--day)"], [p.set, p.b, "var(--night)"]].forEach(function (g) {
+          var u0 = Math.max(X0, X(sunLonDeg(g[0]))), u1 = Math.min(X1, X(sunLonDeg(g[1])));
+          if (u1 > u0) h += '<rect x="' + u0.toFixed(1) + '" y="' + y + '" width="' + (u1 - u0).toFixed(1) + '" height="' + rh + '" fill="' + g[2] + '" opacity="' + op + '"/>'
+        });
+        var x0 = Math.max(X0, X(sunLonDeg(p.a))), x1 = Math.min(X1, X(sunLonDeg(p.b)));
+        h += (X(sunLonDeg(p.a)) > X0 ? '<line x1="' + x0.toFixed(1) + '" y1="' + (y - 1) + '" x2="' + x0.toFixed(1) + '" y2="' + (y + rh + 1) + '" stroke="var(--fg)" stroke-width="1.2"/>' : '') +
           (cur ? '<rect x="' + x0.toFixed(1) + '" y="' + (y - .5) + '" width="' + (x1 - x0).toFixed(1) + '" height="' + (rh + 1) + '" fill="none" stroke="' + (ok ? "var(--sun)" : "var(--mut)") + '" stroke-width="1.5"/>' : '')
       }
     }

@@ -333,7 +333,7 @@ button {
 .starbtn { background: none; border: 0; padding: 0 4px; color: var(--mut); font: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
 .starbtn[aria-pressed="true"] { color: var(--sun); }
 .housebtn { font-size: 17px; }
-.housebtn[aria-pressed="true"] { cursor: default; }   /* to już jest Twoje miejsce */
+.housebtn[aria-disabled="true"] { color: var(--sun); cursor: default; }   /* to już jest Twoje miejsce */
 #pickList {
   position: absolute;
   top: calc(100% + 4px);
@@ -359,6 +359,7 @@ button {
 #pickList li[aria-selected="true"] { color: var(--sun); font-weight: 700; }
 #pickList li.hint { color: var(--mut); cursor: default; font-size: 12px; }
 [dir="rtl"] #pickList { text-align: right; }
+[dir="rtl"] #pickList li:not(.hint) { direction: ltr; unicode-bidi: isolate; text-align: right; }   /* współrzędne w tej samej kolejności co w linijce miejsca */
 .pmsg { margin-top: 6px; font-size: 13px; color: var(--mut); }
 .pmsg:empty { display: none; }
 .dseg { margin: 0 0 8px; }   /* zakładka Doba: Tarcza / 3D */

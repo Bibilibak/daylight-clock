@@ -3,8 +3,9 @@ var R = Math.PI / 180, cx = 170, cy = 170, r = 140, lat = 52.23, lon = 21.01, pl
 
 try {
   var s = JSON.parse(localStorage.getItem("sw") || "null");
-  if (s && validCoords(s.lat, s.lon)) { lat = s.lat; lon = s.lon; place = s.name || ""; tz = s.tz || "" }
+  if (s && validCoords(s.lat, s.lon)) { lat = s.lat; lon = s.lon; place = txt(s.name); tz = txt(s.tz) }
 } catch (e) {}
+function txt(v) { return typeof v === "string" ? v : "" }   // nazwa / strefa z localStorage: tylko tekst, inne wartości pomijamy
 function validCoords(a, b) {   // tylko prawdziwe liczby (tekst "21" z uszkodzonego localStorage psułby obliczenia)
   return typeof a === "number" && typeof b === "number" && isFinite(a) && isFinite(b) && a >= -90 && a <= 90 && b >= -180 && b <= 180
 }
@@ -452,7 +453,7 @@ function openPlace(open) {
   $("placeBtn").textContent = t(open ? "placeClose" : "placeChange");
   if (open) $("city").focus(); else placeMsg("")
 }
-$("placeBtn").onclick = function () { openPlace($("placeBox").hidden) };
+$("placeBtn").onclick = function () { Picker.open(false); openPlace($("placeBox").hidden) };
 var pmsgKey = "";   // komunikat w panelu miejsca (klucz tłumaczenia, żeby zmiana języka go przetłumaczyła)
 function placeMsg(k) { pmsgKey = k; $("pmsg").textContent = k ? t(k) : "" }
 // look = true: tylko podgląd zapisanego miejsca (nie zapisuje się jako Twoje miejsce, po odświeżeniu strona wraca do domu);
@@ -475,12 +476,17 @@ function apply(look) {
    Lista w localStorage "swp" ([{ lat, lon, name, tz }]), dodawana i usuwana gwiazdką przy bieżącym miejscu.
    Twoje miejsce (home) stoi zawsze na górze listy; inne miejsce jest tylko podglądem (powrót przez wybór ⌂ z listy). */
 var home = null, peek = false, saved = [];
-try {
-  var sp = JSON.parse(localStorage.getItem("swp") || "[]");
-  if (Array.isArray(sp)) sp.forEach(function (p) {
-    if (p && validCoords(p.lat, p.lon)) saved.push({ lat: p.lat, lon: p.lon, name: String(p.name || ""), tz: String(p.tz || "") })
-  })
-} catch (e) {}
+// czytane od nowa przed każdą zmianą listy, żeby druga otwarta karta nie nadpisała tego, co zapisała ta
+function loadSaved() {
+  saved = [];
+  try {
+    var sp = JSON.parse(localStorage.getItem("swp") || "[]");
+    if (Array.isArray(sp)) sp.forEach(function (p) {
+      if (p && validCoords(p.lat, p.lon)) saved.push({ lat: p.lat, lon: p.lon, name: txt(p.name), tz: txt(p.tz) })
+    })
+  } catch (e) {}
+}
+loadSaved();
 function samePlace(a, b) { return !!a && !!b && Math.abs(a.lat - b.lat) < 1e-3 && Math.abs(a.lon - b.lon) < 1e-3 }
 function placeLabel(p) { return p.name || p.lat + "°, " + p.lon + "°" }
 function hereP() { return { lat: lat, lon: lon, name: place, tz: tz } }
@@ -495,7 +501,7 @@ function showWhere() {
   $("starBtn").setAttribute("aria-pressed", on ? "true" : "false");
   $("starBtn").title = t(on ? "starDel" : "starAdd");
   $("starBtn").setAttribute("aria-label", $("starBtn").title);
-  $("houseBtn").setAttribute("aria-pressed", peek ? "false" : "true");   // ⌂ świeci, gdy to Twoje miejsce
+  $("houseBtn").setAttribute("aria-disabled", peek ? "false" : "true");   // ⌂ świeci (i nic nie robi), gdy to Twoje miejsce
   $("houseBtn").title = t(peek ? "houseSet" : "houseIs");
   $("houseBtn").setAttribute("aria-label", $("houseBtn").title)
 }
@@ -504,12 +510,21 @@ function showWhere() {
 $("houseBtn").onclick = function () {
   if (!peek) return;
   var old = home;
+  loadSaved();
   if (!saved.some(function (p) { return samePlace(p, old) })) { saved.push(old); storeSaved() }
   apply();
   if (!$("pickList").hidden) Picker.fill()
 };
 
+// lista zmieniona w innej karcie: odśwież gwiazdkę i otwartą listę
+window.addEventListener("storage", function (e) {
+  if (e.key !== "swp" && e.key !== null) return;
+  loadSaved(); showWhere();
+  if (!$("pickList").hidden) Picker.fill()
+});
+
 $("starBtn").onclick = function () {
+  loadSaved();
   var i = savedIdx();
   if (i >= 0) saved.splice(i, 1); else saved.push(hereP());
   storeSaved(); showWhere();
@@ -529,7 +544,8 @@ var Picker = (function () {
     if (!opts.length) return;
     act = (i + opts.length) % opts.length;
     opts.forEach(function (o, k) { o.classList.toggle("active", k === act) });
-    list.setAttribute("aria-activedescendant", opts[act].id)
+    list.setAttribute("aria-activedescendant", opts[act].id);
+    if (!list.hidden) opts[act].scrollIntoView({ block: "nearest" })   // długa lista: zaznaczenie zawsze widoczne
   }
   function fill() {
     items = [home].concat(saved.filter(function (p) { return !samePlace(p, home) }));
@@ -541,7 +557,7 @@ var Picker = (function () {
       li.setAttribute("aria-selected", samePlace(p, hereP()) ? "true" : "false");
       list.appendChild(li)
     });
-    if (!saved.length) {
+    if (items.length === 1) {   // poza Twoim miejscem nic nie ma (też gdy zapisane jest tylko ono)
       var h = document.createElement("li");
       h.className = "hint"; h.setAttribute("role", "presentation"); h.textContent = t("pickHint");
       list.appendChild(h)

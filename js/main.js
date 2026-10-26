@@ -494,7 +494,7 @@ function savedIdx() { for (var i = 0; i < saved.length; i++) if (samePlace(saved
 function storeSaved() { try { localStorage.setItem("swp", JSON.stringify(saved)) } catch (e) {} }
 
 function showWhere() {
-  $("where").textContent = "📍 " + (place ? place + " · " : "") + lat + "°, " + lon + "°";
+  $("where").textContent = "📍 " + (place && !isDay(curView) ? place + " · " : "") + lat + "°, " + lon + "°";   // w Dobie nazwa jest w nagłówku, tu same współrzędne
   $("whereBox").classList.toggle("peek", peek);
   if (isDay(curView)) $("lightH").textContent = placeHead();   // nagłówek Doby = oglądane miejsce
   var on = savedIdx() >= 0;
@@ -877,6 +877,7 @@ function showView(v) {
   if (v === "year" && window.YearClock) YearClock.render();
   if (v === "cal" && window.Cal) Cal.render();
   if (window.Sun3D) Sun3D.refresh();
+  showWhere();   // linijka miejsca: w Dobie bez nazwy
   updateHead()
 }
 if ($("dialBtn")) $("dialBtn").onclick = function () { showView("dial") };

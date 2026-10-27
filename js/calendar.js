@@ -229,11 +229,10 @@
      później (o ok. 87° dalej na tarczy), a po roku przestępnym się cofa. Czasem przechodzi przez słoneczną północ
      i wtedy urodziny wypadają w kalendarzu orbity o dzień dalej (albo bliżej). Powroty liczą się tam, gdzie jesteś. */
   var bday = null, bdOpen = false, bplace = null, bpList = [], bpTimer = null, bpId = 0;   // bday: { d: "2000-10-24", t: "12:00" }
+  // data i miejsce urodzenia żyją tylko do zamknięcia strony (wybór użytkownika: po otwarciu od nowa pola są puste,
+  // np. gdy pokazuje się aplikację kolejnym osobom); usuwamy też to, co zapisały starsze wersje
   try {
-    var bs = JSON.parse(localStorage.getItem("bday") || "null");
-    if (bs && /^\d{4}-\d\d-\d\d$/.test(bs.d) && /^\d\d:\d\d$/.test(bs.t)) bday = bs;
-    var bp = JSON.parse(localStorage.getItem("bplace") || "null");   // { lat, lon, name, tz }
-    if (bp && validCoords(bp.lat, bp.lon)) bplace = { lat: bp.lat, lon: bp.lon, name: String(bp.name || ""), tz: String(bp.tz || "") };
+    localStorage.removeItem("bday"); localStorage.removeItem("bplace");
     bdOpen = localStorage.getItem("bdOpen") === "1"
   } catch (e) {}
   // fn liczone w miejscu p: obliczenia czytają miejsce z lat / lon / tz (js/main.js), więc podmieniamy je na chwilę
@@ -244,7 +243,6 @@
   function bpLabel() { return bplace ? "📍 " + (bplace.name || bplace.lat + "°, " + bplace.lon + "°") : "" }
   function setBplace(p) {
     bplace = p; bpList = [];
-    try { localStorage.setItem("bplace", JSON.stringify(p)) } catch (e) {}
     var v = $("calView"), i = v.querySelector("[data-bp]");
     if (i) i.value = "";
     v.querySelector(".bdpr").innerHTML = "";
@@ -318,7 +316,7 @@
         short(OrbitCal.dateOf(n)) + '</td><td><div class="bdtod"><div>' + whenTxt(m) + '<span class="bdhm">' + clockTxt(m) + '</span></div>' + miniDial(m) + '</div></td></tr>'
     }
     // data urodzenia: dzień w kalendarzu klimatycznym, kąt w porze roku (orbitalny) i pora doby (kąt Słońca od wschodu, jak na tarczy)
-    function bdCal(nm, big, sub, col, hm, dial) {   // hm: godzina pod opisem, dial: mała tarcza przy stopniach (tylko pora doby)
+    function bdCal(nm, big, sub, col, hm, dial) {   // hm: mała szara linijka pod opisem (godzina albo „od równonocy marcowej”), dial: mała tarcza przy stopniach
       return '<div class="bdc" style="border-color:' + col + '"><small>' + t(nm) + '</small><b>' + (dial ? '<span class="bdtod">' + dial + big + '</span>' : big) + '</b><span>' + sub + '</span>' +
         (hm ? '<span class="bdhm">' + hm + '</span>' : '') + '</div>'
     }
@@ -326,8 +324,8 @@
     function pin(p) { return '<span class="bdpin">📍 ' + esc(p.name || p.lat + "°, " + p.lon + "°") + '</span>' }
     return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + t("calOYear").replace("{y}", Yb) + ' ' + pin(bplace) + '</div>' +
       '<div class="bdcals">' + bdCal("calNmS", B.clim, t("calDay").replace("{d}", ob.day), B.color) +
-      bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)", B.hm, B.dial) + '</div>' +
-      '<div class="bdorb">' + t("bdOrb").replace("{a}", num(a, 2) + "°") + '</div></div>' +
+      bdCal("calNmL", degTr(a), degTr(B.oa) + " " + B.orb, B.color, t("bdFromEq")) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)", B.hm, B.dial) + '</div>' +
+      '</div>' +
       (rows ? '<div class="bdsec bdsec2"><small>' + t("bdRet") + '</small><div class="bdwhen">' + pin({ lat: lat, lon: lon, name: place }) + '</div>' +
         bdLadder(a, Ys, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Ys + 1) + '</p>' +
         '<div class="bdscr"><table class="ttab btab"><thead><tr><td>' + t("bdY") + '</td><td>' + t("bdAge") + '</td><td>' + t("bdODay") + '</td><td></td><td>' + t("bdTod") +
@@ -436,7 +434,6 @@
     e.target.value = e.target.value.replace(/\D/g, "");
     var b = bdRead(); if (!b || (bday && b.d === bday.d && b.t === bday.t)) return;
     bday = b;
-    try { localStorage.setItem("bday", JSON.stringify(bday)) } catch (e2) {}
     var out = $("calView").querySelector(".bdout"); if (out) out.innerHTML = birthOut()
   });
   if ($("calView")) $("calView").addEventListener("toggle", function (e) {

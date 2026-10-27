@@ -710,7 +710,6 @@ button {
 /* wynik urodzin: data w kalendarzu orbity (rok i pora doby wspólne, okienka obu kalendarzy), pod nią kąt orbity */
 .bdres small { display: block; font-size: 12px; color: var(--mut); }
 .bdres .bdwhen { margin-top: 2px; font-size: 16px; font-weight: 700; }
-.bdorb { font-size: 13px; color: var(--mut); }
 .bdcals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px !important; }
 /* urodzenie (miejsce urodzenia) i powroty (tam, gdzie jesteś): osobne części, każda z plakietką miejsca */
 .bdsec { padding: 10px; background: color-mix(in srgb, var(--bg) 55%, transparent); border-radius: 12px; }
@@ -726,7 +725,6 @@ button {
 .bdc .bdtod { justify-content: flex-start; font-size: inherit; }
 .btab .bdtod { gap: 8px; }
 .bdc .bdhm, .btab .bdhm { display: block; font-size: 12px; color: var(--mut); }   /* godzina pod stopniami pory doby */
-.bdcals + div { margin-top: 12px !important; }
 .bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
 .btab { margin-top: 0; }
 .why p { margin: 8px 0 0; font-size: 14px; line-height: 1.45; }

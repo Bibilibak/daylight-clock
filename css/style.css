@@ -721,6 +721,11 @@ button {
 .bdc { padding: 7px 8px; min-width: 0; overflow-wrap: break-word; background: var(--bg); border-radius: 10px; border-inline-start: 4px solid; }
 .bdc b { display: block; font-size: 16px; line-height: 1.25; }
 .bdc span { font-size: 13px; }
+.mdial { width: 30px; height: 30px; flex: none; margin: 0; }   /* mała tarcza chwili (miniDial w main.js) */
+.bdtod { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.bdc .bdtod { justify-content: flex-start; font-size: inherit; }
+.btab .bdtod { gap: 8px; }
+.bdc .bdhm, .btab .bdhm { display: block; font-size: 12px; color: var(--mut); }   /* godzina pod stopniami pory doby */
 .bdcals + div { margin-top: 12px !important; }
 .bdscr { max-height: 300px; overflow-y: auto; margin-top: 6px; }
 .btab { margin-top: 0; }
@@ -730,7 +735,8 @@ button {
 .wtab td:first-child { font-weight: 600; }
 .btab td:nth-child(2) { white-space: nowrap; }
 .btab td:nth-child(3) { white-space: normal; }
-.btab td:nth-child(5) { text-align: right; }
+.btab td:nth-child(5) { text-align: right; white-space: normal; }
+.btab .mdial { width: 26px; height: 26px; }
 .btab thead td { font-weight: 700; color: var(--mut); }
 .btab tr.off { color: var(--mut); }
 

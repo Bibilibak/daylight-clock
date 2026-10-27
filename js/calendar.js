@@ -303,7 +303,7 @@
     var B = atPlace(bplace, function () {
       var ms = zoned(p[0], p[1] - 1, p[2], q[0], q[1]); if (isNaN(ms)) return null;
       var o = OrbitCal.date(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), r = riseRel(ms);   // orbitalny: pora roku według kąta w tej chwili
-      return { ms: ms, a: a, o: o, tod: r ? degTxt(r.deg) : "", todK: r && r.key === "degToRise" ? "bdTodB" : r && r.key === "degRise" ? "bdTodR" : "bdTodP",
+      return { ms: ms, a: a, o: o, tod: r ? degTxt(r.deg) : "", hm: clockTxt(ms), dial: miniDial(ms), todK: r && r.key === "degRise" ? "bdTodR" : "bdTodP",
         color: qColor(o.season), clim: mName(o.month), orb: part("lsG", sIdx(qa)), oa: a - qa * 90 }
     });
     if (!B) return '<p class="cnote">' + t("bdHint") + '</p>';
@@ -315,17 +315,18 @@
       var m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === bk && o.d === bd;
       if (!same0) shift++;
       rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + Y + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
-        short(OrbitCal.dateOf(n)) + '</td><td>' + whenTxt(m) + '</td></tr>'
+        short(OrbitCal.dateOf(n)) + '</td><td><div class="bdtod"><div>' + whenTxt(m) + '<span class="bdhm">' + clockTxt(m) + '</span></div>' + miniDial(m) + '</div></td></tr>'
     }
     // data urodzenia: dzień w kalendarzu klimatycznym, kąt w porze roku (orbitalny) i pora doby (kąt Słońca od wschodu, jak na tarczy)
-    function bdCal(nm, big, sub, col) {
-      return '<div class="bdc" style="border-color:' + col + '"><small>' + t(nm) + '</small><b>' + big + '</b><span>' + sub + '</span></div>'
+    function bdCal(nm, big, sub, col, hm, dial) {   // hm: godzina pod opisem, dial: mała tarcza przy stopniach (tylko pora doby)
+      return '<div class="bdc" style="border-color:' + col + '"><small>' + t(nm) + '</small><b>' + (dial ? '<span class="bdtod">' + dial + big + '</span>' : big) + '</b><span>' + sub + '</span>' +
+        (hm ? '<span class="bdhm">' + hm + '</span>' : '') + '</div>'
     }
     // dwie części, każda ze swoim miejscem: urodzenie (w miejscu urodzenia) i powroty (tam, gdzie jesteś: miasto u góry strony)
     function pin(p) { return '<span class="bdpin">📍 ' + esc(p.name || p.lat + "°, " + p.lon + "°") + '</span>' }
     return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + t("calOYear").replace("{y}", Yb) + ' ' + pin(bplace) + '</div>' +
       '<div class="bdcals">' + bdCal("calNmS", B.clim, t("calDay").replace("{d}", ob.day), B.color) +
-      bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)") + '</div>' +
+      bdCal("calNmL", degTr(B.oa), B.orb, B.color) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)", B.hm, B.dial) + '</div>' +
       '<div class="bdorb">' + t("bdOrb").replace("{a}", num(a, 2) + "°") + '</div></div>' +
       (rows ? '<div class="bdsec bdsec2"><small>' + t("bdRet") + '</small><div class="bdwhen">' + pin({ lat: lat, lon: lon, name: place }) + '</div>' +
         bdLadder(a, Ys, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Ys + 1) + '</p>' +

@@ -766,20 +766,40 @@ function buildMonthScale(cyc) {
 /* ===== Chwile w stopniach doby =====
    Każde zdarzenie (faza Księżyca, równonoc, aphelium…) podajemy tak jak tarcza: kąt Słońca od wschodu
    (w dzień / noc polarną od słonecznej północy). Wyjątek: chwila po słonecznej północy, a przed wschodem należy
-   już do nowej doby kalendarza, a tarcza liczy ją jeszcze od wczorajszego wschodu. Wtedy podajemy kąt DO wschodu
-   tej doby (np. „33° do wschodu” zamiast „327° od wschodu”). */
+   już do nowej doby kalendarza, a tarcza liczy ją jeszcze od wczorajszego wschodu. Wtedy podajemy kąt OD słonecznej
+   północy tej doby (np. „4° od słonecznej północy” zamiast „327° od wschodu”). Dawniej było „X° do wschodu”, ale
+   liczba odliczana wstecz od wschodu myliła: zimą „115° do wschodu” to chwila tuż po północy (drabina lat w urodzinach). */
 // 137.4 -> "137°" (izolacja LTR jak w nearParts). Pełne stopnie (1° = 4 min): uproszczony model Księżyca
 // myli się nawet o kilka godzin, więc minuty łuku udawałyby dokładność, której nie ma.
 function degTxt(x) { return "⁦" + Math.min(359, Math.round(x)) + "°⁩" }
-// chwila ms względem wschodu: { deg, key } (key: degRise, degToRise albo degPolar) albo null
+// chwila ms względem wschodu: { deg, key } (key: degRise albo degPolar = od słonecznej północy) albo null
+// (kąt od północy w tej samej skali co tarcza: 360° = od wschodu do wschodu)
 function riseRel(ms) {
   var c = dayCycle(new Date(ms)); if (!c) return null;
-  var f = (ms - c.a) / (c.b - c.a);
+  var f = (ms - c.a) / (c.b - c.a), n = sunDay(ms);
   if (c.polar) return { deg: Math.min(359.99, 360 * f), key: "degPolar" };
-  return sunDay(ms) > sunDay(c.a) ? { deg: 360 * (1 - f), key: "degToRise" } : { deg: Math.min(359.99, 360 * f), key: "degRise" }
+  return n > sunDay(c.a) ? { deg: 360 * (ms - sunDayStart(n)) / (c.b - c.a), key: "degPolar" } : { deg: Math.min(359.99, 360 * f), key: "degRise" }
 }
-// "137° od wschodu" albo "33° do wschodu": kąt Słońca w dobie, w której wypada chwila ms
+// "137° od wschodu" albo "4° od słonecznej północy": kąt Słońca w dobie, w której wypada chwila ms
 function whenTxt(ms) { var r = riseRel(ms); return r ? t(r.key).replace("{a}", degTxt(r.deg)) : "" }
+/* Mała tarcza chwili ms (jak duża: 0° = wschód po lewej, 90° u góry, zgodnie ze wskazówkami zegara; w dzień / noc
+   polarną od słonecznej północy): jasny łuk = dzień, ciemny = noc, wskazówka i kropka = Słońce. Do tabel z chwilami,
+   bo same stopnie trudno sobie wyobrazić. Możliwy zalążek ikonki / logo. */
+function miniDial(ms) {
+  var c = dayCycle(new Date(ms)); if (!c) return "";
+  var L = c.b - c.a, s = 360 * (ms - c.a) / L, z = 360 * (c.set - c.a) / L, R9 = 9;
+  function p(a, q) { q = q || R9; return (-q * Math.cos(a * R)).toFixed(2) + " " + (-q * Math.sin(a * R)).toFixed(2) }
+  function arc(a0, a1, col) {
+    return a1 - a0 >= 359.9 ? '<circle r="' + R9 + '" stroke="' + col + '"/>' :
+      a1 - a0 < .1 ? "" : '<path d="M' + p(a0) + ' A' + R9 + ' ' + R9 + ' 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + p(a1) + '" stroke="' + col + '"/>'
+  }
+  return '<svg class="mdial" viewBox="-12.5 -12.5 25 25" aria-hidden="true"><g fill="none" stroke-width="3.5">' +
+    arc(0, z, "var(--day)") + arc(z, 360, "var(--night)") + '</g>' +
+    '<path d="M0 0 L' + p(s, 6.5) + '" stroke="var(--fg)" stroke-width="1.4" stroke-linecap="round"/>' +
+    '<circle cx="' + p(s).split(" ")[0] + '" cy="' + p(s).split(" ")[1] + '" r="2.6" fill="var(--sun)" stroke="var(--bg)" stroke-width="1"/></svg>'
+}
+// "10:46": godzina chwili ms według zegara miasta (podpowiedź przy stopniach dla tych, którzy ich jeszcze nie czują)
+function clockTxt(ms) { var o = tzParts(ms); return "⁦" + o.hour + ":" + (o.minute < 10 ? "0" : "") + o.minute + "⁩" }
 // główne fazy Księżyca (0 nów, 1 I kwadra, 2 pełnia, 3 III kwadra) w przedziale [a, b): [{ k, ms }]
 // c: cykl, z którego brać fazy (domyślnie ten, w którym leży a)
 function moonPhasesIn(a, b, c) {

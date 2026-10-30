@@ -4,7 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zegar światła</title>
-  <link rel="stylesheet" href="css/style.css?v=82">
+  <meta name="description" content="Zegar, który pokazuje czas w stopniach obrotu Ziemi: ile światła minęło i ile zostało.">
+  <!-- aplikacja do zainstalowania (PWA): manifest w języku strony podmienia setLang() w js/I18n.js -->
+  <link rel="manifest" id="manifest" href="manifests/pl.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" id="appTitle" content="Zegar światła">
+  <meta name="theme-color" content="#fff7ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14100c" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="css/style.css?v=84">
 </head>
 <body>
   <div class="top">
@@ -177,14 +188,15 @@
   </div>
   </div>
 
+  <p class="foot"><a href="privacy.html" data-i18n="privacy">Prywatność</a></p>
 
-  <script src="js/I18n.js?v=82"></script>
-  <script src="js/I18n-more.js?v=82"></script>
-  <script src="js/main.js?v=82"></script>
-  <script src="js/view3d.js?v=82"></script>
-  <script src="js/year.js?v=82"></script>
-  <script src="js/orbit.js?v=82"></script>
-  <script src="js/calendar.js?v=82"></script>
-  <script src="js/orbitwheel.js?v=82"></script>
+  <script src="js/I18n.js?v=84"></script>
+  <script src="js/I18n-more.js?v=84"></script>
+  <script src="js/main.js?v=84"></script>
+  <script src="js/view3d.js?v=84"></script>
+  <script src="js/year.js?v=84"></script>
+  <script src="js/orbit.js?v=84"></script>
+  <script src="js/calendar.js?v=84"></script>
+  <script src="js/orbitwheel.js?v=84"></script>
 </body>
 </html>

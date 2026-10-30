@@ -4,6 +4,7 @@
    Arabski pisze się od prawej do lewej: setLang() ustawia wtedy dir="rtl". */
 I18N.de = {
   title: "Lichtuhr",
+  privacy: "Datenschutz",
   dial: "Zifferblatt",
   sinceRise: "seit Sonnenaufgang",
   altitude: "Sonnenhöhe",
@@ -195,6 +196,7 @@ I18N.de = {
 
 I18N.fr = {
   title: "Horloge de lumière",
+  privacy: "Confidentialité",
   dial: "Cadran",
   sinceRise: "depuis le lever",
   altitude: "Hauteur du soleil",
@@ -386,6 +388,7 @@ I18N.fr = {
 
 I18N.it = {
   title: "Orologio della luce",
+  privacy: "Privacy",
   dial: "Quadrante",
   sinceRise: "dall’alba",
   altitude: "Altezza del sole",
@@ -577,6 +580,7 @@ I18N.it = {
 
 I18N.pt = {
   title: "Relógio da luz",
+  privacy: "Privacidade",
   dial: "Mostrador",
   sinceRise: "desde o nascer do sol",
   altitude: "Altura do sol",
@@ -768,6 +772,7 @@ I18N.pt = {
 
 I18N.uk = {
   title: "Годинник світла",
+  privacy: "Конфіденційність",
   dial: "Циферблат",
   sinceRise: "від сходу",
   altitude: "Висота сонця",
@@ -961,6 +966,7 @@ I18N.uk = {
 
 I18N.ar = {
   title: "ساعة الضوء",
+  privacy: "الخصوصية",
   dial: "الميناء",
   sinceRise: "منذ الشروق",
   altitude: "ارتفاع الشمس",

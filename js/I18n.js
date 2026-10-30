@@ -4,6 +4,7 @@
 var I18N = {
   pl: {
     title: "Zegar światła",
+    privacy: "Prywatność",
     dial: "Tarcza",
     sinceRise: "od wschodu",
     altitude: "Wysokość słońca",
@@ -201,6 +202,8 @@ var I18N = {
   },
   en: {
     title: "Light clock",
+    privacy: "Privacy",
+    appName: "Light Clock",   // nazwa pod ikoną aplikacji (jak w manifests/en.webmanifest)
     dial: "Dial",
     sinceRise: "since sunrise",
     altitude: "Sun altitude",
@@ -398,6 +401,7 @@ var I18N = {
   },
   es: {
     title: "Reloj de luz",
+    privacy: "Privacidad",
     dial: "Esfera",
     sinceRise: "desde el amanecer",
     altitude: "Altura del sol",
@@ -632,6 +636,10 @@ function setLang(l) {
   document.documentElement.lang = l;
   document.documentElement.dir = l === "ar" ? "rtl" : "ltr";   // arabski: od prawej do lewej
   document.title = t("title");
+  // aplikacja do zainstalowania: manifest i nazwa pod ikoną w tym samym języku (manifests/<język>.webmanifest)
+  var mf = document.getElementById("manifest"), at = document.getElementById("appTitle");
+  if (mf) mf.setAttribute("href", "manifests/" + l + ".webmanifest");
+  if (at) at.setAttribute("content", I18N[l].appName || t("title"));
   document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")) });
   document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.getAttribute("data-i18n-ph")) });
   document.querySelectorAll("[data-i18n-aria]").forEach(function (el) { el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria"))) });

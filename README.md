@@ -4,7 +4,7 @@ Interaktywny zegar światła w przeglądarce. Czas pokazuje w **stopniach obrotu
 
 **▶ Otwórz: https://bibilibak.github.io/daylight-clock/**
 
-Strona działa na komputerze i telefonie. Nic nie trzeba instalować.
+Strona działa na komputerze i telefonie. Nic nie trzeba instalować, ale można ją dodać do ekranu głównego telefonu: otwiera się wtedy jak aplikacja i działa bez internetu (poza wyszukiwaniem miast).
 
 Strona ma trzy zakładki: **Doba**, **Rok** i **Kalendarz**. Miejsce jest wspólne dla wszystkich zakładek.
 
@@ -49,7 +49,7 @@ Kalendarz klimatyczny: rok zaczyna się w dniu równonocy marcowej (kąt roku 0�
 Polski, English, Español, Deutsch, Français, Italiano, Português, Українська, العربية.
 
 ## Prywatność
-Wybrane miejsca, wydarzenia, urodziny, język i ustawienia widoku zostają tylko w Twojej przeglądarce (`localStorage`). Wyszukiwanie miast korzysta z darmowego [Open-Meteo Geocoding API](https://open-meteo.com/). Wysyłana jest tylko wpisana nazwa miasta.
+Wybrane miejsca, wydarzenia, język i ustawienia widoku zostają tylko w Twojej przeglądarce (`localStorage`). Wyszukiwanie miast korzysta z darmowego [Open-Meteo Geocoding API](https://open-meteo.com/). Wysyłana jest tylko wpisana nazwa miasta. Pełna polityka prywatności: [privacy.html](privacy.html).
 
 ## Uruchomienie lokalnie
 Wystarczy otworzyć `index.html` w przeglądarce. Projekt to czysty HTML, CSS i JavaScript, bez bibliotek i bez budowania.
@@ -65,6 +65,10 @@ js/year.js          – zakładka Rok: przełącznik Orbita / Długość dnia, w
 js/orbit.js         – obliczenia kalendarza orbity (granice miesięcy, apsydy, daty)
 js/calendar.js      – zakładka Kalendarz, urodziny
 js/orbitwheel.js    – zakładka Rok, widok Orbita: koło orbity i lupa
+sw.js               – działanie bez internetu (service worker; po zmianie podnieś w nim CACHE)
+manifests/          – manifesty aplikacji do zainstalowania, po jednym na język
+assets/             – ikony aplikacji (icon.svg i PNG)
+privacy.html        – polityka prywatności (PL, EN)
 ```
 
 Skrypty ładują się w tej kolejności i korzystają ze wspólnych zmiennych globalnych z `main.js` (`lat`, `lon`, `tz`, `R`) oraz funkcji obliczeń (`sunDay`, `sunLonDeg`, `elong`…).

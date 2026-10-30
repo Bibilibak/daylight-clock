@@ -41,10 +41,21 @@ Testy powinny sprawdzać, że nigdzie nie pojawia się `NaN` ani `undefined`, ż
 
 ## 4. Przygotowanie pod aplikację
 
-Kolejne kroki, żeby z strony zrobić aplikację:
-- ikony aplikacji (różne rozmiary dla iOS i Androida) i ekran startowy,
-- plik manifestu (`manifest.webmanifest`) i działanie bez internetu (service worker), bo bez sieci działa wtedy wszystko poza wyszukiwaniem miast,
-- opakowanie w Capacitor (projekty Xcode i Android Studio),
-- polityka prywatności na osobnej stronie (wymagana przez oba sklepy),
-- opisy uprawnień (lokalizacja) dla iOS i Androida,
-- decyzja, co będzie płatne (np. widżet na ekran główny, powiadomienia, zegarek), i jednorazowy zakup „Pro” w aplikacji.
+### Etap 1: PWA, czyli strona do zainstalowania (zrobione 30 października 2026)
+- [x] ikona: tarcza z pierścieniem w kolorach nieba (`assets/icon.svg`, PNG 32, 180, 192 i 512 px, wersje maskowalne dla Androida),
+- [x] manifesty w 9 językach (`manifests/<język>.webmanifest`); strona podmienia manifest i nazwę pod ikoną po zmianie języka,
+- [x] działanie bez internetu (`sw.js`): po pierwszym otwarciu strona działa offline, poza wyszukiwaniem miast,
+- [x] polityka prywatności (`privacy.html`, PL i EN), link w stopce strony.
+
+Do zrobienia przez Ciebie: uzupełnij w `privacy.html` miejsca oznaczone **[UZUPEŁNIJ]** / **[FILL IN]** (twórca, e-mail, data).
+
+Jak sprawdzić: otwórz https://bibilibak.github.io/daylight-clock/ na telefonie i wybierz „Dodaj do ekranu głównego” (iPhone: Udostępnij → Do ekranu początkowego; Android: menu ⋮ → Zainstaluj aplikację). Potem włącz tryb samolotowy i otwórz zegar z ikony.
+
+### Etap 2: aplikacja w sklepach (do zrobienia)
+- opakowanie w Capacitor (wymaga Node.js; projekt Android Studio, a dla iOS Maca albo usługi w chmurze, np. Codemagic),
+- ekran startowy (Capacitor tworzy go z ikony i koloru tła `#fff7ea`),
+- uprawnienie do lokalizacji: wystarczy przybliżona lokalizacja (Android: tylko `ACCESS_COARSE_LOCATION`, iOS: „Przybliżona” wystarczy), bo do wschodu Słońca dokładność kilku kilometrów nie ma znaczenia. Gotowe opisy zgody:
+  - iOS `NSLocationWhenInUseUsageDescription`, PL: „Lokalizacja służy tylko do obliczenia wschodu i zachodu Słońca w Twoim miejscu. Nie jest nigdzie wysyłana.”
+  - EN: “Your location is used only to calculate sunrise and sunset where you are. It is never sent anywhere.”
+- decyzja, co będzie płatne (np. widżet na ekran główny, powiadomienia, zegarek), i jednorazowy zakup „Pro” w aplikacji,
+- konta deweloperskie: Apple (99 USD rocznie), Google Play (25 USD jednorazowo, zamknięte testy z 12 testerami przez 14 dni).

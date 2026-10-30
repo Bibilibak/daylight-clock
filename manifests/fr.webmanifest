@@ -1,0 +1,21 @@
+{
+  "name": "Horloge de lumière",
+  "short_name": "Horloge de lumière",
+  "description": "Une horloge qui indique le temps en degrés de rotation de la Terre : la lumière écoulée et celle qui reste.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "../",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7ea",
+  "theme_color": "#fff7ea",
+  "categories": ["education", "utilities"],
+  "icons": [
+    { "src": "../assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

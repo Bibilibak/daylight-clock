@@ -756,3 +756,7 @@ button {
   .top, h1, .lightH, .legend, .reading, .where, #dialExtras, .place, .results, .or, body > .row, .manual,
   #v3 > :not(svg), .yseg, .ystate, .yrow { zoom: 1.3; }
 }
+
+/* stopka: link do polityki prywatności (privacy.html) */
+.foot { text-align: center; margin: 28px 0 18px; font-size: 13px; }
+.foot a { color: var(--mut); }

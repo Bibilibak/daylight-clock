@@ -1,0 +1,21 @@
+{
+  "name": "Relógio da luz",
+  "short_name": "Relógio da luz",
+  "description": "Um relógio que mostra o tempo em graus de rotação da Terra: quanta luz já passou e quanta resta.",
+  "lang": "pt",
+  "dir": "ltr",
+  "start_url": "../",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7ea",
+  "theme_color": "#fff7ea",
+  "categories": ["education", "utilities"],
+  "icons": [
+    { "src": "../assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

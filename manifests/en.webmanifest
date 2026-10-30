@@ -1,0 +1,21 @@
+{
+  "name": "Light Clock",
+  "short_name": "Light Clock",
+  "description": "A clock that shows time in degrees of Earth's rotation: how much daylight has passed and how much is left.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "../",
+  "scope": "../",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7ea",
+  "theme_color": "#fff7ea",
+  "categories": ["education", "utilities"],
+  "icons": [
+    { "src": "../assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "../assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

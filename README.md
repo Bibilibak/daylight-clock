@@ -69,11 +69,17 @@ sw.js               – działanie bez internetu (service worker; po zmianie pod
 manifests/          – manifesty aplikacji do zainstalowania, po jednym na język
 assets/             – ikony aplikacji (icon.svg i PNG)
 privacy.html        – polityka prywatności (PL, EN)
+scripts/icons.ps1   – tworzy ikony strony i aplikacji (PowerShell)
+scripts/copy-web.js – kopiuje pliki strony do www/ dla aplikacji
+capacitor.config.json, package.json, android/ – aplikacja na Androida (Capacitor)
 ```
 
 Skrypty ładują się w tej kolejności i korzystają ze wspólnych zmiennych globalnych z `main.js` (`lat`, `lon`, `tz`, `R`) oraz funkcji obliczeń (`sunDay`, `sunLonDeg`, `elong`…).
 
 Po zmianie plików CSS lub JS podnieś numer `?v=` w `index.html`, żeby przeglądarki pobrały nową wersję.
+
+### Aplikacja na Androida
+Aplikacja to ta sama strona opakowana w [Capacitor](https://capacitorjs.com/) (identyfikator `app.lightclock`). Potrzebne są Node.js i Android Studio. Raz: `npm install`. Potem `npm run android` kopiuje pliki strony do aplikacji i otwiera projekt w Android Studio, gdzie przyciskiem Run uruchamia się ją na telefonie albo w emulatorze. Szczegóły w [NASTEPNE-KROKI.md](NASTEPNE-KROKI.md).
 
 Otwarte i podjęte decyzje projektowe są opisane w [OTWARTE-PYTANIA.md](OTWARTE-PYTANIA.md), a ważne kroki przed wydaniem aplikacji w [NASTEPNE-KROKI.md](NASTEPNE-KROKI.md).
 

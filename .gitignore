@@ -1,2 +1,6 @@
 # PDF-y prezentacji trzymamy tylko lokalnie
 Prezentacje/*.pdf
+
+# aplikacja (Capacitor): zależności npm i kopia strony do budowania
+node_modules/
+www/

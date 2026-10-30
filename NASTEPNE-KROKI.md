@@ -51,11 +51,28 @@ Do zrobienia przez Ciebie: uzupełnij w `privacy.html` miejsca oznaczone **[UZUP
 
 Jak sprawdzić: otwórz https://bibilibak.github.io/daylight-clock/ na telefonie i wybierz „Dodaj do ekranu głównego” (iPhone: Udostępnij → Do ekranu początkowego; Android: menu ⋮ → Zainstaluj aplikację). Potem włącz tryb samolotowy i otwórz zegar z ikony.
 
-### Etap 2: aplikacja w sklepach (do zrobienia)
-- opakowanie w Capacitor (wymaga Node.js; projekt Android Studio, a dla iOS Maca albo usługi w chmurze, np. Codemagic),
-- ekran startowy (Capacitor tworzy go z ikony i koloru tła `#fff7ea`),
-- uprawnienie do lokalizacji: wystarczy przybliżona lokalizacja (Android: tylko `ACCESS_COARSE_LOCATION`, iOS: „Przybliżona” wystarczy), bo do wschodu Słońca dokładność kilku kilometrów nie ma znaczenia. Gotowe opisy zgody:
-  - iOS `NSLocationWhenInUseUsageDescription`, PL: „Lokalizacja służy tylko do obliczenia wschodu i zachodu Słońca w Twoim miejscu. Nie jest nigdzie wysyłana.”
+### Etap 2: aplikacja na Androida (Capacitor)
+Zrobione 30 października 2026:
+- [x] projekt Capacitor 8 w tym samym repozytorium: `package.json`, `capacitor.config.json`, folder `android/`,
+- [x] identyfikator aplikacji: **`app.lightclock`** (nie da się go zmienić po publikacji w Google Play),
+- [x] nazwa pod ikoną w języku telefonu (domyślnie „Light Clock”, po polsku „Zegar światła”, razem 9 języków: `android/app/src/main/res/values-*/strings.xml`),
+- [x] ikony (zwykła, okrągła, adaptacyjna) i ekran startowy z kremowym tłem; tworzy je `scripts/icons.ps1`,
+- [x] zgoda na lokalizację: przybliżona i dokładna. Sama przybliżona działa w Capacitorze dopiero od Androida 12, a tam użytkownik i tak może wybrać „Przybliżona”.
+
+Do zrobienia przez Ciebie: zainstalować **Android Studio** (https://developer.android.com/studio). Kreator przy pierwszym uruchomieniu pobierze Android SDK.
+
+Jak zbudować i uruchomić:
+1. W folderze repozytorium: `npm install` (raz, po pobraniu repo na nowy komputer), potem `npm run android`. Polecenie kopiuje pliki strony do aplikacji i otwiera projekt w Android Studio.
+2. W Android Studio: podłącz telefon z włączonym debugowaniem USB (albo utwórz emulator w Device Manager) i kliknij **Run ▶**.
+3. Po każdej zmianie w zegarze: znowu `npm run sync` (albo `npm run android`), potem Run.
+
+Do Google Play (później):
+- **Build → Generate Signed App Bundle** (plik `.aab`). Klucz podpisu (`.jks`) i jego hasło trzymaj bezpiecznie poza repozytorium. Bez niego nie wydasz aktualizacji, chyba że włączysz podpisywanie przez Google Play (Play App Signing, zalecane).
+- przed każdym wydaniem podnieś `versionCode` (1, 2, 3…) i `versionName` (np. 1.0.1) w `android/app/build.gradle`.
+- konto Google Play (25 USD jednorazowo), zamknięte testy z 12 testerami przez 14 dni, polityka prywatności pod adresem https://bibilibak.github.io/daylight-clock/privacy.html (najpierw uzupełnij w niej swoje dane).
+
+### Etap 3: iOS i wersja Pro (do zrobienia)
+- iOS: `npx cap add ios` wymaga Maca z Xcode (albo usługi w chmurze, np. Codemagic) i konta Apple Developer (99 USD rocznie). Opis zgody `NSLocationWhenInUseUsageDescription`:
+  - PL: „Lokalizacja służy tylko do obliczenia wschodu i zachodu Słońca w Twoim miejscu. Nie jest nigdzie wysyłana.”
   - EN: “Your location is used only to calculate sunrise and sunset where you are. It is never sent anywhere.”
-- decyzja, co będzie płatne (np. widżet na ekran główny, powiadomienia, zegarek), i jednorazowy zakup „Pro” w aplikacji,
-- konta deweloperskie: Apple (99 USD rocznie), Google Play (25 USD jednorazowo, zamknięte testy z 12 testerami przez 14 dni).
+- decyzja, co będzie płatne (np. widżet na ekran główny, powiadomienia, zegarek), i jednorazowy zakup „Pro” w aplikacji.

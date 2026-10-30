@@ -912,7 +912,8 @@ if ($("calBtn")) $("calBtn").onclick = function () { showView("cal") };
 
 /* ===== Działanie bez internetu: service worker (sw.js) zapisuje stronę w pamięci telefonu lub komputera =====
    Tylko ze strony w sieci (http / https); otwarty z dysku plik index.html działa jak dotąd. */
-if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol))
+// W aplikacji (Capacitor) pliki są w środku aplikacji, więc service worker nie jest potrzebny.
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && !window.Capacitor)
   addEventListener("load", function () {   // po załadowaniu strony, żeby przy pierwszej wizycie nie pobierać plików dwa razy naraz
     navigator.serviceWorker.register("sw.js").catch(function (err) { console.error("Service worker:", err) })
   });

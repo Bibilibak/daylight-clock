@@ -1,0 +1,20 @@
+{
+  "name": "daylight-clock",
+  "private": true,
+  "description": "Zegar światła / Light Clock: strona (GitHub Pages) i aplikacja na Androida (Capacitor)",
+  "scripts": {
+    "build": "node scripts/copy-web.js",
+    "sync": "npm run build && npx cap sync android",
+    "android": "npm run sync && npx cap open android"
+  },
+  "overrides": {
+    "tslib": "2.8.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0"
+  }
+}

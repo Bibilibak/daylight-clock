@@ -1,0 +1,9 @@
+{
+  "appId": "app.lightclock",
+  "appName": "Light Clock",
+  "webDir": "www",
+  "backgroundColor": "#fff7ea",
+  "android": {
+    "allowMixedContent": false
+  }
+}

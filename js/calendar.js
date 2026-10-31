@@ -13,15 +13,16 @@
     if (cs && inYears(cs.sy) && cs.sm >= 0 && cs.sm < 12 && cs.d >= 1 && cs.d <= 31 && cs.sm % 1 === 0 && cs.d % 1 === 0) sel = new Date(cs.sy, cs.sm, cs.d)
   } catch (e) {}
   function inYears(y) { return typeof y === "number" && y % 1 === 0 && y >= 1000 && y <= 3000 }   // lata 1000–3000, jak pole roku
-  var od = OrbitCal.date(sel), oy = od.year, om = od.month;   // oglądany rok orbity i miesiąc (0–11)
-  if (cs && inYears(cs.oy) && cs.om >= 0 && cs.om < 12 && cs.om % 1 === 0) { oy = cs.oy; om = cs.om }
+  var od = clDate(sel), oy = od.year, om = od.month, shownS = south();   // oglądany rok klimatyczny i miesiąc (0–11); shownS: półkula, dla której są liczone
+  // oglądany rok i miesiąc z zapisu tylko dla tej samej półkuli (na drugiej ten sam numer to inny rok)
+  if (cs && inYears(cs.oy) && cs.om >= 0 && cs.om < 12 && cs.om % 1 === 0 && !!cs.s === shownS) { oy = cs.oy; om = cs.om }
 
   // O słonecznej północy (albo po zmianie miejsca) "dziś" przesuwa się samo. Jeśli patrzyłeś na dzisiejszy dzień,
   // zaznaczenie idzie razem z nim. Zwraca true, gdy "dziś" się zmieniło.
   function syncToday() {
     var n = dayStart();
     if (same(n, today)) return false;
-    if (same(sel, today)) { sel = n; var o = OrbitCal.date(n); oy = o.year; om = o.month }
+    if (same(sel, today)) { sel = n; var o = clDate(n); oy = o.year; om = o.month }
     today = n;
     return true
   }
@@ -34,11 +35,43 @@
   function same(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate() }
   function short(d) { return d.toLocaleDateString(loc(), { day: "numeric", month: "short" }) }
 
-  /* Nazwy i kolory pór roku. Ćwiartka q = 0…3 to kąt orbity 0–90°, 90–180°… Na półkuli północnej ćwiartka 0
-     to wiosna, na południowej jesień. Kalendarz jest wspólny dla całej Ziemi, więc między zwrotnikami nazwy też są
-     takie jak na danej półkuli (klimatycznie pory roku się tam prawie nie różnią, ale dni liczymy tak samo). */
+  /* Półkula: z wybranego miejsca (lat < 0 = południowa), a w urodzinach z miejsca urodzenia (withS).
+     Rok klimatyczny zaczyna się wiosną: na północy w równonocy marcowej (kąt roku 0°), na południu we wrześniowej (180°).
+     To podział umowny, dla wygody: między zwrotnikami pory roku prawie się nie różnią, a nazwy zostają jak na tej półkuli. */
+  var sOver = null;
+  function south() { return sOver != null ? sOver : lat < 0 }   // != null: przy starcie (linia z shownS) sOver jest jeszcze undefined
+  function withS(sv, fn) { var o = sOver; sOver = sv; try { return fn() } finally { sOver = o } }
+  function off() { return south() ? 180 : 0 }
+  function ang(k) { return (k * 30 + off()) % 360 }   // kąt roku (orbitalny), od którego zaczyna się miesiąc k roku klimatycznego
+
+  /* Rok klimatyczny Y: na północy = rok orbity Y (js/orbit.js), na południu od 180° roku orbity Y do 180° roku Y+1
+     (wrzesień Y – wrzesień Y+1). Te same funkcje co w OrbitCal, ale miesiąc 0 to zawsze wczesna wiosna. */
+  function clYear(Y) {
+    var a = OrbitCal.year(Y); if (!south()) return a;
+    var c = OrbitCal.year(Y + 1);   // aphelium (lipiec) wypada już w roku orbity Y+1, peryhelium (styczeń) jeszcze w roku Y
+    return { b: a.b.slice(6).concat(c.b.slice(1, 7)), aph: c.aph, peri: a.peri }
+  }
+  function clStarts(Y) { var a = OrbitCal.starts(Y); return south() ? a.slice(6).concat(OrbitCal.starts(Y + 1).slice(1, 7)) : a }
+  function clApsis(Y) { var a = OrbitCal.apsisDays(Y); return south() ? { aph: OrbitCal.apsisDays(Y + 1).aph, peri: a.peri } : a }
+  // rok orbity, w którym Słońce jest na kącie l w roku klimatycznym Y (na południu kąty 0–180° to już następny rok orbity)
+  function oYear(Y, l) { return Y + (south() && (l % 360 + 360) % 360 < 180 ? 1 : 0) }
+  function clDayAt(Y, l) { return OrbitCal.dayAt(oYear(Y, l), l) }
+  function clMoment(Y, l) { return OrbitCal.momentAt(oYear(Y, l), l) }
+  // data w kalendarzu klimatycznym dla doby d (jak OrbitCal.date)
+  function clDate(d) {
+    var n = OrbitCal.dayN(d), Y = d.getFullYear(), s = clStarts(Y), k = 11;
+    if (n < s[0]) { Y--; s = clStarts(Y) }
+    while (s[k] > n) k--;
+    var q = k / 3 | 0;
+    return { year: Y, month: k, season: q, day: n - s[k] + 1, len: s[k + 1] - s[k], start: s[k], sday: n - s[q * 3] + 1, slen: s[q * 3 + 3] - s[q * 3],
+      yday: n - s[0] + 1, ylen: s[12] - s[0] }
+  }
+  function yLbl(Y) { return t("calOYear").replace("{y}", OrbitCal.yLabel(Y)) }   // „Rok orbity 2026/27”: rok obejmuje dwa lata gregoriańskie
+
+  /* Nazwy i kolory pór roku. Ćwiartka orbity q = 0…3 to kąt 0–90°, 90–180°… Na północy ćwiartka 0 to wiosna, na południu
+     jesień (sIdx). Miesiąc k kalendarza klimatycznego (0 = wczesna wiosna) i jego pora roku k / 3 nie zależą od półkuli. */
   var SC = ["#4c9a3f", "#e0a000", "#c8623a", "#4f7fc4"];   // wiosna, lato, jesień, zima
-  function sIdx(q) { return lat < 0 ? (q + 2) % 4 : q }
+  function sIdx(q) { return south() ? (q + 2) % 4 : q }
   function qColor(q) { return SC[sIdx(q)] }
   /* Kalendarz klimatyczny: wiosna, lato, jesień, zima, każda podzielona na 3 miesiące po 30° (wczesna / pełna / późna
      pora roku), na wzór 12 miesięcy gregoriańskich. Miesiące mają 29–32 dni. Kalendarz i Koło to dwa sposoby jego pokazania.
@@ -48,15 +81,15 @@
   /* Nazwa miesiąca kalendarza klimatycznego: wczesna / pełna / późna pora roku (calMonN: 12 nazw rozdzielonych "|",
      od wczesnej wiosny do późnej zimy). Gdy brakuje nazwy w tłumaczeniu: zakres kąta orbity, np. "Miesiąc 0–30°". */
   function mName(k) {
-    return t("calMonN").split("|")[sIdx(k / 3 | 0) * 3 + k % 3] || t("calMon").replace("{a}", k * 30 + "–" + (k + 1) * 30 + "°")
+    return t("calMonN").split("|")[k] || t("calMon").replace("{a}", ang(k) + "–" + (ang(k) + 30) + "°")
   }
   /* Skrót na kole: wczesna / pełna / późna (calMonS: 3 skróty albo 12, gdy forma zależy od pory roku).
-     Gdy brakuje skrótu: numer miesiąca w ćwiartce, 1–3. */
+     Gdy brakuje skrótu: numer miesiąca w porze roku, 1–3. */
   function mShort(k) {
     var s = t("calMonS").split("|");
-    return (s.length === 12 ? s[sIdx(k / 3 | 0) * 3 + k % 3] : s[k % 3]) || k % 3 + 1
+    return (s.length === 12 ? s[k] : s[k % 3]) || k % 3 + 1
   }
-  function mColor(k) { return qColor(k / 3 | 0) }
+  function mColor(k) { return SC[k / 3 | 0] }
   // urodziny: kąt w porze roku kalendarza orbitalnego, z 2 miejscami po przecinku, ucięty (nie zaokrąglony):
   // 33,996° to jeszcze 33,99°, bo Ziemia nie doszła do 34°
   function degTr(x) { return num(Math.floor(x * 100 + 1e-9) / 100, 2) + "°" }
@@ -69,10 +102,10 @@
     var n = OrbitCal.dayN(d), noon = sunNoon(n), c = dayCycle(new Date(noon)),
       ph = elong(noon), il = Math.round((1 - Math.cos(ph * R)) / 2 * 100), lc = lunarCycle(new Date(noon)),
       light = c && !c.polar && !c.noDay ? Math.round(360 * (c.set - c.a) / (c.b - c.a)) : null,
-      o = OrbitCal.date(d), ap = OrbitCal.apsisOn(n),
+      o = clDate(d), ap = OrbitCal.apsisOn(n),
       ev = moonPhasesIn(OrbitCal.dayStart(n), OrbitCal.dayStart(n + 1)), k = o.month,
       // doba przejścia przez granicę 30°·k: równonoc 0° / 180°, przesilenie 90° / 270°, inaczej granica miesiąca
-      cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", k * 30) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(OrbitCal.year(o.year).b[k]) : "";
+      cross = o.day === 1 ? (k % 3 ? t("calMonStart").replace("{l}", ang(k)) : t(k % 6 ? "calSolstice" : "calEquinox")) + ': ' + whenTxt(clYear(o.year).b[k]) : "";
     return '<div class="cdet"><div class="cg1">' + d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + '</div>' +
       '<div class="cp">' + dName(o) + '</div>' +
       (cross ? '<div class="cap">' + cross + '</div>' : '') +
@@ -134,16 +167,16 @@
      Koło obraca się palcem albo myszą (dzień pod strzałką zmienia się na bieżąco, puszczone w ruchu kręci się jeszcze chwilę),
      strzałkami klawiatury o dobę; kliknięcie w pierścień obraca koło do tego dnia. W środku kąt roku pod strzałką. */
   var rTop = null;   // kąt roku pod strzałką na narysowanym kole (null: koło nienarysowane)
-  function inOy(d) { var s = OrbitCal.starts(oy), n = OrbitCal.dayN(d); return n >= s[0] && n < s[12] }
+  function inOy(d) { var s = clStarts(oy), n = OrbitCal.dayN(d); return n >= s[0] && n < s[12] }
   function ringInner(top) {
-    var o = OrbitCal.year(oy), s = OrbitCal.starts(oy), C = 180, h = "", k, n;
+    var o = clYear(oy), s = clStarts(oy), C = 180, h = "", k, n;
     var P = function (l, r) { var th = (l - top) * R; return [C + r * Math.sin(th), C - r * Math.cos(th)] },
       f = function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1) },
       arc = function (l0, l1, r) { return "M" + f(P(l0, r)) + " A" + r + " " + r + " 0 0 1 " + f(P(l1, r)) };
     var q, u;
     for (u = 0; u < 12; u++) {
-      var c = P(u * 30 + 15, 118);
-      h += '<path d="' + arc(u * 30 + 0.7, u * 30 + 29.3, 118) + '" fill="none" stroke="' + mColor(u) + '" stroke-width="24" stroke-opacity="' + (u === om ? 1 : 0.35) + '"/>' +
+      var c = P(ang(u) + 15, 118);
+      h += '<path d="' + arc(ang(u) + 0.7, ang(u) + 29.3, 118) + '" fill="none" stroke="' + mColor(u) + '" stroke-width="24" stroke-opacity="' + (u === om ? 1 : 0.35) + '"/>' +
         '<text class="ylb" x="' + c[0].toFixed(1) + '" y="' + (c[1] + 4).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' +
           (u === om ? "#fff" : "var(--fg)") + '">' + mShort(u) + '</text>'
     }
@@ -195,7 +228,7 @@
   function turn(top) {
     top = (top % 360 + 360) % 360;
     drawRing(top);
-    var d = OrbitCal.dayAt(oy, top);
+    var d = clDayAt(oy, top);
     if (same(d, sel)) return;
     var y = oy; pick(d); oy = y;
     if (!restDue) { restDue = true; requestAnimationFrame(function () { restDue = false; var r = $("calView").querySelector(".orest"); if (r) r.innerHTML = ringRest() }) }
@@ -207,12 +240,12 @@
   }
   function renderRing(box, spin) {
     var top = OrbitCal.lonAt(OrbitCal.dayN(sel)), from = rTop;
-    box.innerHTML = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
+    box.innerHTML = segs() + yearNav(yLbl(oy)) +
       '<svg class="oring" viewBox="0 0 360 360" tabindex="0" role="img" aria-label="' + t("calRing") + '"></svg><div class="orest">' + ringRest() + '</div>';
     if (spin && from !== null) spinTo(from, top); else { cancelAnimationFrame(anim); drawRing(top) }
   }
   function ringRest() {   // pod kołem: miesiąc albo pora roku wybranego dnia, jej dni i dane dnia
-    var s = OrbitCal.starts(oy), u = om, b0 = s[u], b1 = s[u + 1], i, h =
+    var s = clStarts(oy), u = om, b0 = s[u], b1 = s[u + 1], i, h =
       '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + mColor(u) + '">' + mName(u) +
       '<small>' + short(OrbitCal.dateOf(b0)) + ' – ' + short(OrbitCal.dateOf(b1 - 1)) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
     for (i = 0; i < b1 - b0; i++) {
@@ -262,7 +295,7 @@
   }
   // dzień powrotu w kalendarzu klimatycznym (w orbitalnym kąt jest co roku ten sam, więc tabela pokazuje dni)
   function bdOName(n) {
-    var o = OrbitCal.date(OrbitCal.dateOf(n));
+    var o = clDate(OrbitCal.dateOf(n));
     return { k: o.month, d: o.day, txt: mName(o.month) + ' · ' + t("calDay").replace("{d}", o.day) }
   }
   /* Pola daty i godziny: zwykłe pola tekstowe na cyfry (natywne pole daty w części przeglądarek samo przeskakuje
@@ -292,7 +325,9 @@
     return h + '<div class="bdout">' + birthOut() + '</div></details>'
   }
   // wynik pod polami (przeliczany osobno: pola daty nie są przerysowywane w trakcie wpisywania)
-  function birthOut() {
+  // urodziny liczą się w kalendarzu półkuli, na której się urodziłeś (np. urodzony w Sydney: rok od wiosny we wrześniu)
+  function birthOut() { return bday && bplace ? withS(bplace.lat < 0, birthOut0) : birthOut0() }
+  function birthOut0() {
     if (!bday) return '<p class="cnote">' + t("bdHint") + '</p>';
     if (!bplace) return '<p class="cnote">' + t("bdPlNone") + '</p>';
     var p = bday.d.split("-").map(Number), q = bday.t.split(":").map(Number);
@@ -300,19 +335,19 @@
     // chwila i doba urodzenia w miejscu urodzenia (strefa, słoneczna północ, półkula)
     var B = atPlace(bplace, function () {
       var ms = zoned(p[0], p[1] - 1, p[2], q[0], q[1]); if (isNaN(ms)) return null;
-      var o = OrbitCal.date(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), r = riseRel(ms);   // orbitalny: pora roku według kąta w tej chwili
+      var o = clDate(OrbitCal.dateOf(sunDay(ms))), a = sunLonDeg(ms), qa = Math.floor(a / 90), r = riseRel(ms);   // orbitalny: pora roku według kąta w tej chwili
       return { ms: ms, a: a, o: o, tod: r ? degTxt(r.deg) : "", hm: clockTxt(ms), dial: miniDial(ms), todK: r && r.key === "degRise" ? "bdTodR" : "bdTodP",
-        color: qColor(o.season), clim: mName(o.month), orb: part("lsG", sIdx(qa)), oa: a - qa * 90 }
+        color: SC[o.season], clim: mName(o.month), orb: part("lsG", sIdx(qa)), oa: a - qa * 90 }
     });
     if (!B) return '<p class="cnote">' + t("bdHint") + '</p>';
     var a = B.a, ob = B.o, bk = ob.month, bd = ob.day,
-      Yb = ob.year, Yn = Math.min(Y1, OrbitCal.date(today).year + 1), rows = "", shift = 0,
+      Yb = ob.year, Yn = Math.min(Y1, clDate(today).year + 1), rows = "", shift = 0,
       Ys = Math.max(Yb + 1, Yn - 99);   // tabela i drabina: najwyżej 100 ostatnich lat (dawna data urodzenia liczyłaby się bardzo długo)
     // powroty na kąt urodzin: tam, gdzie jesteś (miasto wybrane na dole strony)
     for (var Y = Ys; Y <= Yn; Y++) {
-      var m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === bk && o.d === bd;
+      var m = clMoment(Y, a), n = sunDay(m), o = bdOName(n), same0 = o.k === bk && o.d === bd;
       if (!same0) shift++;
-      rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + Y + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
+      rows += '<tr' + (same0 ? '' : ' class="off"') + ' data-bn="' + n + '"><td>' + OrbitCal.yLabel(Y) + '</td><td>' + (Y - Yb) + '</td><td>' + o.txt + '</td><td>' +
         short(OrbitCal.dateOf(n)) + '</td><td><div class="bdtod"><div>' + whenTxt(m) + '<span class="bdhm">' + clockTxt(m) + '</span></div>' + miniDial(m) + '</div></td></tr>'
     }
     // data urodzenia: dzień w kalendarzu klimatycznym, kąt w porze roku (orbitalny) i pora doby (kąt Słońca od wschodu, jak na tarczy)
@@ -322,7 +357,7 @@
     }
     // dwie części, każda ze swoim miejscem: urodzenie (w miejscu urodzenia) i powroty (tam, gdzie jesteś: miasto u góry strony)
     function pin(p) { return '<span class="bdpin">📍 ' + esc(p.name || p.lat + "°, " + p.lon + "°") + '</span>' }
-    return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + t("calOYear").replace("{y}", Yb) + ' ' + pin(bplace) + '</div>' +
+    return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + yLbl(Yb) + ' ' + pin(bplace) + '</div>' +
       '<div class="bdcals">' + bdCal("calNmS", B.clim, t("calDay").replace("{d}", ob.day), B.color) +
       bdCal("calNmL", degTr(a), degTr(B.oa) + " " + B.orb, B.color, t("bdFromEq")) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)", B.hm, B.dial) + '</div>' +
       '</div>' +
@@ -342,8 +377,8 @@
     var W = 2.4, X0 = 40, X1 = 318, px = (X1 - X0) / W, xc = (X0 + X1) / 2, rh = 9, gap = 3, y0 = 4, h = "", Y;
     function X(l) { return xc + normDeg(l - a) * px }
     for (Y = Ys; Y <= Yn; Y++) {
-      var i = Y - Ys, y = y0 + i * (rh + gap), m = OrbitCal.momentAt(Y, a), n = sunDay(m), o = bdOName(n), ok = o.k === bk && o.d === bd;
-      h += '<text class="ylb" x="' + (X0 - 4) + '" y="' + (y + rh - 1) + '" text-anchor="end" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + Y + '</text>' +
+      var i = Y - Ys, y = y0 + i * (rh + gap), m = clMoment(Y, a), n = sunDay(m), o = bdOName(n), ok = o.k === bk && o.d === bd;
+      h += '<text class="ylb" x="' + (X0 - 4) + '" y="' + (y + rh - 1) + '" text-anchor="end" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + OrbitCal.yLabel(Y) + '</text>' +
         '<text class="ylb" x="' + (X1 + 4) + '" y="' + (y + rh - 1) + '" font-size="8.5"' + (ok ? '' : ' opacity=".6"') + '>' + short(OrbitCal.dateOf(n)) + '</text>';
       for (var k = n - 2; k <= n + 2; k++) {
         var p = sunDayParts(k), cur = k === n, op = cur ? 1 : .45;
@@ -381,7 +416,7 @@
      Na szerokim ekranie 3 miesiące w rzędzie (rząd = pora roku). Kropka = równonoc / przesilenie,
      ◆ = aphelium / peryhelium. */
   function renderGrid(box) {
-    var s = OrbitCal.starts(oy), o = OrbitCal.apsisDays(oy), u, i, h = segs() + yearNav(t("calOYear").replace("{y}", oy)) +
+    var s = clStarts(oy), o = clApsis(oy), u, i, h = segs() + yearNav(yLbl(oy)) +
       '<div class="ysum">' + t("calOYearSum").replace("{d}", s[12] - s[0]).replace("{a}", short(OrbitCal.dateOf(s[0]))).replace("{b}", short(OrbitCal.dateOf(s[12] - 1))) +
       ' · ◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(o.aph)) + ' · ◆ ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(o.peri)) + '</div><div class="cyear oyear">';
     for (u = 0; u < 12; u++) {
@@ -404,11 +439,12 @@
     var box = $("calView"); if (!box) return;
     closeYear(false);   // np. odświeżenie o wschodzie przy otwartym polu roku: pole znika, więc zamykamy je bez zapisu
     syncToday();
+    if (south() !== shownS) { shownS = south(); pick(sel) }   // nowe miejsce na drugiej półkuli: rok i miesiąc liczone od nowa dla wybranego dnia
     // na kole wybrany dzień jest zawsze w oglądanym roku: po zmianie roku ten sam kąt roku (oglądana część roku zostaje)
-    if (cvO === "ring" && !inOy(sel)) { var m = om; pick(OrbitCal.dayAt(oy, OrbitCal.lonAt(OrbitCal.dayN(sel)))); om = m }
+    if (cvO === "ring" && !inOy(sel)) { var m = om; pick(clDayAt(oy, OrbitCal.lonAt(OrbitCal.dayN(sel)))); om = m }
     var spin = cvO === "ring" && lastView === "ring" && !drag; lastView = cvO;
     try {
-      localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om }));
+      localStorage.setItem("calsel", JSON.stringify({ sy: sel.getFullYear(), sm: sel.getMonth(), d: sel.getDate(), oy: oy, om: om, s: shownS }));
       localStorage.setItem("cview", cvO)
     } catch (e) {}
     box.classList.toggle("yearMode", cvO === "grid");
@@ -418,7 +454,7 @@
   // wybór dnia: oglądany rok i miesiąc orbity idą za wybranym dniem
   function pick(d) {
     sel = d;
-    var o = OrbitCal.date(d); oy = o.year; om = o.month
+    var o = clDate(d); oy = o.year; om = o.month
   }
 
   // urodziny: po każdej wpisanej cyfrze, gdy data jest pełna i poprawna, zapis i przeliczenie tabeli (same pola zostają nietknięte)
@@ -487,7 +523,7 @@
     var g = e.target.closest(".oring"), k = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key];
     if (!g || !k) return;
     e.preventDefault();
-    var d = OrbitCal.dateOf(OrbitCal.dayN(sel) + k), y = OrbitCal.date(d).year;
+    var d = OrbitCal.dateOf(OrbitCal.dayN(sel) + k), y = clDate(d).year;
     if (y < Y0 || y > Y1) return;
     pick(d); render();
     $("calView").querySelector(".oring").focus()
@@ -500,7 +536,7 @@
     if (ring) {   // kliknięcie w pierścień: koło obraca się do dnia o tym kącie roku
       if (noClick) { noClick = false; return }
       var p = ptr(ring, e), rr = p.r;
-      if (rr >= 100 && rr <= 150) pick(OrbitCal.dayAt(oy, p.a + rTop));
+      if (rr >= 100 && rr <= 150) pick(clDayAt(oy, p.a + rTop));
       else if (!closed) return;
       return render()
     }
@@ -533,7 +569,7 @@
       return isNaN(ms) ? null : sunLonDeg(ms)
     },
     // data doby n w kalendarzu klimatycznym, np. "Pełna jesień · dzień 3" (kafelek miesiąca księżycowego)
-    orbitName: function (n) { return dName(OrbitCal.date(OrbitCal.dateOf(n))) },
+    orbitName: function (n) { return dName(clDate(OrbitCal.dateOf(n))) },
     // nagłówek zakładki: dzisiejsza data w kalendarzu klimatycznym
-    head: function () { syncToday(); return dName(OrbitCal.date(today)) } };
+    head: function () { syncToday(); return dName(clDate(today)) } };
 })();

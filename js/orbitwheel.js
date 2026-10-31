@@ -172,7 +172,7 @@
   function shown() { return live ? Date.now() : tm }
   window.OrbitWheel = {
     render: render,
-    title: function () { return t("calOYear").replace("{y}", OrbitCal.date(OrbitCal.dateOf(sunDay(shown()))).year) },
+    title: function () { return t("calOYear").replace("{y}", OrbitCal.yLabel(OrbitCal.date(OrbitCal.dateOf(sunDay(shown()))).year)) },
     head: function () { var Q = relQ(sunLonDeg(shown())); return trunc(Q.a) + ' ' + part("lsG", sIdx(Q.q)) }   // np. „32,47° wieczoru roku”
   };
 })();

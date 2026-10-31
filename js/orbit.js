@@ -70,7 +70,9 @@ var OrbitCal = (function () {
   function apsisDays(Y) { var d = days(Y); return { aph: d.aph, peri: d.peri } }
   // strefa: "N" i "S" poza zwrotnikami, "T" między zwrotnikami (tam pod kalendarzem dopisek o porach roku)
   function zone() { return lat >= 23.44 ? "N" : lat <= -23.44 ? "S" : "T" }
+  // podpis roku: rok obejmuje dwa lata gregoriańskie (od wiosny do wiosny), np. 2026/27
+  function yLabel(Y) { return Y + "/" + String(100 + (Y + 1) % 100).slice(1) }
 
   return { year: year, starts: starts, date: date, dayN: dayN, dateOf: dateOf, dayStart: dayStart, lonAt: lonAt, dayAt: dayAt,
-    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, momentAt: momentAt, cross: cross }
+    apsisOn: apsisOn, apsisDays: apsisDays, zone: zone, yLabel: yLabel, momentAt: momentAt, cross: cross }
 })();

@@ -4,6 +4,7 @@
   "description": "Zegar światła / Light Clock: strona (GitHub Pages) i aplikacja na Androida (Capacitor)",
   "scripts": {
     "build": "node scripts/copy-web.js",
+    "test": "node test/zodiac.test.js",
     "sync": "npm run build && npx cap sync android",
     "android": "npm run sync && npx cap open android"
   },
@@ -15,6 +16,7 @@
     "@capacitor/core": "^8.6.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.6.0"
+    "@capacitor/cli": "^8.6.0",
+    "astronomy-engine": "^2.1.19"
   }
 }

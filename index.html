@@ -15,13 +15,14 @@
   <meta name="apple-mobile-web-app-title" id="appTitle" content="Zegar światła">
   <meta name="theme-color" content="#fff7ea" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#14100c" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="css/style.css?v=86">
+  <link rel="stylesheet" href="css/style.css?v=106">
 </head>
 <body>
   <div class="top">
     <div class="topl">
       <!-- trzy zakładki: Doba (tarcza i 3D), Rok (koło orbity i długość dnia), Kalendarz (klimatyczny) -->
       <div class="navr">
+        <button id="menuBtn" class="menubtn" aria-expanded="false" aria-controls="menu" data-i18n-aria="zMenu" aria-label="Menu">☰</button>
         <button id="dayBtn" class="view-btn" aria-pressed="true" data-i18n="tabDay">Doba</button>
         <button id="yearBtn" class="view-btn" aria-pressed="false" data-i18n="tabYear">Rok</button>
         <button id="calBtn" class="view-btn" aria-pressed="false" data-i18n="calBtn">Kalendarz</button>
@@ -42,6 +43,12 @@
       </ul>
     </div>
   </div>
+
+  <!-- panel ☰: filtry astrologii (js/astro-ui.js), treść rysowana przy otwarciu -->
+  <div id="menuBack" class="menuback" hidden></div>
+  <aside id="menu" class="menu" role="dialog" aria-modal="true" aria-labelledby="menuT" tabindex="-1" hidden></aside>
+  <!-- ☰ w rogu ekranu, gdy przycisk w pasku u góry zniknie przy przewijaniu -->
+  <button id="menuFab" class="menubtn menufab" aria-expanded="false" aria-controls="menu" data-i18n-aria="zMenu" aria-label="Menu" hidden>☰</button>
 
   <!-- nagłówek zakładki (tytuł i główny odczyt), ustawiany w js/main.js -->
   <h1 id="hTitle">Zegar światła</h1>
@@ -83,6 +90,8 @@
 
     <!-- podziałka (rysowana w js/main.js) -->
     <g id="ticks" stroke="var(--mut)"></g>
+    <!-- zmiany znaku Księżyca w tej dobie: kreska na pierścieniu i nowy znak (js/astro-ui.js, filtr „Zmiany znaków”) -->
+    <g id="zChg"></g>
 
     <!-- wskazówka centralna: narysowana w stronę 0° (lewo), obracana w JS -->
     <g id="hand" transform="rotate(0 170 170)">
@@ -103,6 +112,8 @@
     <circle id="mid" r="3" fill="var(--mut)"/>           <!-- środek nocy -->
     <g id="evs"></g>
     <g id="moonmark"></g>
+    <!-- znak zodiaku na ikonie Księżyca (js/astro-ui.js, domyślnie ukryty); znak Słońca pokazuje #sunnum -->
+    <text id="zMoonG" class="zg" text-anchor="middle" dominant-baseline="central" style="display:none"></text>
     <circle id="sun" r="11" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>
     <text id="sunnum" font-size="10" font-weight="700" text-anchor="middle" fill="#2b2118"></text>
 
@@ -165,7 +176,7 @@
 
   <div class="ev" id="evl"></div>
 
-  <div class="rowh" data-i18n="sunH">Słońce</div>
+  <div class="rowh"><span data-i18n="sunH">Słońce</span><span id="zSunT" class="zt" hidden></span><span id="zSunC" class="zch" hidden></span></div>
   <div class="row">
     <div class="box"><b id="deg">--°</b><span id="sinceL">Kąt Słońca</span><small id="sinceD"></small></div>
     <div class="box"><b id="alt">--°</b><span data-i18n="altitude">Wysokość słońca</span></div>
@@ -173,7 +184,7 @@
     <div class="box"><b id="light">--°</b><span data-i18n="lightLeft">Zostało światła</span></div>
   </div>
 
-  <div class="rowh" data-i18n="moonH">Księżyc</div>
+  <div class="rowh"><span data-i18n="moonH">Księżyc</span><span id="zMoonT" class="zt" hidden></span><span id="zMoonC" class="zch" hidden></span></div>
   <div class="moonbox">
     <svg id="mico" class="mico" viewBox="-20 -20 40 40" width="46" height="46" aria-hidden="true"></svg>
     <div>
@@ -190,13 +201,16 @@
 
   <p class="foot"><a href="privacy.html" data-i18n="privacy">Prywatność</a></p>
 
-  <script src="js/I18n.js?v=86"></script>
-  <script src="js/I18n-more.js?v=86"></script>
-  <script src="js/main.js?v=86"></script>
-  <script src="js/view3d.js?v=86"></script>
-  <script src="js/year.js?v=86"></script>
-  <script src="js/orbit.js?v=86"></script>
-  <script src="js/calendar.js?v=86"></script>
-  <script src="js/orbitwheel.js?v=86"></script>
+  <script src="js/I18n.js?v=106"></script>
+  <script src="js/I18n-more.js?v=106"></script>
+  <script src="js/I18n-astro.js?v=106"></script>
+  <script src="js/zodiac.js?v=106"></script>
+  <script src="js/main.js?v=106"></script>
+  <script src="js/astro-ui.js?v=106"></script>
+  <script src="js/view3d.js?v=106"></script>
+  <script src="js/year.js?v=106"></script>
+  <script src="js/orbit.js?v=106"></script>
+  <script src="js/calendar.js?v=106"></script>
+  <script src="js/orbitwheel.js?v=106"></script>
 </body>
 </html>

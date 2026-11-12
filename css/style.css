@@ -377,6 +377,7 @@ button {
 .olg .lgd { border-inline-start: 2px dashed var(--sun); width: 0; }
 .olg .lgn { background: #3b82c4; }
 .olg .lgb { background: #d6457a; }
+.olg .lgz { background: linear-gradient(#d4553f, #5c9a3c, #d9a400, #3f7fc4); }   /* granica znaku (kolor nowego znaku) */
 .cdet h2 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--mut); }
 .oinfo .v { font-size: 16px; font-weight: 700; }
 .oinfo .v::first-letter { text-transform: uppercase; }
@@ -674,8 +675,11 @@ button {
 .ogrid .cc { height: 40px; }
 .ogrid .cc small { left: 3px; font-size: 9px; white-space: nowrap; }
 .ogrid .cc b { margin-top: 12px; }
-.cc.ap::after, .yd.ap::after { content: "◆"; position: absolute; bottom: 0; right: 2px; font-size: 8px; line-height: 1; color: var(--fg); }
+.cc.ap::after, .yd.ap::after, .cmd.ap::after { content: "◆"; position: absolute; bottom: 0; right: 2px; font-size: 8px; line-height: 1; color: var(--fg); }
 .yd.ap::after { top: 0; bottom: auto; right: 0; font-size: 7px; }
+.cmd { position: relative; }
+.cmd.ap::after { top: auto; bottom: 4px; right: 5px; font-size: 9px; color: var(--mut); }   /* aphelium / peryhelium w widoku miesiąca */
+.cc .zdm { inset-inline-end: 11px; }   /* kropka Księżyca obok ◆, nie na nim */
 .cc.sel.ap::after, .yd.sel.ap::after { color: var(--on-sun); }
 .oyear .ymh { text-transform: none; font-size: 13px; border-radius: 0; }
 .ymsub { margin-bottom: 3px; font-size: 10px; color: var(--mut); }
@@ -760,3 +764,94 @@ button {
 /* stopka: link do polityki prywatności (privacy.html) */
 .foot { text-align: center; margin: 28px 0 18px; font-size: 13px; }
 .foot a { color: var(--mut); }
+
+/* ===== Astrologia: panel ☰ i znaki zodiaku (js/astro-ui.js) ===== */
+.menubtn { width: auto; margin: 0; padding: 4px 10px; background: transparent; color: var(--lang-fg); border: 1px solid var(--arc); border-radius: 8px; font: inherit; font-size: 15px; line-height: 1.2; cursor: pointer; }
+.menubtn:hover, .menubtn:focus-visible, .menubtn[aria-expanded="true"] { border-color: var(--sun); }
+.menuback { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .25); }
+.menu {
+  position: fixed; top: 0; bottom: 0; inset-inline-start: 0; z-index: 41;
+  width: min(300px, 86vw); overflow-y: auto; box-sizing: border-box;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg); color: var(--fg); border-inline-end: 1px solid var(--arc);
+  box-shadow: 0 0 24px rgba(0, 0, 0, .18); text-align: start; font-size: 14px;
+}
+.menu .mhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.menu .mhead b { font-size: 16px; }
+.menu .mclose { width: auto; margin: 0; padding: 0 8px; background: none; border: 0; color: var(--mut); font-size: 22px; line-height: 1; cursor: pointer; }
+.menu .mchk { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
+/* pola wyboru: bez ogólnego stylu pól tekstowych (wypełnienie i ramka wypychały zaznaczenie poza kółko) */
+.menu input[type="checkbox"], .menu input[type="radio"] { appearance: auto; width: 16px; height: 16px; flex: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; accent-color: var(--sun); }
+.menu .mdis { opacity: .45; cursor: default; }
+/* wybór systemu: kółko rysowane w CSS (wbudowane kółko z kolorem przeglądarki rysowało zaznaczenie obok kółka) */
+.menu input[type="radio"] { appearance: none; -webkit-appearance: none; box-sizing: border-box; border: 2px solid var(--mut); border-radius: 50%; background: var(--bg); cursor: pointer; }
+.menu input[type="radio"]:checked { border-color: var(--sun); background: radial-gradient(circle, var(--sun) 0 3.5px, var(--bg) 4px); }
+.menu input[type="radio"]:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }   /* podfiltr gwiazdozbiorów przy innym systemie */
+.menu .msys { border: 0; padding: 0; margin: 12px 0 0; }
+.menu .msys legend { padding: 0; margin-bottom: 4px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); }
+.menu .mrad { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; cursor: pointer; }
+.menu .mrad input { margin-top: 3px; }
+.menu .mrad span { display: flex; flex-direction: column; gap: 1px; }
+.menu .mrad small, .menu .mnote { color: var(--mut); font-size: 12px; line-height: 1.35; }
+.menu .mnote { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--arc); }
+/* znak na ikonie Księżyca: cienki kontur w kolorze tła, lekko przezroczysty, żeby faza dalej prześwitywała */
+.zg { fill: var(--fg); fill-opacity: .85; stroke: var(--bg); stroke-width: 1.6px; stroke-opacity: .85; paint-order: stroke; font-weight: 600; pointer-events: none; }
+.zg, #sunnum { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "Apple Symbols", "DejaVu Sans", system-ui, sans-serif; }
+/* symbole zmian znaku na tarczy doby i pierścień znaków na orbicie; bieżący znak wyraźniej */
+.zc { fill: var(--mut); font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "Apple Symbols", "DejaVu Sans", system-ui, sans-serif; }
+.zc.zcur { fill: var(--fg); font-weight: 700; }
+/* ☰ w rogu ekranu przy przewiniętej stronie */
+.menufab { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); inset-inline-start: 10px; z-index: 39; background: var(--bg); box-shadow: 0 2px 10px rgba(0, 0, 0, .15); }
+html { scrollbar-gutter: stable; }   /* blokada przewijania przy otwartym panelu nie przesuwa strony */
+html.menuopen, html.menuopen body { overflow: hidden; }
+.menu { overscroll-behavior: contain; }
+.menu:focus { outline: none; }
+.menu .mchk span { display: flex; flex-direction: column; gap: 1px; }
+.menu .mchk small { color: var(--mut); font-size: 12px; line-height: 1.35; }
+.menu .msub { margin-inline-start: 26px; padding-top: 2px; }
+.menu .mchk input { align-self: flex-start; margin-top: 3px; }
+/* „· ♌ Lew 14°” w nagłówkach Słońce / Księżyc */
+.rowh .zt { unicode-bidi: isolate; margin-inline-start: 6px; text-transform: none; letter-spacing: 0; color: var(--fg); font-weight: 600; }
+.rowh .zt::before { content: "· "; color: var(--mut); }
+/* najbliższa zmiana znaku: osobna linijka pod nagłówkiem */
+.rowh .zch { display: block; unicode-bidi: isolate; margin-top: 2px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--mut); }
+/* legenda znaków pod kołem orbity */
+.zleg:empty { display: none; }
+.zleg { max-width: 420px; margin: 10px auto; font-size: 13px; text-align: center; }
+.zleg .zlh { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mut); margin-bottom: 4px; }
+.zleg .zlg { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; }
+.zleg .zlh small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.zleg .zle { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--mut); }
+.zleg .zle i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-inline-end: 4px; vertical-align: -1px; }
+.zleg .zl { unicode-bidi: isolate; padding: 2px 8px; border: 1px solid var(--arc); border-inline-start-width: 4px; border-radius: 8px; color: var(--mut); white-space: nowrap; }
+.zleg .zl b { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "Apple Symbols", "DejaVu Sans", system-ui, sans-serif; font-weight: 400; }
+.zleg .zlcur { color: var(--fg); border-color: var(--sun); font-weight: 600; }
+/* urodziny: znaki w chwili urodzenia */
+.zbirth b { unicode-bidi: isolate; }
+.zbirth { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 8px 0 0; font-size: 13px; }
+.zbirth small { color: var(--mut); font-size: 11px; }
+
+/* ===== Kalendarz: widok miesiąca i znaczniki znaków (js/calendar.js, js/astro-ui.js) ===== */
+.cmon { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));   /* minmax(0, …): kolumny się nie poszerzają pod tekst */
+  gap: 5px; grid-auto-rows: 1fr; max-width: 520px; margin: 8px auto; }   /* 1fr: wszystkie rzędy tej samej wysokości */
+@media (min-width: 480px) { .cmon { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.cmon .cmd { display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-height: 100px; min-width: 0; overflow: hidden; box-sizing: border-box; padding: 5px 6px; margin: 0; width: auto;   /* stały rozmiar we wszystkich systemach */
+  background: var(--card); color: var(--fg); border: 1px solid var(--arc); border-radius: 10px; font-weight: 400; text-align: start; cursor: pointer; }
+.cmon .cmd.today { border-color: var(--sun); box-shadow: inset 0 0 0 1px var(--sun); }   /* bez grubszej ramki, która zmieniałaby rozmiar */
+.cmon .cmd.sel { background: var(--arc); }
+.cmon .cmn { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+.cmon .cmn b { font-size: 16px; flex: none; }
+.cmon .cmn small { font-size: 10px; color: var(--mut); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.cmon .zt1 { unicode-bidi: isolate; display: flex; flex-wrap: wrap; align-items: center; white-space: nowrap;   /* dwie zmiany w jednej dobie: druga przechodzi do nowej linijki, nic się nie ucina */
+  font-size: 13px; line-height: 1.25; font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "Apple Symbols", "DejaVu Sans", system-ui, sans-serif; }
+.cmon .zt1 small { display: block; flex-basis: 100%; font-size: 10px; color: var(--mut); overflow: hidden; text-overflow: ellipsis; }   /* kąt Słońca w chwili zmiany: linijka pod symbolami */
+/* znak na początku doby w kółku: srebrne = Księżyc, pomarańczowe = Słońce */
+.cmon .zdisc { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; box-sizing: border-box; border-radius: 9px; font-size: 11px; vertical-align: -3px; margin-inline-end: 1px; }
+.cmon .zdisc.zdab { padding: 0 3px; font-size: 9px; }   /* gwiazdozbiór bez symbolu: krótka nazwa, kółko wydłuża się w pigułkę */
+.cmon .ztm .zdisc { background: #c9d3e3; color: #2b3445; }
+.cmon .zts .zdisc { background: var(--sun); color: var(--on-sun); }
+/* małe kafelki (rok, koło): kolorowa kropka = Słońce zmienia znak, srebrna = Księżyc */
+.yd, .cc { position: relative; }
+.zds, .zdm { position: absolute; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; }
+.zds { inset-inline-start: 3px; }
+.zdm { inset-inline-end: 3px; background: #8ea3c2; }

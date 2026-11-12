@@ -59,6 +59,18 @@
     // kąt urodzin (z zakładki Kalendarz), co roku ten sam: kreska na podziałce
     var ba = window.Cal && Cal.birthAngle();
     if (ba !== null && ba !== undefined) { var q1 = P(ba, 137), q2 = P(ba, 153); h += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="' + BDC + '" stroke-width="2.5"/>' }
+    // znaki zodiaku (panel ☰: znak Słońca + zmiany znaków): kolorowy pasek między r = 105 i 121, granice kreskami,
+    // symbole wszystkich znaków, bieżący (tam, gdzie wskazuje Ziemia) wyraźniej; nazwa bieżącego jest pod przyciskami
+    var zr = window.Astro && Astro.ring(tm);
+    if (zr) {
+      h += '<circle cx="200" cy="200" r="105" fill="none" stroke="var(--arc)"/><circle cx="200" cy="200" r="121" fill="none" stroke="var(--arc)"/>';
+      zr.b.forEach(function (s, i) {
+        var e = zr.b[(i + 1) % zr.b.length].a, m = s.a + (((e - s.a) % 360 + 360) % 360) / 2, p0 = P(s.a, 105), p1 = P(s.a, 121), pm = P(m, 113), cur = s.id === zr.cur;
+        h += '<path d="' + arc(s.a, s.a + (((e - s.a) % 360 + 360) % 360), 113) + '" fill="none" stroke="' + zr.color(s.id) + '" stroke-width="16" stroke-opacity="' + (cur ? .5 : .22) + '"/>' +
+          '<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="var(--mut)" stroke-width="1"/>' +
+          '<text class="zc' + (cur ? ' zcur' : '') + '" x="' + pm[0].toFixed(1) + '" y="' + pm[1].toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-size="' + (cur ? 12 : 11) + '">' + zr.glyph(s.id) + '</text>'
+      })
+    }
     // Ziemia: smukła wskazówka w kolorze pory roku (czubek na kreskach stopni) i Ziemia z poświatą na pasie pór roku
     var sc = SC[sIdx(Q.q)], u = P(L, 1), nx = -(u[1] - 200), ny = u[0] - 200, b0 = P(L, 98), tip = P(L, 151), pe = P(L, 160),
       w = function (p3, k) { return (p3[0] + nx * k).toFixed(1) + "," + (p3[1] + ny * k).toFixed(1) };
@@ -94,6 +106,14 @@
     }
     var ba = window.Cal && Cal.birthAngle(), bx = ba !== null && ba !== undefined ? X(ba) : -1;   // kąt urodzin, gdy jest w lupie
     if (bx > 0 && bx < 360) z += '<line x1="' + bx.toFixed(1) + '" y1="26" x2="' + bx.toFixed(1) + '" y2="86" stroke="' + BDC + '" stroke-width="2.5"/>';
+    // granica znaku Słońca (panel ☰: znak Słońca + zmiany znaków): kreska w kolorze nowego znaku i jego symbol
+    var zr = window.Astro && Astro.ring(tm);
+    if (zr) zr.b.forEach(function (s) {
+      var zx = X(s.a); if (zx <= 0 || zx >= 360) return;
+      var gx = zx + (zx > 340 ? -9 : 9);   // symbol po stronie nowego znaku, przy prawym brzegu po lewej
+      z += '<line x1="' + zx.toFixed(1) + '" y1="26" x2="' + zx.toFixed(1) + '" y2="86" stroke="' + zr.color(s.id) + '" stroke-width="2.5"/>' +
+        '<text class="zc zcur" x="' + gx.toFixed(1) + '" y="40" text-anchor="middle" dominant-baseline="central" font-size="12" stroke="var(--bg)" stroke-width="2.5" paint-order="stroke">' + zr.glyph(s.id) + '</text>'
+    });
     return z + '<path d="M180 30 l-6 -8 h12 z" fill="#3b82c4"/><line x1="180" y1="30" x2="180" y2="82" stroke="#3b82c4" stroke-width="2.5"/>'
   }
 
@@ -119,6 +139,8 @@
     var box = $("owBox"); if (!box) return;
     var L = sunLonDeg(tm), Q = relQ(L), n = sunDay(tm), list = days(n, 3), d = list[3];
     box.querySelector(".owheel").innerHTML = wheel(L, Q, d);
+    var zl = box.querySelector(".zleg"), zh = window.Astro ? Astro.legend(tm) : "";   // nazwy znaków z pierścienia (panel ☰)
+    if (zl && zl.getAttribute("data-h") !== zh) { zl.innerHTML = zh; zl.setAttribute("data-h", zh) }   // tylko po zmianie treści
     box.querySelector(".ozoom").innerHTML = zoom(L, list, n);
     box.querySelector(".oinfo").innerHTML = info(L, Q, d);
     box.querySelector("[data-ow=now]").setAttribute("aria-pressed", live ? "true" : "false");
@@ -128,10 +150,11 @@
     if (live) tm = Date.now();
     box.innerHTML = '<svg class="owheel" viewBox="-60 -22 520 444" role="img" aria-label="' + t("owAria") + '"></svg>' +
       '<div class="seg ownav" role="group"><button data-ow="-864e5">' + t("owDm") + '</button><button data-ow="-36e5">' + t("owHm") + '</button>' +
-      '<button data-ow="now">' + t("v3Now") + '</button><button data-ow="36e5">' + t("owHp") + '</button><button data-ow="864e5">' + t("owDp") + '</button></div>' +
+      '<button data-ow="now">' + t("v3Now") + '</button><button data-ow="36e5">' + t("owHp") + '</button><button data-ow="864e5">' + t("owDp") + '</button></div><div class="zleg"></div>' +   // znak Słońca pod przyciskami (panel ☰)
       '<div class="cdet"><h2 class="owh">' + t("owZoomT") + '</h2><svg class="ozoom" viewBox="0 0 360 120" role="img" aria-label="' + t("owZoomT") + '"></svg>' +
       '<div class="olg"><span><i class="lgr"></i>' + t("owLgRise") + '</span><span><i class="lgd"></i>' + t("owLgDeg") + '</span><span><i class="lgn"></i>' + t("owLgNow") + '</span>' +
-      (window.Cal && Cal.birthAngle() !== null ? '<span><i class="lgb"></i>' + t("owLgBd") + '</span>' : '') + '</div>' +
+      (window.Cal && Cal.birthAngle() !== null ? '<span><i class="lgb"></i>' + t("owLgBd") + '</span>' : '') +
+      (window.Astro && Astro.ring(tm) ? '<span><i class="lgz"></i>' + t("zLgB") + '</span>' : '') + '</div>' +
       '<p class="cnote">' + t("owZoomN") + '</p></div><div class="cdet oinfo"></div><p class="cnote">' + t("owNote") + '</p>';
     draw()
   }

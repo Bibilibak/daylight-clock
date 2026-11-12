@@ -5,8 +5,8 @@
   function dayStart() { return OrbitCal.dateOf(sunDay(Date.now())) }   // dzisiejsza doba (od słonecznej północy w wybranym miejscu)
   var today = dayStart();
   var sel = today;
-  var cvO = "grid";   // widok: "grid" (Kalendarz) albo "ring" (Koło), zapamiętany w przeglądarce
-  try { if (localStorage.getItem("cview") === "ring") cvO = "ring"; localStorage.removeItem("cviews") } catch (e) {}   // cviews: zapis starszej wersji (z kalendarzem gregoriańskim)
+  var cvO = "grid";   // widok: "grid" (Kalendarz: cały rok), "month" (jeden miesiąc, z nazwy miesiąca w roku) albo "ring" (Koło)
+  try { var cv0 = localStorage.getItem("cview"); if (cv0 === "ring" || cv0 === "month") cvO = cv0; localStorage.removeItem("cviews") } catch (e) {}   // cviews: zapis starszej wersji (z kalendarzem gregoriańskim)
   try {   // ostatnio oglądany miesiąc i wybrany dzień (po przeładowaniu strony widok zostaje)
     var cs = JSON.parse(localStorage.getItem("calsel") || "null");
     // tylko sensowne wartości (zapis mógł zostać uszkodzony albo zmieniony ręcznie)
@@ -122,7 +122,7 @@
     }).join("") + '</div>'
   }
   function segs() {
-    return '<div class="csegs">' + seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO) + '</div>'
+    return '<div class="csegs">' + seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO === "month" ? "grid" : cvO) + '</div>'
   }
   function yearNav(label) {
     return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
@@ -248,9 +248,11 @@
     var s = clStarts(oy), u = om, b0 = s[u], b1 = s[u + 1], i, h =
       '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + mColor(u) + '">' + mName(u) +
       '<small>' + short(OrbitCal.dateOf(b0)) + ' – ' + short(OrbitCal.dateOf(b1 - 1)) + '</small></b><button data-a="nm" aria-label="+">›</button></div><div class="cgrid ogrid">';
+    var zs = window.Astro && Astro.span(b0, b1);
     for (i = 0; i < b1 - b0; i++) {
       var n = b0 + i, dt = OrbitCal.dateOf(n);
-      h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
+      h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"' + (zs ? ' title="' + esc(Astro.dotsTitle(zs.d[i]).slice(3)) + '"' : '') + '><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b>' +
+        (zs ? Astro.dots(zs.d[i]) : '') + '</button>'
     }
     return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + whyBox() + oNote()
   }
@@ -360,6 +362,7 @@
     return '<div class="bdres"><div class="bdsec"><small>' + t("bdBorn") + '</small><div class="bdwhen">' + yLbl(Yb) + ' ' + pin(bplace) + '</div>' +
       '<div class="bdcals">' + bdCal("calNmS", B.clim, t("calDay").replace("{d}", ob.day), B.color) +
       bdCal("calNmL", degTr(a), degTr(B.oa) + " " + B.orb, B.color, t("bdFromEq")) + bdCal("bdTod", B.tod, t(B.todK), "var(--sun)", B.hm, B.dial) + '</div>' +
+      (window.Astro ? Astro.birthLine(B.ms, bplace) : '') +   // znaki Słońca i Księżyca w chwili urodzenia (panel ☰)
       '</div>' +
       (rows ? '<div class="bdsec bdsec2"><small>' + t("bdRet") + '</small><div class="bdwhen">' + pin({ lat: lat, lon: lon, name: place }) + '</div>' +
         bdLadder(a, Ys, Yn, bk, bd) + '<p class="cnote">' + t("bdLad").replace("{s}", shift).replace("{n}", Yn - Ys + 1) + '</p>' +
@@ -419,6 +422,7 @@
     var s = clStarts(oy), o = clApsis(oy), u, i, h = segs() + yearNav(yLbl(oy)) +
       '<div class="ysum">' + t("calOYearSum").replace("{d}", s[12] - s[0]).replace("{a}", short(OrbitCal.dateOf(s[0]))).replace("{b}", short(OrbitCal.dateOf(s[12] - 1))) +
       ' · ◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(o.aph)) + ' · ◆ ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(o.peri)) + '</div><div class="cyear oyear">';
+    var zs = window.Astro && Astro.span(s[0], s[12]);   // znaki: przeskoki Słońca i Księżyca (panel ☰)
     for (u = 0; u < 12; u++) {
       var b0 = s[u], len = s[u + 1] - b0;
       h += '<div class="ym"><button class="ymh" data-om="' + u + '" style="border-bottom:3px solid ' + mColor(u) + '">' + mName(u) + '</button>' +
@@ -426,7 +430,8 @@
       for (i = 0; i < len; i++) {
         var n = b0 + i, dt = OrbitCal.dateOf(n);
         h += '<button class="yd' + dayCls(dt, n) + (i === 0 && u % 3 === 0 ? " sn" : "") + '" data-n="' + n + '" title="' +
-          dt.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + ' · ' + CalendarSystem.label(dt) + '">' + (i + 1) + '</button>'
+          dt.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + ' · ' + CalendarSystem.label(dt) +
+          esc(zs ? Astro.dotsTitle(zs.d[n - s[0]]) : '') + '">' + (i + 1) + (zs ? Astro.dots(zs.d[n - s[0]]) : '') + '</button>'
       }
       h += '</div></div>'
     }
@@ -434,9 +439,25 @@
       detail(sel) + birthBox() + whyBox() + oNote()
   }
 
+  /* Widok miesiąca (kliknięcie nazwy miesiąca w roku): jeden miesiąc klimatyczny z dużymi kafelkami.
+     W kafelku: dzień miesiąca, data, a przy włączonych znakach (panel ☰) tylko przeskoki Księżyca
+     („♑→♒ 212°”: kąt Słońca na tarczy w chwili zmiany) oraz przeskok Słońca w dniu, w którym Słońce zmienia znak. */
+  function renderMonth(box) {
+    var s = clStarts(oy), u = om, b0 = s[u], b1 = s[u + 1], i, zs = window.Astro && Astro.span(b0, b1),
+      h = segs() + '<div class="cnav onav"><button data-a="pm" aria-label="-">‹</button><b style="color:' + mColor(u) + '">' + mName(u) +
+        '<small>' + yLbl(oy) + ' · ' + short(OrbitCal.dateOf(b0)) + ' – ' + short(OrbitCal.dateOf(b1 - 1)) + '</small></b><button data-a="nm" aria-label="+">›</button></div>' +
+        '<div class="ctoolbar"><button class="ctoday" data-cv="grid">' + t("calAllYear") + '</button></div><div class="cmon">';
+    for (i = 0; i < b1 - b0; i++) {
+      var n = b0 + i, dt = OrbitCal.dateOf(n);
+      h += '<button class="cmd' + dayCls(dt, n) + '" data-n="' + n + '"' + (zs ? ' title="' + esc(Astro.dotsTitle(zs.d[i]).slice(3)) + '"' : '') + '><span class="cmn"><b>' + (i + 1) + '</b><small>' + short(dt) + '</small></span>' +
+        (zs ? Astro.tile(zs.d[i]) : '') + '</button>'
+    }
+    return (box.innerHTML = h + '</div>' + (zs ? '<p class="cnote">' + t("zMidN") + '</p>' : '') + '<div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + whyBox() + oNote())
+  }
+
   var lastView = null;
   function render() {
-    var box = $("calView"); if (!box) return;
+    var box = $("calView"); if (!box || box.hidden) return;   // ukryta zakładka: narysuje się przy otwarciu (showView w main.js); oszczędza liczenie znaków
     closeYear(false);   // np. odświeżenie o wschodzie przy otwartym polu roku: pole znika, więc zamykamy je bez zapisu
     syncToday();
     if (south() !== shownS) { shownS = south(); pick(sel) }   // nowe miejsce na drugiej półkuli: rok i miesiąc liczone od nowa dla wybranego dnia
@@ -448,7 +469,7 @@
       localStorage.setItem("cview", cvO)
     } catch (e) {}
     box.classList.toggle("yearMode", cvO === "grid");
-    return cvO === "ring" ? renderRing(box, spin) : renderGrid(box)
+    return cvO === "ring" ? renderRing(box, spin) : cvO === "month" ? renderMonth(box) : renderGrid(box)
   }
 
   // wybór dnia: oglądany rok i miesiąc orbity idą za wybranym dniem
@@ -552,7 +573,7 @@
     var a = b.getAttribute("data-a"), v = b.getAttribute("data-cv"), n = b.getAttribute("data-n"), k = b.getAttribute("data-om");
     if (v) cvO = v;
     else if (n !== null) pick(OrbitCal.dateOf(+n));
-    else if (k !== null) { om = +k; cvO = "ring" }                         // nazwa miesiąca -> koło z nim
+    else if (k !== null) { om = +k; cvO = "month" }                        // nazwa miesiąca -> widok tego miesiąca
     else if (a === "t") pick(today);
     else if (a === "ey") return editYear(b);
     else if (a === "py") oy--; else if (a === "ny") oy++;

@@ -39,6 +39,14 @@ Kalendarz klimatyczny: rok zaczyna się wiosną, w dniu równonocy: na półkuli
 - **Urodziny na orbicie**: data, godzina i miejsce urodzenia dają datę w kalendarzu klimatycznym, dokładny kąt w porze roku i porę doby. Tabela i „drabina lat” pokazują, w który dzień Ziemia wraca co roku na kąt urodzin.
 - **Dlaczego żaden kalendarz nie jest idealny**: tabela kompromisów między rokiem, miesiącem i dobą.
 
+## Astrologia (panel ☰)
+Wysuwany panel z filtrami (przy przewiniętej stronie ☰ czeka w rogu ekranu), domyślnie wszystko wyłączone (w przyszłości funkcje płatne):
+- **Znak Słońca** i **znak Księżyca**: symbol w kółku Słońca (zamiast liczby stopni, która zostaje w kafelku i w środku tarczy) i na ikonie Księżyca, nazwa i stopień w nagłówkach „Słońce” / „Księżyc”, a przy urodzinach znaki w chwili urodzenia.
+- **Zmiany znaków**: w nagłówkach także najbliższa zmiana, np. „→ ♐ 22 lis 08:23” (godzina w wybranym mieście).
+- **Znaki na tarczach i w kalendarzu** (przy „Zmianach znaków”): na tarczy doby kreska tam, gdzie Księżyc zmieni znak (ikona Księżyca dotyka jej w chwili zmiany); w zakładce Rok pierścień znaków na kole orbity (kolory: żywioły, a w gwiazdozbiorach tęcza), nazwa bieżącego znaku pod kołem i granice znaków w lupie. W Kalendarzu kliknięcie nazwy miesiąca otwiera widok miesiąca z dużymi kafelkami: przeskoki Księżyca i Słońca z kątem Słońca w chwili zmiany; w widoku roku i w Kole kropki w dniach przeskoków.
+- Jeden z trzech systemów: **zachodni** (12 równych znaków od równonocy), **wedyjski** (12 równych znaków od gwiazd, ajanamsa Lahiri; inne warianty ajanamsy dają granice przesunięte nawet o ok. 1,5°, notatka jest w panelu i w `js/zodiac.js`) i **gwiazdozbiory** (13, z Wężownikiem, granice IAU na ekliptyce). Przy gwiazdozbiorach podfiltr **Księżyc według nieba**: Księżyc w gwiazdozbiorze, w którym naprawdę go widać z wybranego miejsca (odchodzi od ekliptyki do 5°, więc bywa też w Orionie, Wielorybie, Woźnicy, Kruku albo Sekstansie). Dla Słońca nie ma różnicy, bo leży na ekliptyce.
+- Dokładność w latach 1900-2100: Księżyc ok. 20" (Meeus, rozdz. 47), Słońce ok. 2" (VSOP87), czyli zmiana znaku z dokładnością do ok. minuty. Dla lat 1000-1900 i 2100-3000 tylko orientacyjnie (Księżyc do kilku minut kątowych), bo spowolnienie obrotu Ziemi (ΔT) znamy tam w przybliżeniu. Granice gwiazdozbiorów według Roman (1987). Testy: `npm test` (porównanie z biblioteką astronomy-engine).
+
 ## Miejsce
 - Wyszukiwanie miasta po nazwie,
 - „Użyj mojej lokalizacji”,
@@ -52,17 +60,20 @@ Polski, English, Español, Deutsch, Français, Italiano, Português, Украї�
 Wybrane miejsca, wydarzenia, język i ustawienia widoku zostają tylko w Twojej przeglądarce (`localStorage`). Wyszukiwanie miast korzysta z darmowego [Open-Meteo Geocoding API](https://open-meteo.com/). Wysyłana jest tylko wpisana nazwa miasta. Pełna polityka prywatności: [privacy.html](privacy.html).
 
 ## Uruchomienie lokalnie
-Wystarczy otworzyć `index.html` w przeglądarce. Projekt to czysty HTML, CSS i JavaScript, bez bibliotek i bez budowania.
+Wystarczy otworzyć `index.html` w przeglądarce. Projekt to czysty HTML, CSS i JavaScript, bez bibliotek i bez budowania (biblioteka astronomy-engine służy tylko testom).
 
 ```
 index.html          – układ strony
 css/style.css       – wygląd
 js/I18n.js          – tłumaczenia (PL, EN, ES) i funkcje języka (t, setLang)
 js/I18n-more.js     – pozostałe języki
+js/I18n-astro.js    – tłumaczenia astrologii (panel ☰, nazwy znaków i gwiazdozbiorów)
+js/zodiac.js        – dokładny Księżyc (Meeus), znaki w czterech systemach, granice gwiazdozbiorów IAU
 js/main.js          – obliczenia Słońca i Księżyca, doby, tarcza, wydarzenia, miejsce, miesiąc księżycowy, zakładki
 js/view3d.js        – wizualizacja 3D
 js/year.js          – zakładka Rok: przełącznik Orbita / Długość dnia, wykres i pętla
 js/orbit.js         – obliczenia kalendarza orbity (granice miesięcy, apsydy, daty)
+js/astro-ui.js      – panel ☰ z filtrami astrologii, symbole znaków na tarczy
 js/calendar.js      – zakładka Kalendarz, urodziny
 js/orbitwheel.js    – zakładka Rok, widok Orbita: koło orbity i lupa
 sw.js               – działanie bez internetu (service worker; po zmianie podnieś w nim CACHE)
@@ -71,6 +82,7 @@ assets/             – ikony aplikacji (icon.svg i PNG)
 privacy.html        – polityka prywatności (PL, EN)
 scripts/icons.ps1   – tworzy ikony strony i aplikacji (PowerShell)
 scripts/copy-web.js – kopiuje pliki strony do www/ dla aplikacji
+test/               – testy obliczeń (npm test)
 capacitor.config.json, package.json, android/ – aplikacja na Androida (Capacitor)
 ```
 

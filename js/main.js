@@ -197,20 +197,17 @@ function sunDayParts(n) {
    2. oświetlenie illum (0-1): jaka część widocznej tarczy jest jasna (tekst "5% oświetlenia").
    3. kąt na tarczy dobowej: położenie względem lokalnego południka, w tym samym układzie co Słońce
       (H z moonPos, odłożone od znacznika górowania Słońca nd). Pokazuje go wskazówka i znacznik na tarczy. */
-/* ===== Księżyc: uproszczone położenie (kilka wyrazów wzoru, dokładność rzędu 1°) =====
+/* ===== Księżyc: położenie z js/zodiac.js (Meeus, rozdz. 47, dokładność ok. 20") =====
    Zwraca kąt godzinny Księżyca H (stopnie od jego górowania, na zachód dodatni),
    wysokość nad horyzontem i deklinację. */
 function moonPos(now) {
-  var d = now.getTime() / 864e5 - 10957.5,   // dni od J2000
-    L = R * (218.316 + 13.176396 * d), M = R * (134.963 + 13.064993 * d), F = R * (93.272 + 13.22935 * d),
-    l = L + R * 6.289 * Math.sin(M), b = R * 5.128 * Math.sin(F), e = R * 23.4397,
-    ra = Math.atan2(Math.sin(l) * Math.cos(e) - Math.tan(b) * Math.sin(e), Math.cos(l)),
-    dc = Math.asin(Math.sin(b) * Math.cos(e) + Math.cos(b) * Math.sin(e) * Math.sin(l)),
-    H = R * (280.16 + 360.9856235 * d) + lon * R - ra,
+  var ms = now.getTime(), d = ms / 864e5 - 10957.5,   // dni od J2000
+    m = ZD.moon(ms), q = ZD.toEq(m.lonM, m.lat, m.nut.eps0), dc = q.dec * R,
+    H = R * (280.46061837 + 360.98564736629 * d) + lon * R - q.ra * R,   // średni czas gwiazdowy Greenwich (Meeus 12.4)
     alt = Math.asin(Math.sin(lat * R) * Math.sin(dc) + Math.cos(lat * R) * Math.cos(dc) * Math.cos(H));
-  var ph = elong(now.getTime());
-  return { H: normDeg(H / R), alt: alt / R, dec: dc / R, ph: ph, illum: (1 - Math.cos(ph * R)) / 2,
-    lon: normDeg(l / R), node: normDeg(125.044 - 0.0529539 * d) }   // długość ekliptyczna Księżyca i węzła wstępującego (L - F)
+  var ph = elong(ms);
+  return { H: normDeg(H / R), alt: alt / R, dec: q.dec, ph: ph, illum: (1 - Math.cos(ph * R)) / 2,
+    lon: normDeg(m.lonM), node: normDeg(125.044 - 0.0529539 * d) }   // długość ekliptyczna Księżyca i węzła wstępującego
 }
 
 // faza Księżyca = o ile jego długość ekliptyczna wyprzedza Słońce (0 nów, 90 pierwsza kwadra, 180 pełnia, 270 ostatnia)
@@ -219,10 +216,7 @@ function sunLonDeg(ms) {   // długość ekliptyczna Słońca w stopniach (0° =
   var d = ms / 864e5 - 10957.5, Ms = R * (357.5291 + 0.98560028 * d);
   return (((Ms + R * (1.9148 * Math.sin(Ms) + 0.02 * Math.sin(2 * Ms)) + R * (102.9372 + 4.70935e-5 * d - 0.0057) + Math.PI) / R) % 360 + 360) % 360
 }
-function elong(ms) {
-  var d = ms / 864e5 - 10957.5, M = R * (134.963 + 13.064993 * d), l = R * (218.316 + 13.176396 * d) + R * 6.289 * Math.sin(M);
-  return ((l / R - sunLonDeg(ms)) % 360 + 360) % 360
-}
+function elong(ms) { return ((ZD.moon(ms).lonM - sunLonDeg(ms)) % 360 + 360) % 360 }   // 0..360
 // moment nowiu: poprawiamy przybliżenie kilkoma krokami (Księżyc oddala się od Słońca o ok. 12,19° na dobę)
 function newMoonNear(ms) { for (var i = 0; i < 4; i++) ms -= normDeg(elong(ms)) / 12.19 * 864e5; return ms }
 // numer dnia kalendarzowego (od północy do północy) w strefie czasowej wybranego miasta
@@ -376,6 +370,7 @@ function tick() {
     if ($("dayArc")) $("dayArc").textContent = "";
     if ($("light")) $("light").textContent = "--°";
     setMsg("noSun");
+    if (window.Astro) Astro.tick(now, null, null);   // bez doby słonecznej: symbole znaków chowamy
     return
   }
   var polar = cyc.polar || "";
@@ -440,6 +435,7 @@ function tick() {
   $("deg").textContent = deg.toFixed(1) + "°";
   $("nd").textContent = (90 - Math.abs(lat - sol(gam(new Date(cyc.noon))).dc / R)).toFixed(1) + "°";   // największa wysokość tego dnia (deklinacja w chwili górowania)
   showNear(noSet ? null : nearParts(deg, nd, sd));
+  if (window.Astro) Astro.tick(now, deg, $("moonhand") ? dialAng : null, mr, cyc, k);   // znaki zodiaku przy Słońcu i Księżycu (js/astro-ui.js)
 
   live = { lat: lat, dec: S.dc / R, deg: deg, polar: !!polar, sH: normDeg(H / R), sLon: sunLonDeg(now.getTime()) };   // dla js/view3d.js
 }
@@ -681,6 +677,7 @@ function pickLang(l) {
   if ($("cityres")) $("cityres").innerHTML = "";   // stare wyniki były w poprzednim języku
   if ($("mgrid")) buildMonthScale();            // nazwy rzędów i faz w siatce
   if (window.Sun3D) Sun3D.refresh();               // przetłumacz widok 3D
+  if (window.Astro) Astro.refreshLang();           // panel ☰
   tick();
   refreshViews()
 }

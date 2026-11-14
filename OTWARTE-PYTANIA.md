@@ -121,3 +121,18 @@ Równych dni nie da się uzyskać, jeśli doba ma zostać obrotem Ziemi (od wsch
 ### Gdzie to będzie w kodzie
 - `js/orbit.js`: `year()` i `momentAt()` dają chwile przejścia przez dowolny kąt, a `cross()` znajduje chwilę dla kąta. Na tym można zbudować granice dób orbitalnych w wariantach B i C.
 - `js/calendar.js`: kafelek dnia (`detail()`) i Urodziny na orbicie (`birthOut()`).
+
+---
+
+## Pomysł na później: ludzik energii roku
+
+**Zgłoszone 14 listopada 2026** (pomysłodawczyni, nagranie głosowe; jako żart, „puszczenie oczka”).
+
+Mała postać, która odbija stan światła w nastroju i sile, jak pasek energii bohatera w starej grze komputerowej:
+- ludzik idzie w miejscu: wiosną biegnie truchtem (pełna werwa), latem ma pełną siłę, jesienią coraz bardziej zwalnia,
+- w listopadzie i grudniu schodzi do „hibernacji”: oczy mu się zamykają, a 21 grudnia (przesilenie) siada albo zasypia,
+- to nie smutek ani depresja, tylko odpoczynek; zmiana stopniowa przez cały rok, zależna od półkuli,
+- wcześniejszy wariant: niemowlę (nowy rok) i staruszek z laską (stary rok), raczej odrzucony na rzecz postaw i buziek.
+
+Do ustalenia: gdzie (nagłówek zakładki Rok? kafelek dnia w Kalendarzu?), czy liczyć od długości dnia, czy od kąta roku,
+animacja czy kilka obrazków, i czy w ogóle to robić.

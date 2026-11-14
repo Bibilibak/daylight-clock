@@ -15,7 +15,7 @@
   <meta name="apple-mobile-web-app-title" id="appTitle" content="Zegar światła">
   <meta name="theme-color" content="#fff7ea" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#14100c" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="css/style.css?v=106">
+  <link rel="stylesheet" href="css/style.css?v=115">
 </head>
 <body>
   <div class="top">
@@ -87,6 +87,8 @@
 
     <!-- Księżyc na wspólnej tarczy: srebrny łuk "Księżyc nad horyzontem" przy zewnętrznej krawędzi pierścienia -->
     <path id="moonup" fill="none" stroke="#aab6cc" stroke-width="4"/>
+    <!-- Wenus (filtr w panelu ☰): łuk „Wenus nad horyzontem” jeszcze dalej na zewnątrz, kolor części cyklu (js/main.js) -->
+    <path id="venup" fill="none" stroke-width="3" stroke-linecap="round" style="display:none"/>
 
     <!-- podziałka (rysowana w js/main.js) -->
     <g id="ticks" stroke="var(--mut)"></g>
@@ -112,6 +114,7 @@
     <circle id="mid" r="3" fill="var(--mut)"/>           <!-- środek nocy -->
     <g id="evs"></g>
     <g id="moonmark"></g>
+    <circle id="venmark" r="4.5" stroke="var(--bg)" stroke-width="1.5" style="display:none"/>   <!-- Wenus: kropka na jej łuku -->
     <!-- znak zodiaku na ikonie Księżyca (js/astro-ui.js, domyślnie ukryty); znak Słońca pokazuje #sunnum -->
     <text id="zMoonG" class="zg" text-anchor="middle" dominant-baseline="central" style="display:none"></text>
     <circle id="sun" r="11" fill="var(--sun)" stroke="var(--bg)" stroke-width="2"/>
@@ -130,7 +133,7 @@
   </svg>
 
 
-  <div class="legend"><span class="lg sun"></span><span data-i18n="sunH">Słońce</span><span class="lg moon"></span><span data-i18n="moonH">Księżyc</span></div>
+  <div class="legend"><span class="lg sun"></span><span data-i18n="sunH">Słońce</span><span class="lg moon"></span><span data-i18n="moonH">Księżyc</span><span class="lg ven" id="lgVen" hidden></span><span id="lgVenT" data-i18n="zVenus" hidden>Wenus</span></div>
 
   <div class="reading">
     <span id="msg"></span>
@@ -197,20 +200,27 @@
     <div class="mgrid" id="mgrid"></div>
     <div class="mdet" id="mdet" aria-live="polite"></div>
   </div>
+  <!-- Wenus (filtr w panelu ☰): część cyklu ok. 584 dni, pasek całego cyklu i następne przejście (js/venus.js, js/astro-ui.js) -->
+  <div id="venSec" hidden>
+    <div class="rowh"><span data-i18n="zVenus">Wenus</span><span id="zVenT" class="zt" hidden></span></div>
+    <div class="venbox" id="venBox"></div>
+  </div>
   </div>
 
   <p class="foot"><a href="privacy.html" data-i18n="privacy">Prywatność</a></p>
 
-  <script src="js/I18n.js?v=106"></script>
-  <script src="js/I18n-more.js?v=106"></script>
-  <script src="js/I18n-astro.js?v=106"></script>
-  <script src="js/zodiac.js?v=106"></script>
-  <script src="js/main.js?v=106"></script>
-  <script src="js/astro-ui.js?v=106"></script>
-  <script src="js/view3d.js?v=106"></script>
-  <script src="js/year.js?v=106"></script>
-  <script src="js/orbit.js?v=106"></script>
-  <script src="js/calendar.js?v=106"></script>
-  <script src="js/orbitwheel.js?v=106"></script>
+  <script src="js/I18n.js?v=115"></script>
+  <script src="js/I18n-more.js?v=115"></script>
+  <script src="js/I18n-astro.js?v=115"></script>
+  <script src="js/zodiac.js?v=115"></script>
+  <script src="js/venus.js?v=115"></script>
+  <script src="js/main.js?v=115"></script>
+  <script src="js/astro-ui.js?v=115"></script>
+  <script src="js/view3d.js?v=115"></script>
+  <script src="js/year.js?v=115"></script>
+  <script src="js/orbit.js?v=115"></script>
+  <script src="js/calendar.js?v=115"></script>
+  <script src="js/orbitwheel.js?v=115"></script>
+  <script src="js/venusrose.js?v=115"></script>
 </body>
 </html>

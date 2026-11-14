@@ -1,19 +1,20 @@
 /* ===== Astrologia: panel ☰ z filtrami, znaki Słońca i Księżyca na tarczy, w nagłówkach i przy urodzinach =====
    Obliczenia są w js/zodiac.js (ZD). Ustawienia w localStorage "astro":
-   { sun, moon: pokazywać znak, sys: "trop" | "sid" | "ecl13", moonSky: Księżyc w gwiazdozbiorach według jego
-   prawdziwego położenia na niebie (tylko przy "ecl13"), changes: pokazywać najbliższą zmianę znaku }.
+   { sun, moon, changes: zawsze razem (jeden filtr „Znaki zodiaku”: znaki i ich zmiany), sys: "trop" | "sid" | "ecl13", moonSky: Księżyc w gwiazdozbiorach według jego
+   prawdziwego położenia na niebie (tylko przy "ecl13") }.
    Domyślnie wszystko wyłączone, więc kto nie włączy astrologii, widzi zegar bez zmian.
    Później to będą funkcje płatne: wszystko, co tu się włącza, przechodzi przez Astro.allowed() (na razie zawsze true). */
 var Astro = (function () {
   if (!$("menu") || !$("menuBtn")) return { tick: function () {}, birthLine: function () { return "" }, allowed: function () { return true },
     state: function () { return {} }, refreshLang: function () {}, ring: function () { return null }, legend: function () { return "" },
-    span: function () { return null }, tile: function () { return "" }, dots: function () { return "" }, dotsTitle: function () { return "" } };   // strona bez panelu ☰
+    span: function () { return null }, tile: function () { return "" }, dotsTitle: function () { return "" }, moonAt: function () { return "" } };   // strona bez panelu ☰
   var SYS = ["trop", "sid", "ecl13"],
-    st = { sun: false, moon: false, sys: "trop", moonSky: false, changes: false };
+    st = { sun: false, moon: false, sys: "trop", moonSky: false, changes: false, venus: false };
   try {
     var s = JSON.parse(localStorage.getItem("astro") || "null");
     if (s && typeof s === "object") {
-      ["sun", "moon", "moonSky", "changes"].forEach(function (k) { st[k] = s[k] === true });
+      ["sun", "moon", "moonSky", "changes", "venus"].forEach(function (k) { st[k] = s[k] === true });
+      st.sun = st.moon = st.changes = st.sun || st.moon || st.changes;   // jeden filtr „Znaki zodiaku” (dawniej trzy osobne)
       if (s.sys === "sky") { st.sys = "ecl13"; st.moonSky = true }   // zapis pierwszej wersji (osobny system „na niebie”)
       else if (SYS.indexOf(s.sys) >= 0) st.sys = s.sys
     }
@@ -121,7 +122,41 @@ var Astro = (function () {
     txt("zSunT", zs ? label(zs) : "");
     txt("zMoonT", zm ? label(zm) : "");
     txt("zSunC", zs && on("changes") ? changeTxt(change("sun", ms), zs) : "");   // najbliższa zmiana: linijka pod nagłówkiem
-    txt("zMoonC", zm && on("changes") ? changeTxt(change("moon", ms), zm) : "")
+    txt("zMoonC", zm && on("changes") ? changeTxt(change("moon", ms), zm) : "");
+    venus(ms)
+  }
+
+  /* Kafelek Wenus pod Księżycem: bieżąca część cyklu, dzień tej części, odległość od Słońca, czy jaśnieje,
+     pasek całego cyklu (części w prawdziwych proporcjach, kreska = teraz) i następne przejście. Odświeżany co minutę. */
+  var venKey = "", VCOL = window.Venus ? Venus.COL : [];
+  function venus(ms) {
+    var sec = $("venSec"); if (!sec || !window.Venus) return;
+    var show = on("venus"), key = show ? Math.floor(ms / 6e4) + "|" + lang + "|" + st.sun + "|" + st.sys : "";
+    sec.hidden = !show;
+    if (key === venKey) return;
+    venKey = key;
+    if (!show) return;
+    var c = Venus.cycle(ms), p = Venus.pos(ms), b = $("venBox");
+    if (!c) { b.textContent = ""; return }
+    var day = Math.floor((ms - c.from) / 864e5) + 1, len = Math.round((c.to - c.from) / 864e5), all = c.b[4] - c.b[0],
+      up = Venus.pos(ms + 864e5).mag < p.mag, i, bar = "";
+    for (i = 0; i < 4; i++)
+      bar += '<i class="vseg' + (i === c.k ? " on" : "") + '" style="flex:' + (c.b[i + 1] - c.b[i]) + ';background:' + VCOL[i] + '" title="' + esc(t("venK" + i)) + '">' +
+        (i % 2 ? '<span>' + esc(t("venK" + i)) + '</span>' : '') + '</i>';
+    var nx = c.next, when = new Date(nx.ms).toLocaleDateString(loc(), tz ? { day: "numeric", month: "long", year: "numeric", timeZone: tz } : { day: "numeric", month: "long", year: "numeric" });
+    b.innerHTML = '<div class="vname"><span class="vdot" style="background:' + VCOL[c.k] + '"></span>' + esc(t("venK" + c.k)) + '</div>' +
+      '<div class="vdesc">' + esc(t("venD" + c.k)) + '</div>' +
+      '<div class="vline">' + t("venDay").replace("{d}", day).replace("{n}", len) + ' · ' + t("venFrom").replace("{a}", Math.round(Math.abs(p.d))) + ' · ' + t(up ? "venUp" : "venDn") + '</div>' +
+      '<div class="vbar">' + bar + '<b class="vnow" style="inset-inline-start:' + (100 * (ms - c.b[0]) / all).toFixed(2) + '%"></b></div>' +
+      '<div class="vnext">' + esc(t("venNext").replace("{p}", t("venK" + nx.k)).replace("{w}", when)) + '</div>';
+    var z = st.sun ? Venus.sign(ms, st.sys) : null;   // filtr „Znaki zodiaku”: znak Wenus w nagłówku
+    txt("zVenT", z ? label(z) : "")
+  }
+  // znak Księżyca w chwili ms (np. pełni) przy włączonym filtrze „Znaki zodiaku”: „ · ♉ Byk”
+  function moonAt(ms) {
+    if (!on("moon")) return "";
+    var z = ZD.moonSign(ms, moonSys(), lat, lon);
+    return z ? " · " + (z.glyph ? glyph(z) + " " : "") + name(z) : ""
   }
   function txt(id, v) { var e = $(id); if (e && e.textContent !== v) { e.textContent = v; e.hidden = !v } }
 
@@ -137,13 +172,14 @@ var Astro = (function () {
 
   /* Panel ☰ (wysuwany z boku). Drugi przycisk ☰ (#menuFab) pojawia się w rogu ekranu, gdy pierwszy zniknie
      przy przewijaniu, żeby filtry były pod ręką na każdej wysokości strony. */
-  function chk(k, lbl, sub, dis) {
-    return '<label class="mchk' + (sub ? " msub" : "") + (dis ? " mdis" : "") + '"><input type="checkbox" data-z="' + k + '"' + (st[k] ? " checked" : "") + (dis ? " disabled" : "") + '>' +
+  function chk(k, lbl, sub, dis, top) {   // top: opcja główna z opisem (bez wcięcia podfiltru)
+    return '<label class="mchk' + (sub && !top ? " msub" : "") + (dis ? " mdis" : "") + '"><input type="checkbox" data-z="' + k + '"' + (st[k] ? " checked" : "") + (dis ? " disabled" : "") + '>' +
       '<span>' + lbl + (sub ? '<small>' + sub + '</small>' : '') + '</span></label>'
   }
   function menuHtml() {
     var h = '<div class="mhead"><b id="menuT">' + t("zTitle") + '</b><button class="mclose" data-z="close" aria-label="' + t("zClose") + '">×</button></div>' +
-      chk("sun", t("zSun")) + chk("moon", t("zMoon")) + chk("changes", t("zChanges"), t("zChangesD")) +
+      chk("sun", t("zSigns"), t("zSignsD"), false, true) +   // jeden filtr: znaki Słońca i Księżyca razem z ich zmianami
+      chk("venus", t("zVenus"), t("zVenusD"), false, true) +   // cykl Wenus: kafelek pod Księżycem i przejścia w kalendarzu
       '<fieldset class="msys"><legend>' + t("zSys") + '</legend>';
     SYS.forEach(function (k) {
       h += '<label class="mrad"><input type="radio" name="zsys" data-z="sys" value="' + k + '"' + (st.sys === k ? " checked" : "") + '>' +
@@ -174,7 +210,7 @@ var Astro = (function () {
     }
   }
   function changed() {
-    save(); memo = {}; chg = {};
+    save(); memo = {}; chg = {}; venKey = "";
     if (window.tick) window.tick();   // od razu odśwież tarczę (tick z js/main.js), zamiast czekać sekundę
     if (window.refreshViews) refreshViews()   // Kalendarz (linijka przy urodzinach) i Rok (pierścień znaków na orbicie)
   }
@@ -184,7 +220,8 @@ var Astro = (function () {
   $("menu").addEventListener("click", function (e) { if (e.target.getAttribute("data-z") === "close") open(false) });
   $("menu").addEventListener("change", function (e) {
     var k = e.target.getAttribute("data-z");
-    if (k === "sun" || k === "moon" || k === "changes" || k === "moonSky") st[k] = e.target.checked;
+    if (k === "sun") st.sun = st.moon = st.changes = e.target.checked;   // „Znaki zodiaku”: wszystko naraz
+    else if (k === "moonSky" || k === "venus") st[k] = e.target.checked;
     else if (k === "sys") { st.sys = e.target.value; render() }   // podfiltr Księżyca włącza się / wyszarza
     else return;
     changed()
@@ -244,12 +281,12 @@ var Astro = (function () {
      { m0: znak Księżyca na początku doby, mc: zmiany Księżyca w tej dobie, sc: zmiany Słońca }] }. Liczone raz dla zakresu. */
   var spanMemo = {};
   function span(n0, n1) {
-    if (!on("sun") && !on("moon")) return null;
-    var base = lat + "|" + lon + "|" + st.sys + "|" + st.moonSky + "|" + st.sun + "|" + st.moon, key = n0 + "|" + n1 + "|" + base;
+    if (!on("sun") && !on("moon") && !on("venus")) return null;
+    var base = lat + "|" + lon + "|" + st.sys + "|" + st.moonSky + "|" + st.sun + "|" + st.moon + "|" + st.venus, key = n0 + "|" + n1 + "|" + base;
     if (spanMemo[key]) return spanMemo[key].v;
     for (var mk in spanMemo) {   // miesiąc z już policzonego roku: bez liczenia od nowa
       var m = spanMemo[mk];
-      if (m.base === base && m.n0 <= n0 && m.n1 >= n1) return { sun: m.v.sun, moon: m.v.moon, d: m.v.d.slice(n0 - m.n0, n1 - m.n0) }
+      if (m.base === base && m.n0 <= n0 && m.n1 >= n1) return { sun: m.v.sun, moon: m.v.moon, venus: m.v.venus, d: m.v.d.slice(n0 - m.n0, n1 - m.n0) }
     }
     var starts = [], i, d = [];
     for (i = n0; i <= n1; i++) starts.push(OrbitCal.dayStart(i));
@@ -261,15 +298,17 @@ var Astro = (function () {
     }
     var mc = on("moon") ? all("moon", moonSys()) : [], sc = on("sun") ? all("sun", st.sys) : [],
       m0 = on("moon") ? ZD.moonSign(starts[0], moonSys(), lat, lon, true) : null,
-      s0 = on("sun") ? ZD.sunSign(starts[0], st.sys, true) : null, j = 0, k = 0;
+      s0 = on("sun") ? ZD.sunSign(starts[0], st.sys, true) : null, j = 0, k = 0,
+      vc = on("venus") && window.Venus ? Venus.events(starts[0], starts[starts.length - 1]) : [], q = 0;   // przejścia między częściami cyklu Wenus
     for (i = 0; i < starts.length - 1; i++) {
-      var e = { m0: m0, s0: s0, mc: [], sc: [] };
+      var e = { m0: m0, s0: s0, mc: [], sc: [], vc: [] };
+      while (q < vc.length && vc[q].ms < starts[i + 1]) { e.vc.push(vc[q]); q++ }
       while (j < mc.length && mc[j].ms < starts[i + 1]) { e.mc.push(mc[j]); m0 = mc[j].to; j++ }
       while (k < sc.length && sc[k].ms < starts[i + 1]) { e.sc.push(sc[k]); s0 = sc[k].to; k++ }
       d.push(e)
     }
     if (Object.keys(spanMemo).length > 20) spanMemo = {};   // pamięć: kilka ostatnich zakresów
-    var v = { sun: on("sun"), moon: on("moon"), d: d };
+    var v = { sun: on("sun"), moon: on("moon"), venus: on("venus"), d: d };
     spanMemo[key] = { base: base, n0: n0, n1: n1, v: v };
     return v
   }
@@ -286,21 +325,19 @@ var Astro = (function () {
         list.map(function (c) { return arr() + '<span style="color:' + tcol(c.to.id) + '">' + esc(glyph(c.to)) + '</span>' }).join("") +
         '<small>' + list.map(function (c) { return degAt(c.ms) }).join(", ") + '</small></span>'
     }
-    return (st.moon && e.mc.length ? line("ztm", e.m0, e.mc) : "") + (st.sun && e.sc.length ? line("zts", e.s0, e.sc) : "")
-  }
-  // drobne znaczniki do małych kafelków (rok, koło): kolorowa kropka = zmiana Słońca, srebrna = zmiana Księżyca
-  function dots(e) {
-    if (!e) return "";
-    return (st.sun && e.sc.length ? '<i class="zds" style="background:' + color(e.sc[0].to.id) + '"></i>' : '') + (st.moon && e.mc.length ? '<i class="zdm"></i>' : '')
+    return (st.moon && e.mc.length ? line("ztm", e.m0, e.mc) : "") + (st.sun && e.sc.length ? line("zts", e.s0, e.sc) : "") +
+      (st.venus && e.vc && e.vc.length ? '<span class="zt1 ztv"><span class="zdisc">♀︎</span>' +   // Wenus: [♀] → Hesperus i kąt Słońca w chwili przejścia
+        e.vc.map(function (c) { return arr() + esc(t("venK" + c.k)) }).join(" ") + '<small>' + e.vc.map(function (c) { return degAt(c.ms) }).join(", ") + '</small></span>' : "")
   }
   function dotsTitle(e) {
     if (!e) return "";
     var s = [];
     if (st.sun) e.sc.forEach(function (c) { s.push("☉ " + arr() + " " + glyph(c.to) + " " + name(c.to) + ", " + whenTxt(c.ms)) });
     if (st.moon) e.mc.forEach(function (c) { s.push("☽ " + arr() + " " + glyph(c.to) + " " + name(c.to) + ", " + whenTxt(c.ms)) });
+    if (st.venus && e.vc) e.vc.forEach(function (c) { s.push("♀ " + arr() + " " + t("venK" + c.k) + ", " + whenTxt(c.ms)) });
     return s.length ? " · " + s.join(" · ") : ""
   }
 
-  return { tick: tick, birthLine: birthLine, ring: ring, legend: legend, span: span, tile: tile, dots: dots, dotsTitle: dotsTitle, allowed: allowed, state: function () { return st },
+  return { tick: tick, birthLine: birthLine, ring: ring, legend: legend, span: span, tile: tile, dotsTitle: dotsTitle, moonAt: moonAt, allowed: allowed, state: function () { return st },
     refreshLang: function () { chg = {}; if (!$("menu").hidden) render() } }
 })();

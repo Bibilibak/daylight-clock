@@ -113,7 +113,7 @@
       '<div>' + (light === null ? t("calPolar") : t("lightHead").replace("{a}", light)) + '</div>' +
       '<div>' + t("ph" + phaseIdx(ph)) + ' · ' + t("moonIll").replace("{i}", il) + '</div>' +
       '<div>' + t("moonDayLine").replace("{d}", lc.day).replace("{l}", num(lc.length, 1)) + '</div>' +
-      ev.map(function (e) { return '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' }).join("") + '</div>'
+      ev.map(function (e) { return '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + (window.Astro ? esc(Astro.moonAt(e.ms)) : '') + '</div>' }).join("") + '</div>'
   }
 
   function seg(attr, list, cur) {
@@ -124,10 +124,12 @@
   function segs() {
     return '<div class="csegs">' + seg("data-cv", [["grid", "calGrid"], ["ring", "calRing"]], cvO === "month" ? "grid" : cvO) + '</div>'
   }
-  function yearNav(label) {
-    return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + t("calYearEdit") + '">' + label +
+  function yearNav(Y) {   // „« 2026/27 »”: sam numer roku, pełna nazwa „Rok orbity 2026/27” w podpowiedzi
+    return '<div class="cnav"><button data-a="py" aria-label="-1">«</button><button class="cyl" data-a="ey" title="' + esc(yLbl(Y)) + ' · ' + t("calYearEdit") + '">' + OrbitCal.yLabel(Y) +
       '</button><button data-a="ny" aria-label="+1">»</button></div>'
   }
+  // górny rząd widoku roku i koła: rok obok przełącznika Kalendarz / Koło (mniej rzędów nad kalendarzem)
+  function topRow() { return '<div class="ctop">' + yearNav(oy) + segs() + '</div>' }
   /* Kliknięcie w rok: pole do wpisania roku orbity. Enter albo wyjście z pola zatwierdza, Esc anuluje.
      Kliknięcie innego przycisku kalendarza przy otwartym polu najpierw przyjmuje rok, potem działa normalnie
      (mousedown nie zabiera fokusu z pola, więc przycisk nie znika przed kliknięciem). */
@@ -240,7 +242,7 @@
   }
   function renderRing(box, spin) {
     var top = OrbitCal.lonAt(OrbitCal.dayN(sel)), from = rTop;
-    box.innerHTML = segs() + yearNav(yLbl(oy)) +
+    box.innerHTML = topRow() +
       '<svg class="oring" viewBox="0 0 360 360" tabindex="0" role="img" aria-label="' + t("calRing") + '"></svg><div class="orest">' + ringRest() + '</div>';
     if (spin && from !== null) spinTo(from, top); else { cancelAnimationFrame(anim); drawRing(top) }
   }
@@ -251,8 +253,7 @@
     var zs = window.Astro && Astro.span(b0, b1);
     for (i = 0; i < b1 - b0; i++) {
       var n = b0 + i, dt = OrbitCal.dateOf(n);
-      h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"' + (zs ? ' title="' + esc(Astro.dotsTitle(zs.d[i]).slice(3)) + '"' : '') + '><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b>' +
-        (zs ? Astro.dots(zs.d[i]) : '') + '</button>'
+      h += '<button class="cc' + dayCls(dt, n) + '" data-n="' + n + '"' + (zs ? ' title="' + esc(Astro.dotsTitle(zs.d[i]).slice(3)) + '"' : '') + '><small>' + (i === 0 || dt.getDate() === 1 ? short(dt) : dt.getDate()) + '</small><b>' + (i + 1) + '</b></button>'
     }
     return h + '</div><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' + detail(sel) + birthBox() + whyBox() + oNote()
   }
@@ -419,9 +420,7 @@
      Na szerokim ekranie 3 miesiące w rzędzie (rząd = pora roku). Kropka = równonoc / przesilenie,
      ◆ = aphelium / peryhelium. */
   function renderGrid(box) {
-    var s = clStarts(oy), o = clApsis(oy), u, i, h = segs() + yearNav(yLbl(oy)) +
-      '<div class="ysum">' + t("calOYearSum").replace("{d}", s[12] - s[0]).replace("{a}", short(OrbitCal.dateOf(s[0]))).replace("{b}", short(OrbitCal.dateOf(s[12] - 1))) +
-      ' · ◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(o.aph)) + ' · ◆ ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(o.peri)) + '</div><div class="cyear oyear">';
+    var s = clStarts(oy), o = clApsis(oy), u, i, h = topRow() + '<div class="cyear oyear">';
     var zs = window.Astro && Astro.span(s[0], s[12]);   // znaki: przeskoki Słońca i Księżyca (panel ☰)
     for (u = 0; u < 12; u++) {
       var b0 = s[u], len = s[u + 1] - b0;
@@ -431,11 +430,12 @@
         var n = b0 + i, dt = OrbitCal.dateOf(n);
         h += '<button class="yd' + dayCls(dt, n) + (i === 0 && u % 3 === 0 ? " sn" : "") + '" data-n="' + n + '" title="' +
           dt.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + ' · ' + CalendarSystem.label(dt) +
-          esc(zs ? Astro.dotsTitle(zs.d[n - s[0]]) : '') + '">' + (i + 1) + (zs ? Astro.dots(zs.d[n - s[0]]) : '') + '</button>'
+          esc(zs ? Astro.dotsTitle(zs.d[n - s[0]]) : '') + '">' + (i + 1) + '</button>'
       }
       h += '</div></div>'
     }
-    box.innerHTML = h + '</div><p class="cnote">' + t("calOMarks") + '</p><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' +
+    box.innerHTML = h + '</div><p class="cnote">' + t("calOMarks").split(" · ◆")[0] + '<br>◆ ' + t("calAphS") + ' ' + short(OrbitCal.dateOf(o.aph)) +
+      ' · ' + t("calPeriS") + ' ' + short(OrbitCal.dateOf(o.peri)) + '</p><div class="ctoolbar"><button class="ctoday" data-a="t">' + t("calToday") + '</button></div>' +
       detail(sel) + birthBox() + whyBox() + oNote()
   }
 

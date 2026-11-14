@@ -315,6 +315,7 @@ button {
   color: var(--mut);
   margin: -4px 0 10px;
 }
+.lightH[hidden] + .where { margin: 4px 0 30px; }   /* Kalendarz bez odczytu pod tytułem: miejsce tuż pod tytułem, odstęp przed kalendarzem */
 
 /* miejsce u góry każdej zakładki: „zmień” rozwija wyszukiwarkę miast, lokalizację i współrzędne */
 .linkbtn { background: none; border: 0; padding: 0 2px; color: var(--sun); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
@@ -362,7 +363,7 @@ button {
 [dir="rtl"] #pickList li:not(.hint) { direction: ltr; unicode-bidi: isolate; text-align: right; }   /* współrzędne w tej samej kolejności co w linijce miejsca */
 .pmsg { margin-top: 6px; font-size: 13px; color: var(--mut); }
 .pmsg:empty { display: none; }
-.dseg { margin: 0 0 8px; }   /* zakładka Doba: Tarcza / 3D */
+.dseg { margin: 30px 0 8px; }   /* zakładka Doba: Tarcza / 3D */
 
 /* zakładka Rok, widok Orbita: koło orbity, przyciski czasu, lupa z dobami (js/orbitwheel.js) */
 .owheel { display: block; width: 100%; max-width: 520px; margin: 0 auto; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
@@ -551,6 +552,12 @@ button {
 /* górny pasek */
 .top { align-items: flex-start; }
 .topl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+/* róża Wenus (zakładka Rok, widok Wenus) */
+.vrose { display: block; width: 100%; max-width: 520px; margin: 0 auto; }
+.vrose .vrl { font-size: 13px; fill: var(--mut); }
+.vrnow { margin-top: 6px; font-size: 14px; text-align: center; }
+.vrlg { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin-top: 6px; font-size: 12px; color: var(--mut); }
+.vrlg i { display: inline-block; width: 10px; height: 10px; margin-inline-end: 5px; border-radius: 50%; vertical-align: -1px; }
 .yseg { margin: 0 0 8px; }   /* przełącznik wykres / pętla w zegarze roku */
 
 /* stopnie światła pod nagłówkiem */
@@ -605,6 +612,20 @@ button {
 .mnote { max-width: 340px; margin: 10px auto 0; font-size: 12px; line-height: 1.4; color: var(--mut); }
 
 /* małe ikony faz: przebijają ogólną regułę svg { width: 100% } */
+/* Wenus (filtr w panelu ☰): część cyklu, pasek całego cyklu ok. 584 dni, kreska = teraz */
+.venbox { max-width: 380px; margin: 0 auto; padding: 10px 14px 12px; background: var(--card); border-radius: 14px; text-align: left; }
+.venbox .vname { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; }
+.venbox .vdot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.venbox .vdesc { font-size: 13px; color: var(--mut); }
+.venbox .vline { margin-top: 4px; font-size: 14px; font-weight: 600; }
+.venbox .vbar { position: relative; display: flex; gap: 2px; height: 20px; margin: 10px 0 6px; }
+.venbox .vseg { display: flex; align-items: center; justify-content: center; min-width: 3px; border-radius: 4px; opacity: .55; overflow: hidden; font-style: normal; }
+.venbox .vseg.on { opacity: 1; }
+.venbox .vseg span { font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
+.venbox .vnow { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-inline-start: -1px; background: var(--fg); border-radius: 2px; }
+.venbox .vnext { font-size: 13px; color: var(--mut); }
+.cmon .zt1.ztv .zdisc { background: #8a6cc4; color: #fff; }
+.cmon .zt1.ztv { white-space: normal; font-size: 11px; }
 .moonbox .mico { width: 46px; height: 46px; max-width: none; margin: 0; flex: none; }
 
 /* etykieta kąta fazy nad paskiem: zostaje w kontenerze, strzałka wskazuje dokładne miejsce */
@@ -615,7 +636,7 @@ button {
 .navr { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ===== Zegar roku ===== */
-#yearView { max-width: 380px; margin: 8px auto 22px; text-align: left; }
+#yearView { max-width: 380px; margin: 30px auto 22px; text-align: left; }
 .ysvg { margin: 0 auto; }
 .ylb { font-size: 10px; fill: var(--mut); }
 .ystate { margin-top: 10px; font-size: 22px; font-weight: 700; }
@@ -650,7 +671,10 @@ button {
 .csegs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 0 0 10px; }
 .cseg { margin: 0; }
 #calView.yearMode { max-width: 760px; }
-.ysum { margin: 4px 0 10px; font-size: 13px; color: var(--mut); }
+.ctop { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin: 0 0 10px; }   /* « 2026/27 » obok Kalendarz / Koło */
+.ctop .cnav { flex: 0 1 auto; }
+.ctop .cnav .cyl { flex: none; padding: 4px 6px; }
+.ctop .csegs { margin: 0; }
 .cyear { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 10px; }
 .ym { text-align: center; }
 .ymh { width: auto; margin: 0 0 4px; padding: 2px 8px; background: transparent; color: var(--fg); border: 0; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
@@ -679,7 +703,6 @@ button {
 .yd.ap::after { top: 0; bottom: auto; right: 0; font-size: 7px; }
 .cmd { position: relative; }
 .cmd.ap::after { top: auto; bottom: 4px; right: 5px; font-size: 9px; color: var(--mut); }   /* aphelium / peryhelium w widoku miesiąca */
-.cc .zdm { inset-inline-end: 11px; }   /* kropka Księżyca obok ◆, nie na nim */
 .cc.sel.ap::after, .yd.sel.ap::after { color: var(--on-sun); }
 .oyear .ymh { text-transform: none; font-size: 13px; border-radius: 0; }
 .ymsub { margin-bottom: 3px; font-size: 10px; color: var(--mut); }
@@ -850,8 +873,4 @@ html.menuopen, html.menuopen body { overflow: hidden; }
 .cmon .zdisc.zdab { padding: 0 3px; font-size: 9px; }   /* gwiazdozbiór bez symbolu: krótka nazwa, kółko wydłuża się w pigułkę */
 .cmon .ztm .zdisc { background: #c9d3e3; color: #2b3445; }
 .cmon .zts .zdisc { background: var(--sun); color: var(--on-sun); }
-/* małe kafelki (rok, koło): kolorowa kropka = Słońce zmienia znak, srebrna = Księżyc */
 .yd, .cc { position: relative; }
-.zds, .zdm { position: absolute; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; }
-.zds { inset-inline-start: 3px; }
-.zdm { inset-inline-end: 3px; background: #8ea3c2; }

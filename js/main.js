@@ -49,6 +49,23 @@ function zoned(y, mo, d, h, mi) {   // "dzień, godzina:minuta według zegara mi
 /* ===== Geometria tarczy ===== */
 function pt(t, rr) { rr = rr || r; return [cx - rr * Math.cos(t * R), cy - rr * Math.sin(t * R)] }
 // łuk pierścienia o promieniu rad (domyślnie r) od kąta a0 do a1, zgodnie z ruchem wskazówek
+/* Wenus na tarczy (filtr „Wenus” w panelu ☰): tak jak Księżyc, kąt godzinny H odłożony od znacznika górowania Słońca c.
+   Łuk = Wenus nad horyzontem (h0 z wysokością −0,57°, czyli z refrakcją, jak dla gwiazd), kropka = gdzie jest teraz.
+   Kolor = część cyklu: Lucyfer (złoty) wschodzi przed Słońcem, Hesperus (fioletowy) zachodzi po nim. */
+function venusDial(now, c) {
+  var g = $("venup"), m = $("venmark"), on = !!(window.Venus && window.Astro && Astro.state().venus && Astro.allowed());
+  if (!g) return;
+  g.style.display = m.style.display = on ? "" : "none";
+  $("lgVen").hidden = $("lgVenT").hidden = !on;
+  if (!on) return;
+  var ms = now.getTime(), q = Venus.eq(ms), d = ms / 864e5 - 10957.5, dc = q.dec * R,
+    H = normDeg(280.46061837 + 360.98564736629 * d + lon - q.ra),   // średni czas gwiazdowy Greenwich (Meeus 12.4)
+    cH = (Math.sin(-0.5667 * R) - Math.sin(lat * R) * Math.sin(dc)) / (Math.cos(lat * R) * Math.cos(dc)),
+    h0 = cH > 1 ? -1 : cH < -1 ? 181 : Math.acos(cH) / R, col = Venus.COL[Venus.part(ms)], p = pt(c + H, 157);
+  g.setAttribute("stroke", col); m.setAttribute("fill", col); $("lgVen").style.background = col;
+  g.setAttribute("d", h0 < 0 ? "" : h0 > 180 ? arcSeg(c, c + 359.9, 157) : arcSeg(c - h0, c + h0, 157));
+  m.setAttribute("cx", p[0].toFixed(1)); m.setAttribute("cy", p[1].toFixed(1))
+}
 function arcSeg(a0, a1, rad) {
   rad = rad || r;
   var p = pt(a0, rad), q = pt(Math.min(a1, a0 + 359.99), rad);
@@ -430,6 +447,7 @@ function tick() {
       if (ig !== lastIcon) { $("mico").innerHTML = ig; lastIcon = ig }
     }
   }
+  venusDial(now, nd);
   if ($("sinceL")) { $("sinceL").textContent = t("angleSun"); $("sinceD").textContent = t("modeRise") }
   if ($("dayArc")) $("dayArc").textContent = t("dialDay").replace("{a}", Math.round(sd));   // stopnie światła = łuk dnia na tarczy (w środku tarczy, pod odczytem)
   $("deg").textContent = deg.toFixed(1) + "°";
@@ -490,7 +508,10 @@ function savedIdx() { for (var i = 0; i < saved.length; i++) if (samePlace(saved
 function storeSaved() { try { localStorage.setItem("swp", JSON.stringify(saved)) } catch (e) {} }
 
 function showWhere() {
-  $("where").textContent = "📍 " + (place && !isDay(curView) ? place + " · " : "") + lat + "°, " + lon + "°";   // w Dobie nazwa jest w nagłówku, tu same współrzędne
+  // jedno z dwóch: nazwa miejsca albo (gdy jej nie ma) współrzędne; w Dobie nazwa jest w nagłówku, więc tu współrzędne
+  var xy = lat + "°, " + lon + "°";
+  $("where").textContent = "📍 " + (place && !isDay(curView) ? place : xy);
+  $("where").title = xy;
   $("whereBox").classList.toggle("peek", peek);
   if (isDay(curView)) $("lightH").textContent = placeHead();   // nagłówek Doby = oglądane miejsce
   var on = savedIdx() >= 0;
@@ -820,7 +841,7 @@ function renderMoonDet() {
     '<div>' + t("moonAngleL") + ': ' + ang(pa) + ' → ' + ang(pb) + '</div>' +
     '<div>' + t("moonIllL") + ': ' + ill(pa) + '% → ' + ill(pb) + '%</div>' +
     '<div>' + t("orbL") + ': ' + Math.round(orbitFrom(c, a)) + '° → ' + Math.round(orbitFrom(c, b)) + '°</div>';
-  ev.forEach(function (e) { h += '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + '</div>' });
+  ev.forEach(function (e) { h += '<div><b>' + t("ph" + e.k * 2) + '</b>: ' + whenTxt(e.ms) + (window.Astro ? esc(Astro.moonAt(e.ms)) : '') + '</div>' });   // przy włączonych znakach: znak Księżyca w chwili fazy
   if (c.orbit >= a && c.orbit < b) h += '<div><b>↻ ' + t("orbDone") + '</b>: ' + whenTxt(c.orbit) + '</div>';
   h = orbitSvg(c, (a + b) / 2) + h;
   $("mdet").innerHTML = h
@@ -879,6 +900,7 @@ try { if (localStorage.getItem("view") === "3d") dayView = "3d" } catch (e) {}
 function isDay(v) { return v === "dial" || v === "3d" }
 function updateHead() {
   var v = curView;
+  $("lightH").hidden = v === "cal";   // Kalendarz: sam tytuł, dzisiejszy dzień podświetla siatka
   $("hTitle").textContent = v === "year" && window.OrbitWheel ? OrbitWheel.title() : t(v === "cal" ? "calHeadT" : "title");
   $("lightH").textContent = isDay(v) ? placeHead() : v === "year" && window.OrbitWheel ? OrbitWheel.head() : v === "cal" && window.Cal ? Cal.head() : ""
 }

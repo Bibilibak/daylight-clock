@@ -36,11 +36,15 @@
   /* Zakładka Rok: Orbita (koło orbity, js/orbitwheel.js) albo Długość dnia (wykres / pętla poniżej). */
   function modeSeg() {
     return '<div class="seg yseg" role="group"><button data-ym="orbit" aria-pressed="' + (ymode === "orbit") + '">' + t("ymOrbit") + '</button>' +
-      '<button data-ym="day" aria-pressed="' + (ymode === "day") + '">' + t("ymDay") + '</button></div>'
+      '<button data-ym="day" aria-pressed="' + (ymode === "day") + '">' + t("ymDay") + '</button>' +
+      (venOn() ? '<button data-ym="venus" aria-pressed="' + (ymode === "venus") + '">' + t("zVenus") + '</button>' : '') + '</div>'
   }
+  // trzeci widok „Wenus” (róża Wenus, js/venusrose.js) tylko przy włączonym filtrze Wenus w panelu ☰
+  function venOn() { return !!(window.VenusRose && window.Astro && Astro.state().venus && Astro.allowed()) }
   function render() {
     var box = $("yearView"); if (!box) return;
-    if (ymode === "orbit" && window.OrbitWheel) { box.innerHTML = modeSeg() + '<div id="owBox"></div>'; return OrbitWheel.render($("owBox")) }
+    if (ymode === "venus" && venOn()) { box.innerHTML = modeSeg() + '<div id="vrBox"></div>'; return VenusRose.render($("vrBox")) }
+    if ((ymode === "orbit" || ymode === "venus") && window.OrbitWheel) { box.innerHTML = modeSeg() + '<div id="owBox"></div>'; return OrbitWheel.render($("owBox")) }
     var now = cityToday(), y = now.year, a = series(y), n = a.length,
       lam = a.map(function (_, i) { return sunLonDeg(Date.UTC(y, 0, 1 + i, 12)) }),
       today = Math.round((Date.UTC(y, now.month, now.day) - Date.UTC(y, 0, 1)) / 864e5),
@@ -163,7 +167,7 @@
 
   // Wybór widoku (orbita / długość dnia) i wizualizacji długości dnia (wykres / pętla), zapamiętany w przeglądarce
   var viz = "line", ymode = "orbit";
-  try { if (localStorage.getItem("yviz") === "loop") viz = "loop"; if (localStorage.getItem("ymode") === "day") ymode = "day" } catch (e) {}
+  try { if (localStorage.getItem("yviz") === "loop") viz = "loop"; var ym = localStorage.getItem("ymode"); if (ym === "day" || ym === "venus") ymode = ym } catch (e) {}
   if ($("yearView")) $("yearView").addEventListener("click", function (e) {
     var m = e.target.closest ? e.target.closest("[data-ym]") : null;
     if (m && m.getAttribute("data-ym") !== ymode) {
